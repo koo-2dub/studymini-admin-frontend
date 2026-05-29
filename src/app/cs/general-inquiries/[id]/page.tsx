@@ -1,0 +1,8 @@
+import { AppShell } from "@/components/admin/app-shell";
+import { EditorPanel } from "@/components/admin/feature-panels";
+import { PageHeader } from "@/components/admin/page-header";
+import { StatusBadge } from "@/components/admin/status";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { generalInquiries } from "@/lib/mock-data";
+export default async function GeneralInquiryDetailPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; const item = generalInquiries.find((q) => q.id === id) ?? generalInquiries[0]; return <AppShell><PageHeader title={`${item.id} 일반 문의 상세`} description="사용자 정보, 문의 내용, 답변 편집기, 내부 메모, Slack 수신 상태, 답변 이력을 확인합니다." primaryAction="답변 발송" /><Card className="mb-6"><CardHeader><CardTitle>{item.title}</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-4"><Info label="사용자" value={item.user} /><Info label="이메일" value={item.email} /><Info label="상태" value={<StatusBadge value={item.status} />} /><Info label="Slack" value={item.slack} /><div className="md:col-span-4 rounded-2xl bg-slate-50 p-4 text-sm">{item.preview}</div></CardContent></Card><EditorPanel /><Card className="mt-6"><CardHeader><CardTitle>답변 히스토리</CardTitle></CardHeader><CardContent className="text-sm text-muted-foreground">{item.assignee} 관리자 답변 기록 및 변경 로그가 표시됩니다.</CardContent></Card></AppShell>; }
+function Info({ label, value }: { label: string; value: React.ReactNode }) { return <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs text-muted-foreground">{label}</p><div className="mt-1 font-bold">{value}</div></div>; }
