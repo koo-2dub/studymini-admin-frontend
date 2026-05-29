@@ -1,79 +1,96 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpenCheck, CreditCard, MessageSquareText, Sparkles } from "lucide-react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { id: "overview", label: "Overview", icon: Sparkles },
-  { id: "orders", label: "Orders", icon: CreditCard },
-  { id: "lessons", label: "Lessons", icon: BookOpenCheck },
-  { id: "support", label: "Support", icon: MessageSquareText },
+  { id: "basic", label: "기본 정보" },
+  { id: "orders", label: "주문 내역" },
+  { id: "courses", label: "수강/그룹" },
+  { id: "points", label: "포인트" },
+  { id: "coupons", label: "쿠폰/바우처" },
+  { id: "general-inquiries", label: "일반 문의" },
+  { id: "lesson-questions", label: "학습 질문" },
+  { id: "admin-memos", label: "관리자 메모" },
 ] as const;
 
 type Member = {
+  id: string;
   name: string;
-  plan: string;
-  spend: string;
-  points: number;
-  lessons: number;
-  segment: string;
+  email: string;
+  phone: string;
+  customerType: string;
+  status: string;
+  marketingConsent: string;
+  joined: string;
+  lastLogin: string;
 };
 
-export function MemberTabs({ member, timeline }: { member: Member; timeline: string[] }) {
-  const [active, setActive] = useState<(typeof tabs)[number]["id"]>("overview");
+const placeholderContent: Record<Exclude<(typeof tabs)[number]["id"], "basic">, string> = {
+  orders: "선택한 유저의 주문 내역을 확인합니다.",
+  courses: "선택한 유저의 수강 강의와 그룹 배정 정보를 확인합니다.",
+  points: "선택한 유저의 포인트 적립/사용 내역을 확인합니다.",
+  coupons: "선택한 유저에게 발급된 쿠폰과 바우처를 확인합니다.",
+  "general-inquiries": "선택한 유저의 일반 문의 접수 및 처리 내역을 확인합니다.",
+  "lesson-questions": "선택한 유저의 학습 질문과 답변 상태를 확인합니다.",
+  "admin-memos": "선택한 유저에 대한 내부 관리자 메모를 확인합니다.",
+};
+
+export function MemberTabs({ member }: { member: Member }) {
+  const [active, setActive] = useState<(typeof tabs)[number]["id"]>("basic");
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Member workspace</CardTitle>
-        <CardDescription>Client-side App Router tabs for account operations.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6 grid gap-2 rounded-2xl bg-slate-100 p-2 md:grid-cols-4">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActive(tab.id)}
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 transition-all",
-                  active === tab.id && "bg-white text-indigo-600 shadow-sm",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
+      <CardContent className="p-6">
+        <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActive(tab.id)}
+              className={cn(
+                "rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-500 transition-colors",
+                active === tab.id && "border-indigo-200 bg-indigo-50 text-indigo-700",
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {active === "overview" && (
-          <div className="grid gap-4 md:grid-cols-3">
-            {["Plan: " + member.plan, "Segment: " + member.segment, "Points: " + member.points.toLocaleString()].map((item) => (
-              <div key={item} className="rounded-3xl border bg-white p-5 font-bold shadow-sm">{item}</div>
-            ))}
-          </div>
-        )}
-        {active === "orders" && <Panel title="Payment history" items={[`${member.spend} lifetime spend`, "Latest renewal paid successfully", "No chargebacks in mock data"]} />}
-        {active === "lessons" && <Panel title="Learning activity" items={[`${member.lessons} lessons completed`, ...timeline.filter((item) => item.includes("lesson") || item.includes("Algebra") || item.includes("Physics"))]} />}
-        {active === "support" && <Panel title="Support context" items={["Preferred channel: email", "Last satisfaction score: 96%", "No escalations currently open"]} />}
+        {active === "basic" ? <BasicInfo member={member} /> : <EmptyPanel text={placeholderContent[active]} />}
       </CardContent>
     </Card>
   );
 }
 
-function Panel({ title, items }: { title: string; items: string[] }) {
+function BasicInfo({ member }: { member: Member }) {
+  const rows = [
+    { label: "닉네임", value: member.name },
+    { label: "User ID", value: member.id },
+    { label: "이메일", value: member.email },
+    { label: "전화번호", value: member.phone },
+    { label: "고객구분", value: member.customerType },
+    { label: "회원상태", value: member.status },
+    { label: "마케팅 수신동의", value: member.marketingConsent },
+    { label: "가입일", value: member.joined },
+    { label: "최근 로그인", value: member.lastLogin },
+  ];
+
   return (
-    <div className="rounded-3xl border bg-gradient-to-br from-white to-indigo-50 p-6">
-      <h3 className="text-lg font-black">{title}</h3>
-      <div className="mt-4 space-y-3">
-        {items.map((item) => <div key={item} className="rounded-2xl bg-white/80 p-4 text-sm font-semibold text-slate-600 shadow-sm">{item}</div>)}
-      </div>
+    <div className="grid gap-4 md:grid-cols-2">
+      {rows.map((row) => (
+        <div key={row.label} className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-bold text-slate-400">{row.label}</p>
+          <p className="mt-2 text-sm font-semibold text-slate-800">{row.value}</p>
+        </div>
+      ))}
     </div>
   );
+}
+
+function EmptyPanel({ text }: { text: string }) {
+  return <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm font-semibold text-slate-500">{text}</div>;
 }

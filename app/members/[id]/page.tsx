@@ -1,12 +1,9 @@
 import { notFound } from "next/navigation";
-import { Mail, Trophy } from "lucide-react";
 
 import { MemberTabs } from "@/components/dashboard/member-tabs";
-import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { memberTimeline, members } from "@/lib/mock-data";
+import { members } from "@/lib/mock-data";
 
 export function generateStaticParams() {
   return members.map((member) => ({ id: member.id }));
@@ -19,31 +16,25 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ i
 
   return (
     <>
-      <PageHeader eyebrow="Member detail" title={member.name} description={`A complete mock admin profile for ${member.email}, including account, commerce, learning, and support tabs.`} />
-      <section className="mb-6 grid gap-4 md:grid-cols-3">
-        <StatCard label="Lifetime spend" value={member.spend} change={member.plan} tone="indigo" />
-        <StatCard label="Reward points" value={member.points.toLocaleString()} change="Available balance" tone="emerald" />
-        <StatCard label="Lessons completed" value={String(member.lessons)} change={member.segment} tone="amber" />
+      <section className="mb-6 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-panel backdrop-blur-xl">
+        <p className="text-sm font-bold text-slate-500">유저 상세</p>
+        <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-950">{member.name}</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">User ID: {member.id}</p>
+          </div>
+          <Badge variant={member.status === "Active" ? "success" : member.status === "Paused" ? "warning" : "slate"}>{member.status}</Badge>
+        </div>
       </section>
-      <section className="grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 to-sky-400 text-2xl font-black text-white">{member.name.charAt(0)}</div>
-              <div>
-                <h3 className="text-xl font-black">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.id}</p>
-              </div>
-            </div>
-            <div className="mt-6 space-y-3">
-              <Badge variant="success">{member.status}</Badge>
-              <p className="flex items-center gap-2 text-sm text-slate-600"><Mail className="h-4 w-4" />{member.email}</p>
-              <p className="flex items-center gap-2 text-sm text-slate-600"><Trophy className="h-4 w-4" />Joined {member.joined}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <MemberTabs member={member} timeline={memberTimeline} />
+
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="누적 주문수" value={`${member.orderCount}건`} change="전체 기간" tone="indigo" />
+        <StatCard label="누적 결제금액" value={member.spend} change="전체 기간" tone="emerald" />
+        <StatCard label="보유 포인트" value={member.points.toLocaleString()} change="사용 가능" tone="amber" />
+        <StatCard label="진행중 강의 수" value={`${member.activeCourses}개`} change="현재 수강" tone="rose" />
       </section>
+
+      <MemberTabs member={member} />
     </>
   );
 }
