@@ -1,0 +1,148 @@
+import {
+  BadgePercent,
+  BellRing,
+  BookOpenCheck,
+  CircleDollarSign,
+  Coins,
+  CreditCard,
+  HelpCircle,
+  LineChart,
+  Megaphone,
+  ReceiptText,
+  UsersRound,
+  WalletCards,
+} from "lucide-react";
+
+export const navItems = [
+  { title: "Dashboard", href: "/", icon: LineChart },
+  { title: "Members", href: "/members", icon: UsersRound },
+  { title: "Orders / Payments", href: "/orders", icon: CreditCard },
+  { title: "General inquiries", href: "/inquiries", icon: HelpCircle },
+  { title: "Lesson questions", href: "/lesson-questions", icon: BookOpenCheck },
+  { title: "Coupons", href: "/coupons", icon: BadgePercent },
+  { title: "Vouchers", href: "/vouchers", icon: WalletCards },
+  { title: "Points", href: "/points", icon: Coins },
+  { title: "Popup management", href: "/popups", icon: Megaphone },
+  { title: "Sales analytics", href: "/analytics", icon: CircleDollarSign },
+];
+
+export const stats = [
+  { label: "Monthly revenue", value: "$184,260", change: "+18.4%", tone: "indigo" },
+  { label: "Active learners", value: "12,480", change: "+9.2%", tone: "emerald" },
+  { label: "Open tickets", value: "38", change: "-12 today", tone: "amber" },
+  { label: "Conversion rate", value: "7.8%", change: "+1.1 pts", tone: "rose" },
+];
+
+export const members = [
+  {
+    id: "SM-1007",
+    name: "Avery Kim",
+    email: "avery.kim@example.com",
+    plan: "Pro Annual",
+    status: "Active",
+    joined: "2026-01-12",
+    spend: "$1,280",
+    points: 4850,
+    lessons: 74,
+    segment: "Power learner",
+  },
+  {
+    id: "SM-1008",
+    name: "Noah Park",
+    email: "noah.park@example.com",
+    plan: "Starter",
+    status: "Trial",
+    joined: "2026-03-04",
+    spend: "$89",
+    points: 720,
+    lessons: 14,
+    segment: "New cohort",
+  },
+  {
+    id: "SM-1009",
+    name: "Mina Lee",
+    email: "mina.lee@example.com",
+    plan: "Team",
+    status: "Active",
+    joined: "2025-10-21",
+    spend: "$3,940",
+    points: 8930,
+    lessons: 128,
+    segment: "Team admin",
+  },
+  {
+    id: "SM-1010",
+    name: "Ethan Choi",
+    email: "ethan.choi@example.com",
+    plan: "Pro Monthly",
+    status: "Paused",
+    joined: "2025-12-18",
+    spend: "$540",
+    points: 2130,
+    lessons: 45,
+    segment: "At risk",
+  },
+];
+
+export const memberTimeline = [
+  "Completed Advanced Algebra checkpoint",
+  "Redeemed 1,000 points for coaching voucher",
+  "Submitted lesson question for Physics Lab 08",
+  "Purchased Pro Annual renewal",
+];
+
+export const orders = [
+  { id: "ORD-4821", member: "Avery Kim", product: "Pro Annual", amount: "$940", status: "Paid", date: "2026-05-26" },
+  { id: "ORD-4817", member: "Mina Lee", product: "Team seats x 8", amount: "$2,880", status: "Paid", date: "2026-05-24" },
+  { id: "ORD-4812", member: "Noah Park", product: "Starter Monthly", amount: "$29", status: "Refund review", date: "2026-05-23" },
+  { id: "ORD-4803", member: "Ethan Choi", product: "Pro Monthly", amount: "$79", status: "Failed", date: "2026-05-21" },
+];
+
+export const inquiries = [
+  { id: "INQ-304", subject: "Invoice name change", requester: "Mina Lee", priority: "Normal", status: "Open" },
+  { id: "INQ-305", subject: "Cannot access recorded lesson", requester: "Avery Kim", priority: "High", status: "In progress" },
+  { id: "INQ-306", subject: "Cancel team seat", requester: "Daniel Wu", priority: "Low", status: "Waiting" },
+];
+
+export const lessonQuestions = [
+  { id: "LQ-772", lesson: "Physics Lab 08", member: "Avery Kim", status: "Teacher assigned", age: "18m" },
+  { id: "LQ-773", lesson: "Geometry Proofs", member: "Noah Park", status: "Needs answer", age: "42m" },
+  { id: "LQ-774", lesson: "Essay Structure", member: "Mina Lee", status: "Answered", age: "2h" },
+];
+
+export const coupons = [
+  { code: "SPRING26", discount: "25%", used: 421, expires: "2026-06-30", status: "Live" },
+  { code: "TEAMUP", discount: "$150", used: 66, expires: "2026-07-15", status: "Live" },
+  { code: "WINBACK", discount: "40%", used: 18, expires: "2026-05-31", status: "Ending" },
+];
+
+export const vouchers = [
+  { code: "VCH-9082", owner: "Avery Kim", value: "1:1 coaching", status: "Issued" },
+  { code: "VCH-9083", owner: "Noah Park", value: "Mock exam", status: "Redeemed" },
+  { code: "VCH-9084", owner: "Mina Lee", value: "Team workshop", status: "Scheduled" },
+];
+
+export const pointsLedger = [
+  { member: "Avery Kim", action: "Lesson streak bonus", points: "+250", date: "2026-05-27" },
+  { member: "Mina Lee", action: "Voucher redemption", points: "-1,500", date: "2026-05-25" },
+  { member: "Noah Park", action: "First quiz perfect score", points: "+500", date: "2026-05-24" },
+];
+
+export const popups = [
+  { title: "Summer intensive launch", audience: "All visitors", impressions: "42.1k", status: "Active" },
+  { title: "Team plan upgrade", audience: "Team admins", impressions: "8.4k", status: "Scheduled" },
+  { title: "Maintenance notice", audience: "Logged-in users", impressions: "18.9k", status: "Draft" },
+];
+
+export const salesSeries = [
+  { month: "Jan", revenue: 78, refunds: 8 },
+  { month: "Feb", revenue: 94, refunds: 6 },
+  { month: "Mar", revenue: 121, refunds: 9 },
+  { month: "Apr", revenue: 138, refunds: 7 },
+  { month: "May", revenue: 184, refunds: 5 },
+];
+
+export const alerts = [
+  { icon: BellRing, title: "38 tickets need triage", detail: "5 high priority conversations are older than 2 hours." },
+  { icon: ReceiptText, title: "Refund queue improved", detail: "Automated policy checks cleared 12 payment reviews." },
+];
