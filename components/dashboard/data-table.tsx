@@ -57,9 +57,9 @@ export function DataTable<T extends { id?: string }>({
 
 
 export function StatusBadge({ value }: { value: string }) {
-  const variant = value.match(/active|paid|answered|live|issued/i)
+  const variant = value.match(/active|paid|answered|live|issued|정상/i)
     ? "success"
-    : value.match(/failed|refund|ending/i)
+    : value.match(/failed|refund|ending|탈퇴/i)
       ? "rose"
       : value.match(/trial|scheduled|progress|assigned/i)
         ? "warning"
