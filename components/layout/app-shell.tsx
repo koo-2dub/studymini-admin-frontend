@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="mx-auto flex max-w-7xl items-center gap-4">
             <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-sm">
               <Search className="h-4 w-4 text-slate-400" />
-              <span className="text-sm text-slate-500">Search members, orders, tickets...</span>
+              <span className="text-sm text-slate-500">Search users, orders, tickets...</span>
               <kbd className="ml-auto hidden items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500 sm:flex">
                 <Command className="h-3 w-3" />K
               </kbd>
