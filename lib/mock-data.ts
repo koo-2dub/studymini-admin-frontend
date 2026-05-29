@@ -303,11 +303,292 @@ export const memberTimeline = [
   "Purchased Pro Annual renewal",
 ];
 
-export const orders = [
-  { id: "ORD-4821", member: "Avery Kim", product: "Pro Annual", amount: "$940", status: "Paid", date: "2026-05-26" },
-  { id: "ORD-4817", member: "Mina Lee", product: "Team seats x 8", amount: "$2,880", status: "Paid", date: "2026-05-24" },
-  { id: "ORD-4812", member: "Noah Park", product: "Starter Monthly", amount: "$29", status: "Refund review", date: "2026-05-23" },
-  { id: "ORD-4803", member: "Ethan Choi", product: "Pro Monthly", amount: "$79", status: "Failed", date: "2026-05-21" },
+export type OrderPaymentStatus = "결제완료" | "결제대기" | "결제실패" | "환불요청" | "환불완료";
+export type OrderStatus = "신규주문" | "처리중" | "배송준비" | "배송중" | "완료" | "취소";
+export type ShippingStatus = "배송전" | "배송중" | "배송완료";
+
+export type AdminOrder = {
+  id: string;
+  member: string;
+  product: string;
+  amount: string;
+  status: OrderPaymentStatus;
+  date: string;
+  userId: string;
+  email: string;
+  phone: string;
+  memberStatus: MemberStatus;
+  orderStatus: OrderStatus;
+  shippingStatus: ShippingStatus;
+  createdAt: string;
+  paidAt: string;
+  completedAt: string;
+  productAmount: number;
+  couponCode: string;
+  couponAmount: number;
+  pointAmount: number;
+  shippingFee: number;
+  finalAmount: number;
+  expectedPoints: number;
+  recipient: string;
+  shippingAddress: string;
+  shippingMemo: string;
+  carrier: string;
+  invoiceNo: string;
+  sku: string;
+  quantity: number;
+  linkedClass: string;
+  paymentMethod: string;
+  installmentMonths: string;
+  interestFree: string;
+  internalMemo: string;
+  processLogs: string[];
+  paymentLinkStatus: "활성" | "만료" | "사용완료";
+  paymentLinkExpiresAt: string;
+  memberType: "신규회원" | "기존회원";
+};
+
+export const orders: AdminOrder[] = [
+  {
+    id: "ORD-4924",
+    member: "지윤 김",
+    product: "비즈니스 회화 집중반",
+    amount: "₩215,000",
+    status: "결제완료",
+    date: "2026-05-29",
+    userId: "SM-1024",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    memberStatus: "정상",
+    orderStatus: "배송준비",
+    shippingStatus: "배송전",
+    createdAt: "2026-05-29",
+    paidAt: "2026-05-29",
+    completedAt: "",
+    productAmount: 229000,
+    couponCode: "WELCOME10",
+    couponAmount: 12000,
+    pointAmount: 2000,
+    shippingFee: 0,
+    finalAmount: 215000,
+    expectedPoints: 2150,
+    recipient: "지윤 김",
+    shippingAddress: "서울시 마포구 월드컵북로 12, 803호",
+    shippingMemo: "부재 시 문 앞에 놓아주세요.",
+    carrier: "CJ대한통운",
+    invoiceNo: "",
+    sku: "BIZ-SPK-2026",
+    quantity: 1,
+    linkedClass: "비즈니스 회화 집중반 / 2026 상반기 집중 코호트",
+    paymentMethod: "신용카드",
+    installmentMonths: "일시불",
+    interestFree: "아니오",
+    internalMemo: "교재 포함 주문. 출고 전 주소 확인 완료.",
+    processLogs: ["2026-05-29 09:14 주문 생성", "2026-05-29 09:18 결제 완료", "2026-05-29 10:05 배송준비 전환"],
+    paymentLinkStatus: "사용완료",
+    paymentLinkExpiresAt: "2026-06-05",
+    memberType: "기존회원",
+  },
+  {
+    id: "ORD-4917",
+    member: "서준 이",
+    product: "영어 리스닝 스타터",
+    amount: "₩99,000",
+    status: "결제완료",
+    date: "2026-05-21",
+    userId: "SM-1022",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    memberStatus: "정상",
+    orderStatus: "배송중",
+    shippingStatus: "배송중",
+    createdAt: "2026-05-21",
+    paidAt: "2026-05-21",
+    completedAt: "",
+    productAmount: 99000,
+    couponCode: "",
+    couponAmount: 0,
+    pointAmount: 0,
+    shippingFee: 0,
+    finalAmount: 99000,
+    expectedPoints: 990,
+    recipient: "이서준",
+    shippingAddress: "경기도 성남시 분당구 판교역로 45",
+    shippingMemo: "경비실 보관 가능",
+    carrier: "롯데택배",
+    invoiceNo: "LT-82399210",
+    sku: "ENG-LIS-START",
+    quantity: 1,
+    linkedClass: "영어 리스닝 스타터 / 리스닝 5월반",
+    paymentMethod: "카카오페이",
+    installmentMonths: "일시불",
+    interestFree: "아니오",
+    internalMemo: "송장 업로드 완료. 배송 문의 가능성 낮음.",
+    processLogs: ["2026-05-21 13:02 주문 생성", "2026-05-21 13:03 결제 완료", "2026-05-22 16:40 송장 등록"],
+    paymentLinkStatus: "사용완료",
+    paymentLinkExpiresAt: "2026-05-28",
+    memberType: "기존회원",
+  },
+  {
+    id: "ORD-4908",
+    member: "민서 박",
+    product: "스페인어 베이직 교재",
+    amount: "₩0",
+    status: "결제대기",
+    date: "2026-05-28",
+    userId: "SM-1023",
+    email: "minseo.park@example.com",
+    phone: "010-3488-1023",
+    memberStatus: "정상",
+    orderStatus: "신규주문",
+    shippingStatus: "배송전",
+    createdAt: "2026-05-28",
+    paidAt: "",
+    completedAt: "",
+    productAmount: 49000,
+    couponCode: "WELCOME10",
+    couponAmount: 4900,
+    pointAmount: 0,
+    shippingFee: 3000,
+    finalAmount: 47100,
+    expectedPoints: 471,
+    recipient: "박민서",
+    shippingAddress: "부산시 해운대구 센텀중앙로 77",
+    shippingMemo: "배송 전 전화 요청",
+    carrier: "",
+    invoiceNo: "",
+    sku: "SP-BOOK-BASIC",
+    quantity: 1,
+    linkedClass: "스페인어 베이직",
+    paymentMethod: "결제 링크",
+    installmentMonths: "-",
+    interestFree: "-",
+    internalMemo: "상담 후 결제 링크 발송.",
+    processLogs: ["2026-05-28 15:40 수동 주문 생성", "2026-05-28 15:41 결제 링크 생성"],
+    paymentLinkStatus: "활성",
+    paymentLinkExpiresAt: "2026-06-04",
+    memberType: "신규회원",
+  },
+  {
+    id: "ORD-4875",
+    member: "도윤 정",
+    product: "HSK 실전반",
+    amount: "₩179,000",
+    status: "환불요청",
+    date: "2026-04-28",
+    userId: "SM-1020",
+    email: "doyoon.jung@example.com",
+    phone: "010-6610-1020",
+    memberStatus: "정상",
+    orderStatus: "처리중",
+    shippingStatus: "배송완료",
+    createdAt: "2026-04-28",
+    paidAt: "2026-04-28",
+    completedAt: "2026-05-01",
+    productAmount: 199000,
+    couponCode: "TEAMUP",
+    couponAmount: 15000,
+    pointAmount: 5000,
+    shippingFee: 0,
+    finalAmount: 179000,
+    expectedPoints: 0,
+    recipient: "정도윤",
+    shippingAddress: "대구시 수성구 달구벌대로 2300",
+    shippingMemo: "",
+    carrier: "우체국택배",
+    invoiceNo: "PO-72900218",
+    sku: "HSK-REAL-2026",
+    quantity: 1,
+    linkedClass: "HSK 실전반 / HSK 6월 목표반",
+    paymentMethod: "신용카드",
+    installmentMonths: "3개월",
+    interestFree: "예",
+    internalMemo: "부분 환불 가능 여부 확인 필요.",
+    processLogs: ["2026-04-28 11:20 주문 생성", "2026-04-28 11:22 결제 완료", "2026-05-27 18:12 환불 요청 접수"],
+    paymentLinkStatus: "사용완료",
+    paymentLinkExpiresAt: "2026-05-05",
+    memberType: "기존회원",
+  },
+  {
+    id: "ORD-4863",
+    member: "하린 최",
+    product: "일본어 문법 완성",
+    amount: "₩179,000",
+    status: "환불완료",
+    date: "2026-04-19",
+    userId: "SM-1021",
+    email: "harin.choi@example.com",
+    phone: "010-7752-1021",
+    memberStatus: "휴면",
+    orderStatus: "취소",
+    shippingStatus: "배송전",
+    createdAt: "2026-04-19",
+    paidAt: "2026-04-19",
+    completedAt: "2026-04-20",
+    productAmount: 179000,
+    couponCode: "",
+    couponAmount: 0,
+    pointAmount: 0,
+    shippingFee: 0,
+    finalAmount: 179000,
+    expectedPoints: 0,
+    recipient: "최하린",
+    shippingAddress: "인천시 연수구 컨벤시아대로 100",
+    shippingMemo: "",
+    carrier: "",
+    invoiceNo: "",
+    sku: "JP-GRAMMAR-FULL",
+    quantity: 1,
+    linkedClass: "일본어 문법 완성",
+    paymentMethod: "무통장입금",
+    installmentMonths: "-",
+    interestFree: "-",
+    internalMemo: "환불 완료. 재결제 유도 금지.",
+    processLogs: ["2026-04-19 08:10 주문 생성", "2026-04-19 08:55 입금 확인", "2026-04-20 14:30 전체 환불 완료"],
+    paymentLinkStatus: "만료",
+    paymentLinkExpiresAt: "2026-04-26",
+    memberType: "기존회원",
+  },
+  {
+    id: "ORD-4855",
+    member: "유나 강",
+    product: "1:1 코칭 바우처",
+    amount: "₩50,000",
+    status: "결제실패",
+    date: "2026-04-02",
+    userId: "SM-1019",
+    email: "yuna.kang@example.com",
+    phone: "010-3145-1019",
+    memberStatus: "탈퇴",
+    orderStatus: "취소",
+    shippingStatus: "배송전",
+    createdAt: "2026-04-02",
+    paidAt: "",
+    completedAt: "",
+    productAmount: 50000,
+    couponCode: "",
+    couponAmount: 0,
+    pointAmount: 0,
+    shippingFee: 0,
+    finalAmount: 50000,
+    expectedPoints: 0,
+    recipient: "강유나",
+    shippingAddress: "디지털 상품",
+    shippingMemo: "",
+    carrier: "",
+    invoiceNo: "",
+    sku: "COACH-VOUCHER-1",
+    quantity: 1,
+    linkedClass: "1:1 코칭",
+    paymentMethod: "신용카드",
+    installmentMonths: "일시불",
+    interestFree: "아니오",
+    internalMemo: "탈퇴 회원. 재시도 안내 불필요.",
+    processLogs: ["2026-04-02 20:15 주문 생성", "2026-04-02 20:16 결제 실패"],
+    paymentLinkStatus: "만료",
+    paymentLinkExpiresAt: "2026-04-09",
+    memberType: "기존회원",
+  },
 ];
 
 export const inquiries = [

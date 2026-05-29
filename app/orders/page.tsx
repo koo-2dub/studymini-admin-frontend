@@ -1,7 +1,16 @@
-import { DataTable, StatusBadge } from "@/components/dashboard/data-table";
+import { OrdersDashboard } from "@/components/dashboard/orders-dashboard";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { orders } from "@/lib/mock-data";
 
 export default function OrdersPage() {
-  return <><PageHeader eyebrow="Payments" title="Orders / Payments" description="Mock payment operations for subscriptions, renewals, refunds, and failed charges." /><DataTable title="Payment ledger" description="Recent transactions with payment state." data={orders} columns={[{key:"id",header:"Order"},{key:"member",header:"Member"},{key:"product",header:"Product"},{key:"amount",header:"Amount"},{key:"date",header:"Date"},{key:"status",header:"Status",render:(order)=><StatusBadge value={order.status}/>}]} /></>;
+  return (
+    <>
+      <PageHeader
+        eyebrow="Orders · Payments"
+        title="주문/결제 관리"
+        description="주문 조회, 수동 주문 생성, 결제 링크, Export, CSV 업로드, 송장 업로드, PDF 다운로드 로그를 한 화면에서 처리합니다."
+      />
+      <OrdersDashboard orders={orders} />
+    </>
+  );
 }
