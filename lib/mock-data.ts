@@ -358,3 +358,267 @@ export const alerts = [
   { icon: BellRing, title: "38 tickets need triage", detail: "5 high priority conversations are older than 2 hours." },
   { icon: ReceiptText, title: "Refund queue improved", detail: "Automated policy checks cleared 12 payment reviews." },
 ];
+export type AdminOrder = {
+  id: string;
+  createdAt: string;
+  paidAt: string;
+  completedAt: string;
+  orderStatus: "주문완료" | "배송준비" | "배송중" | "배송완료" | "환불요청" | "환불완료";
+  paymentStatus: "결제완료" | "결제대기" | "결제실패" | "부분환불" | "환불완료";
+  shippingStatus: "배송없음" | "배송대기" | "배송중" | "배송완료";
+  memberId: string;
+  memberName: string;
+  email: string;
+  phone: string;
+  address: string;
+  productName: string;
+  productId: string;
+  sku: string;
+  quantity: number;
+  productAmount: number;
+  refundAmount: number;
+  paymentMethod: string;
+  installmentMonths: number;
+  interestFree: boolean;
+  couponCode: string;
+  couponAmount: number;
+  usedPoints: number;
+  shippingFee: number;
+  finalAmount: number;
+  earnedPoints: number;
+  isNewMember: boolean;
+  deliveryMemo: string;
+  invoiceCompany: string;
+  invoiceNumber: string;
+  adminMemo: string;
+  processLogs: string[];
+};
+
+export const adminOrders: AdminOrder[] = [
+  {
+    id: "ORD-4924",
+    createdAt: "2026-05-29",
+    paidAt: "2026-05-29",
+    completedAt: "2026-05-29",
+    orderStatus: "배송준비",
+    paymentStatus: "결제완료",
+    shippingStatus: "배송대기",
+    memberId: "SM-1024",
+    memberName: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    address: "서울시 마포구 월드컵북로 12, 802호",
+    productName: "비즈니스 회화 집중반",
+    productId: "P-BIZ-2026",
+    sku: "BIZ-SPK-12W",
+    quantity: 1,
+    productAmount: 249000,
+    refundAmount: 0,
+    paymentMethod: "신용카드",
+    installmentMonths: 3,
+    interestFree: true,
+    couponCode: "WELCOME10",
+    couponAmount: 20000,
+    usedPoints: 0,
+    shippingFee: 0,
+    finalAmount: 229000,
+    earnedPoints: 2290,
+    isNewMember: false,
+    deliveryMemo: "교재 발송 전 문자 안내",
+    invoiceCompany: "CJ대한통운",
+    invoiceNumber: "",
+    adminMemo: "VIP 전환 후보. 영수증 요청 가능성 높음.",
+    processLogs: ["2026-05-29 09:12 주문 생성", "2026-05-29 09:13 결제 승인", "2026-05-29 10:20 배송 준비 상태 변경"],
+  },
+  {
+    id: "ORD-4917",
+    createdAt: "2026-05-21",
+    paidAt: "2026-05-21",
+    completedAt: "2026-05-22",
+    orderStatus: "주문완료",
+    paymentStatus: "결제완료",
+    shippingStatus: "배송없음",
+    memberId: "SM-1022",
+    memberName: "서준 이",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    address: "디지털 콘텐츠 - 배송 없음",
+    productName: "영어 리스닝 스타터",
+    productId: "P-ENG-LISTEN",
+    sku: "ENG-LSN-START",
+    quantity: 1,
+    productAmount: 119000,
+    refundAmount: 0,
+    paymentMethod: "카카오페이",
+    installmentMonths: 0,
+    interestFree: false,
+    couponCode: "",
+    couponAmount: 0,
+    usedPoints: 20000,
+    shippingFee: 0,
+    finalAmount: 99000,
+    earnedPoints: 990,
+    isNewMember: true,
+    deliveryMemo: "",
+    invoiceCompany: "",
+    invoiceNumber: "",
+    adminMemo: "첫 결제 회원. 온보딩 메시지 발송 완료.",
+    processLogs: ["2026-05-21 14:01 주문 생성", "2026-05-21 14:02 결제 승인", "2026-05-22 09:00 수강권 지급"],
+  },
+  {
+    id: "ORD-4908",
+    createdAt: "2026-05-18",
+    paidAt: "2026-05-18",
+    completedAt: "",
+    orderStatus: "환불요청",
+    paymentStatus: "부분환불",
+    shippingStatus: "배송완료",
+    memberId: "SM-1018",
+    memberName: "준호 임",
+    email: "junho.lim@example.com",
+    phone: "010-1209-1018",
+    address: "부산시 해운대구 센텀동로 45, 1103호",
+    productName: "프랑스어 회화 + 교재",
+    productId: "P-FR-CONV",
+    sku: "FR-CONV-BOOK",
+    quantity: 1,
+    productAmount: 259000,
+    refundAmount: 30000,
+    paymentMethod: "신용카드",
+    installmentMonths: 6,
+    interestFree: true,
+    couponCode: "SPRING26",
+    couponAmount: 25000,
+    usedPoints: 5000,
+    shippingFee: 3000,
+    finalAmount: 232000,
+    earnedPoints: 2020,
+    isNewMember: false,
+    deliveryMemo: "부재 시 경비실 보관",
+    invoiceCompany: "우체국택배",
+    invoiceNumber: "6868123490012",
+    adminMemo: "교재 일부 파손 클레임. 부분 환불 검토 중.",
+    processLogs: ["2026-05-18 11:31 주문 생성", "2026-05-18 11:33 결제 승인", "2026-05-19 16:10 송장 등록", "2026-05-27 15:42 환불 요청 접수"],
+  },
+  {
+    id: "ORD-4899",
+    createdAt: "2026-05-17",
+    paidAt: "",
+    completedAt: "",
+    orderStatus: "주문완료",
+    paymentStatus: "결제대기",
+    shippingStatus: "배송대기",
+    memberId: "SM-1023",
+    memberName: "민서 박",
+    email: "minseo.park@example.com",
+    phone: "010-3488-1023",
+    address: "인천시 연수구 컨벤시아대로 77",
+    productName: "스페인어 베이직 교재",
+    productId: "P-SP-BASIC-BOOK",
+    sku: "SP-BASIC-TEXT",
+    quantity: 2,
+    productAmount: 52000,
+    refundAmount: 0,
+    paymentMethod: "무통장입금",
+    installmentMonths: 0,
+    interestFree: false,
+    couponCode: "",
+    couponAmount: 0,
+    usedPoints: 0,
+    shippingFee: 3000,
+    finalAmount: 55000,
+    earnedPoints: 0,
+    isNewMember: true,
+    deliveryMemo: "입금 확인 후 출고",
+    invoiceCompany: "",
+    invoiceNumber: "",
+    adminMemo: "입금 대기 알림 발송 필요.",
+    processLogs: ["2026-05-17 19:23 주문 생성", "2026-05-18 09:00 입금 대기 알림 발송"],
+  },
+  {
+    id: "ORD-4875",
+    createdAt: "2026-04-28",
+    paidAt: "2026-04-28",
+    completedAt: "2026-04-29",
+    orderStatus: "배송완료",
+    paymentStatus: "결제완료",
+    shippingStatus: "배송완료",
+    memberId: "SM-1020",
+    memberName: "도윤 정",
+    email: "doyoon.jung@example.com",
+    phone: "010-6610-1020",
+    address: "대전시 유성구 대학로 99",
+    productName: "HSK 실전반",
+    productId: "P-HSK-REAL",
+    sku: "CN-HSK-REAL",
+    quantity: 1,
+    productAmount: 229000,
+    refundAmount: 0,
+    paymentMethod: "네이버페이",
+    installmentMonths: 0,
+    interestFree: false,
+    couponCode: "TEAMUP",
+    couponAmount: 30000,
+    usedPoints: 0,
+    shippingFee: 0,
+    finalAmount: 199000,
+    earnedPoints: 1990,
+    isNewMember: false,
+    deliveryMemo: "",
+    invoiceCompany: "",
+    invoiceNumber: "",
+    adminMemo: "고액 결제 회원. 환불 정책 안내 완료.",
+    processLogs: ["2026-04-28 08:20 주문 생성", "2026-04-28 08:20 간편결제 승인", "2026-04-29 10:00 수강권 지급"],
+  },
+  {
+    id: "ORD-4863",
+    createdAt: "2026-04-19",
+    paidAt: "2026-04-19",
+    completedAt: "2026-04-20",
+    orderStatus: "환불완료",
+    paymentStatus: "환불완료",
+    shippingStatus: "배송없음",
+    memberId: "SM-1021",
+    memberName: "하린 최",
+    email: "harin.choi@example.com",
+    phone: "010-7752-1021",
+    address: "디지털 콘텐츠 - 배송 없음",
+    productName: "일본어 문법 완성",
+    productId: "P-JP-GRAMMAR",
+    sku: "JP-GRM-FULL",
+    quantity: 1,
+    productAmount: 179000,
+    refundAmount: 179000,
+    paymentMethod: "신용카드",
+    installmentMonths: 0,
+    interestFree: false,
+    couponCode: "WINBACK40",
+    couponAmount: 0,
+    usedPoints: 0,
+    shippingFee: 0,
+    finalAmount: 179000,
+    earnedPoints: 0,
+    isNewMember: false,
+    deliveryMemo: "",
+    invoiceCompany: "",
+    invoiceNumber: "",
+    adminMemo: "환불 완료 후 휴면 복귀 캠페인 제외.",
+    processLogs: ["2026-04-19 12:22 주문 생성", "2026-04-19 12:23 결제 승인", "2026-04-21 17:15 환불 승인", "2026-04-22 10:30 환불 완료"],
+  },
+];
+
+export const orderUploadPreview = [
+  { row: 1, userId: "SM-1024", name: "지윤 김", email: "jiyoon.kim@example.com", productId: "P-BIZ-2026", quantity: 1, price: 229000, result: "정상" },
+  { row: 2, userId: "SM-1099", name: "테스트 유저", email: "test@example.com", productId: "P-UNKNOWN", quantity: 1, price: 99000, result: "상품아이디 확인 필요" },
+];
+
+export const invoiceUploadPreview = [
+  { row: 1, orderId: "ORD-4924", productName: "비즈니스 회화 집중반", carrier: "CJ대한통운", invoiceNo: "555512340001", orderStatus: "배송중", result: "정상" },
+  { row: 2, orderId: "ORD-4899", productName: "스페인어 베이직 교재", carrier: "", invoiceNo: "", orderStatus: "배송대기", result: "배송회사/송장번호 누락" },
+];
+
+export const pdfDownloadLogs = [
+  { orderId: "ORD-4924", paidAt: "2026-05-29", name: "지윤 김", memberId: "SM-1024", className: "비즈니스 회화 집중반", fileName: "business-speaking-week01.pdf", firstDownloadedAt: "2026-05-29 10:02", lastDownloadedAt: "2026-05-29 13:18", downloadCount: 3 },
+  { orderId: "ORD-4917", paidAt: "2026-05-21", name: "서준 이", memberId: "SM-1022", className: "영어 리스닝 스타터", fileName: "listening-starter-unit04.pdf", firstDownloadedAt: "2026-05-22 09:30", lastDownloadedAt: "2026-05-27 21:04", downloadCount: 8 },
+  { orderId: "ORD-4875", paidAt: "2026-04-28", name: "도윤 정", memberId: "SM-1020", className: "HSK 실전반", fileName: "hsk-real-mock-test-02.pdf", firstDownloadedAt: "2026-04-29 11:10", lastDownloadedAt: "2026-05-29 07:55", downloadCount: 12 },
+];
