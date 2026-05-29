@@ -57,11 +57,11 @@ export function DataTable<T extends { id?: string }>({
 
 
 export function StatusBadge({ value }: { value: string }) {
-  const variant = value.match(/active|paid|answered|live|issued/i)
+  const variant = value.match(/active|paid|answered|live|issued|결제완료|완료|배송완료/i)
     ? "success"
-    : value.match(/failed|refund|ending/i)
+    : value.match(/failed|refund|ending|실패|환불|취소/i)
       ? "rose"
-      : value.match(/trial|scheduled|progress|assigned/i)
+      : value.match(/trial|scheduled|progress|assigned|대기|처리중|접수|배송중|결제확인/i)
         ? "warning"
         : "slate";
   return <Badge variant={variant}>{value}</Badge>;

@@ -303,11 +303,145 @@ export const memberTimeline = [
   "Purchased Pro Annual renewal",
 ];
 
-export const orders = [
-  { id: "ORD-4821", member: "Avery Kim", product: "Pro Annual", amount: "$940", status: "Paid", date: "2026-05-26" },
-  { id: "ORD-4817", member: "Mina Lee", product: "Team seats x 8", amount: "$2,880", status: "Paid", date: "2026-05-24" },
-  { id: "ORD-4812", member: "Noah Park", product: "Starter Monthly", amount: "$29", status: "Refund review", date: "2026-05-23" },
-  { id: "ORD-4803", member: "Ethan Choi", product: "Pro Monthly", amount: "$79", status: "Failed", date: "2026-05-21" },
+export type OrderRecord = {
+  id: string;
+  memberId: string;
+  member: string;
+  email: string;
+  phone: string;
+  product: string;
+  paymentAmount: number;
+  refundAmount: number;
+  paymentStatus: "결제완료" | "입금대기" | "결제실패" | "부분환불" | "환불요청";
+  orderStatus: "접수" | "결제확인" | "처리중" | "취소요청" | "완료";
+  shippingStatus: "배송없음" | "배송대기" | "배송중" | "배송완료";
+  orderedAt: string;
+  paidAt: string;
+  couponUsed: boolean;
+  pointsUsed: boolean;
+  shippingAddress: string;
+  invoiceNo: string;
+  adminMemo: string;
+  logs: string[];
+};
+
+export const orders: OrderRecord[] = [
+  {
+    id: "ORD-4924",
+    memberId: "SM-1024",
+    member: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    product: "비즈니스 회화 집중반",
+    paymentAmount: 229000,
+    refundAmount: 0,
+    paymentStatus: "결제완료",
+    orderStatus: "결제확인",
+    shippingStatus: "배송대기",
+    orderedAt: "2026-05-29 09:14",
+    paidAt: "2026-05-29 09:15",
+    couponUsed: true,
+    pointsUsed: true,
+    shippingAddress: "서울시 강남구 테헤란로 21",
+    invoiceNo: "미등록",
+    adminMemo: "교재 배송 전 주소 재확인 필요.",
+    logs: ["2026-05-29 09:15 결제 승인", "2026-05-29 09:20 배송대기 전환"],
+  },
+  {
+    id: "ORD-4917",
+    memberId: "SM-1022",
+    member: "서준 이",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    product: "영어 리스닝 스타터",
+    paymentAmount: 99000,
+    refundAmount: 0,
+    paymentStatus: "결제완료",
+    orderStatus: "완료",
+    shippingStatus: "배송없음",
+    orderedAt: "2026-05-21 18:02",
+    paidAt: "2026-05-21 18:03",
+    couponUsed: false,
+    pointsUsed: false,
+    shippingAddress: "온라인 강의 상품",
+    invoiceNo: "-",
+    adminMemo: "학습 질문 답변 지연 모니터링.",
+    logs: ["2026-05-21 18:03 결제 승인", "2026-05-21 18:04 수강권 지급"],
+  },
+  {
+    id: "ORD-4881",
+    memberId: "SM-1024",
+    member: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    product: "스페인어 베이직",
+    paymentAmount: 149000,
+    refundAmount: 0,
+    paymentStatus: "결제완료",
+    orderStatus: "완료",
+    shippingStatus: "배송완료",
+    orderedAt: "2026-05-13 10:41",
+    paidAt: "2026-05-13 10:42",
+    couponUsed: true,
+    pointsUsed: false,
+    shippingAddress: "서울시 강남구 테헤란로 21",
+    invoiceNo: "CJ-88392014",
+    adminMemo: "VIP 전환 후보.",
+    logs: ["2026-05-13 10:42 결제 승인", "2026-05-14 11:02 송장 등록", "2026-05-15 16:44 배송완료"],
+  },
+  {
+    id: "ORD-4863",
+    memberId: "SM-1021",
+    member: "하린 최",
+    email: "harin.choi@example.com",
+    phone: "010-7752-1021",
+    product: "일본어 문법 완성",
+    paymentAmount: 179000,
+    refundAmount: 0,
+    paymentStatus: "결제완료",
+    orderStatus: "처리중",
+    shippingStatus: "배송중",
+    orderedAt: "2026-04-19 13:12",
+    paidAt: "2026-04-19 13:14",
+    couponUsed: false,
+    pointsUsed: true,
+    shippingAddress: "부산시 해운대구 센텀동로 35",
+    invoiceNo: "HANJIN-5620184",
+    adminMemo: "휴면 복귀 캠페인 대상.",
+    logs: ["2026-04-19 13:14 결제 승인", "2026-04-20 09:31 송장 등록"],
+  },
+  {
+    id: "ORD-4812",
+    memberId: "SM-1020",
+    member: "도윤 정",
+    email: "doyoon.jung@example.com",
+    phone: "010-6610-1020",
+    product: "HSK 실전반",
+    paymentAmount: 199000,
+    refundAmount: 99000,
+    paymentStatus: "환불요청",
+    orderStatus: "취소요청",
+    shippingStatus: "배송없음",
+    orderedAt: "2026-05-23 15:22",
+    paidAt: "2026-05-23 15:23",
+    couponUsed: false,
+    pointsUsed: false,
+    shippingAddress: "온라인 강의 상품",
+    invoiceNo: "-",
+    adminMemo: "부분 환불 정책 확인 후 처리 예정.",
+    logs: ["2026-05-23 15:23 결제 승인", "2026-05-24 08:30 환불 요청 접수"],
+  },
+];
+
+export const orderExports = [
+  { id: "EXP-1204", period: "2026-05-01 ~ 2026-05-29", format: "CSV", requestedBy: "operations", status: "완료", createdAt: "2026-05-29 10:10" },
+  { id: "EXP-1203", period: "2026-04-01 ~ 2026-04-30", format: "XLSX", requestedBy: "finance", status: "완료", createdAt: "2026-05-01 09:00" },
+];
+
+export const pdfDownloadLogs = [
+  { id: "PDF-8841", orderId: "ORD-4924", document: "영수증", downloadedBy: "operations", downloadedAt: "2026-05-29 11:18", ip: "10.12.0.8" },
+  { id: "PDF-8835", orderId: "ORD-4881", document: "거래명세서", downloadedBy: "finance", downloadedAt: "2026-05-28 16:40", ip: "10.12.0.5" },
+  { id: "PDF-8821", orderId: "ORD-4812", document: "환불 내역", downloadedBy: "support", downloadedAt: "2026-05-24 09:02", ip: "10.12.0.11" },
 ];
 
 export const inquiries = [

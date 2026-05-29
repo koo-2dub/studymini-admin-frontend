@@ -89,11 +89,15 @@ export default function DashboardPage() {
           columns={[
             { key: "id", header: "Order" },
             { key: "member", header: "Member" },
-            { key: "amount", header: "Amount" },
-            { key: "status", header: "Status", render: (order) => <StatusBadge value={order.status} /> },
+            { key: "paymentAmount", header: "Amount", render: (order) => formatCurrency(order.paymentAmount) },
+            { key: "paymentStatus", header: "Status", render: (order) => <StatusBadge value={order.paymentStatus} /> },
           ]}
         />
       </section>
     </>
   );
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("ko-KR", { style: "currency", currency: "KRW", maximumFractionDigits: 0 }).format(value);
 }
