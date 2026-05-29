@@ -303,11 +303,122 @@ export const memberTimeline = [
   "Purchased Pro Annual renewal",
 ];
 
-export const orders = [
-  { id: "ORD-4821", member: "Avery Kim", product: "Pro Annual", amount: "$940", status: "Paid", date: "2026-05-26" },
-  { id: "ORD-4817", member: "Mina Lee", product: "Team seats x 8", amount: "$2,880", status: "Paid", date: "2026-05-24" },
-  { id: "ORD-4812", member: "Noah Park", product: "Starter Monthly", amount: "$29", status: "Refund review", date: "2026-05-23" },
-  { id: "ORD-4803", member: "Ethan Choi", product: "Pro Monthly", amount: "$79", status: "Failed", date: "2026-05-21" },
+export type OrderRecord = {
+  id: string;
+  userId: string;
+  member: string;
+  customerType: CustomerType;
+  product: string;
+  amount: string;
+  paymentAmount: number;
+  refundAmount: number;
+  finalPaymentAmount: number;
+  status: string;
+  paymentStatus: string;
+  orderStatus: string;
+  shippingStatus: string;
+  date: string;
+  orderDate: string;
+  paymentDate: string;
+  trackingNumber: string;
+};
+
+export const orders: OrderRecord[] = [
+  {
+    id: "ORD-4924",
+    userId: "SM-1024",
+    member: "지윤 김",
+    customerType: "구매회원",
+    product: "비즈니스 회화 집중반",
+    amount: "₩229,000",
+    paymentAmount: 229000,
+    refundAmount: 0,
+    finalPaymentAmount: 229000,
+    status: "결제완료",
+    paymentStatus: "결제완료",
+    orderStatus: "주문완료",
+    shippingStatus: "배송준비",
+    date: "2026-05-29",
+    orderDate: "2026-05-29",
+    paymentDate: "2026-05-29",
+    trackingNumber: "미등록",
+  },
+  {
+    id: "ORD-4917",
+    userId: "SM-1022",
+    member: "서준 이",
+    customerType: "구매회원",
+    product: "영어 스타터",
+    amount: "₩99,000",
+    paymentAmount: 99000,
+    refundAmount: 0,
+    finalPaymentAmount: 99000,
+    status: "결제완료",
+    paymentStatus: "결제완료",
+    orderStatus: "주문완료",
+    shippingStatus: "배송완료",
+    date: "2026-05-21",
+    orderDate: "2026-05-21",
+    paymentDate: "2026-05-21",
+    trackingNumber: "CJ-58392017",
+  },
+  {
+    id: "ORD-4863",
+    userId: "SM-1021",
+    member: "하린 최",
+    customerType: "구매회원",
+    product: "일본어 문법 완성",
+    amount: "₩179,000",
+    paymentAmount: 179000,
+    refundAmount: 0,
+    finalPaymentAmount: 179000,
+    status: "환불검토",
+    paymentStatus: "환불검토",
+    orderStatus: "취소요청",
+    shippingStatus: "배송보류",
+    date: "2026-04-19",
+    orderDate: "2026-04-19",
+    paymentDate: "2026-04-19",
+    trackingNumber: "미등록",
+  },
+  {
+    id: "ORD-4875",
+    userId: "SM-1020",
+    member: "도윤 정",
+    customerType: "구매회원",
+    product: "HSK 실전반",
+    amount: "₩199,000",
+    paymentAmount: 199000,
+    refundAmount: 0,
+    finalPaymentAmount: 199000,
+    status: "결제완료",
+    paymentStatus: "결제완료",
+    orderStatus: "처리중",
+    shippingStatus: "배송중",
+    date: "2026-04-28",
+    orderDate: "2026-04-28",
+    paymentDate: "2026-04-28",
+    trackingNumber: "HANJIN-20481092",
+  },
+  {
+    id: "ORD-4902",
+    userId: "SM-1023",
+    member: "민서 박",
+    customerType: "미구매회원",
+    product: "영어 스타터",
+    amount: "₩0",
+    paymentAmount: 0,
+    refundAmount: 0,
+    finalPaymentAmount: 0,
+    status: "결제대기",
+    paymentStatus: "결제대기",
+    orderStatus: "처리중",
+    shippingStatus: "배송대기",
+    date: "2026-05-27",
+    orderDate: "2026-05-27",
+    paymentDate: "-",
+    trackingNumber: "미등록",
+  },
 ];
 
 export const inquiries = [
