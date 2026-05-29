@@ -40,3 +40,13 @@ body {
 ::selection {
   background: rgba(99, 102, 241, 0.22);
 }
+
+@layer components {
+  .filter-label {
+    @apply text-xs font-black uppercase tracking-wide text-slate-500;
+  }
+
+  .filter-input {
+    @apply h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100;
+  }
+}
