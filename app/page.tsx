@@ -72,11 +72,11 @@ export default function DashboardPage() {
 
       <section className="mt-6 grid gap-6 xl:grid-cols-2">
         <DataTable
-          title="Recent members"
-          description="High-value learner accounts and engagement status."
+          title="Recent users"
+          description="High-value user accounts and engagement status."
           data={members.slice(0, 4)}
           columns={[
-            { key: "name", header: "Member" },
+            { key: "name", header: "User" },
             { key: "plan", header: "Plan" },
             { key: "status", header: "Status", render: (member) => <StatusBadge value={member.status} /> },
             { key: "spend", header: "Spend" },
@@ -88,7 +88,7 @@ export default function DashboardPage() {
           data={orders}
           columns={[
             { key: "id", header: "Order" },
-            { key: "member", header: "Member" },
+            { key: "member", header: "User" },
             { key: "amount", header: "Amount" },
             { key: "status", header: "Status", render: (order) => <StatusBadge value={order.status} /> },
           ]}

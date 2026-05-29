@@ -28,11 +28,11 @@ export function DataTable<T extends { id?: string }>({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <Table>
+        <Table className="min-w-[980px] text-sm">
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={String(column.key)}>{column.header}</TableHead>
+                <TableHead key={String(column.key)} className="whitespace-nowrap px-3 py-3 text-xs font-black uppercase tracking-wide text-slate-500">{column.header}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -41,7 +41,7 @@ export function DataTable<T extends { id?: string }>({
               return (
                 <TableRow key={item.id ?? index}>
                   {columns.map((column) => (
-                    <TableCell key={String(column.key)}>
+                    <TableCell key={String(column.key)} className="px-3 py-3 align-middle">
                       {column.render ? column.render(item) : String(item[column.key as keyof T] ?? "")}
                     </TableCell>
                   ))}
@@ -57,12 +57,18 @@ export function DataTable<T extends { id?: string }>({
 
 
 export function StatusBadge({ value }: { value: string }) {
-  const variant = value.match(/active|paid|answered|live|issued/i)
+  const variant = value.match(/정상|active|paid|answered|live|issued/i)
     ? "success"
-    : value.match(/failed|refund|ending/i)
+    : value.match(/탈퇴|failed|refund|ending/i)
       ? "rose"
-      : value.match(/trial|scheduled|progress|assigned/i)
-        ? "warning"
-        : "slate";
+      : value.match(/휴면/i)
+        ? "slate"
+        : value.match(/trial|scheduled|progress|assigned/i)
+          ? "warning"
+          : "slate";
   return <Badge variant={variant}>{value}</Badge>;
+}
+
+export function MarketingBadge({ agreed }: { agreed: boolean }) {
+  return <Badge variant={agreed ? "default" : "slate"}>{agreed ? "동의" : "미동의"}</Badge>;
 }
