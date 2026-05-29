@@ -303,11 +303,141 @@ export const memberTimeline = [
   "Purchased Pro Annual renewal",
 ];
 
-export const orders = [
-  { id: "ORD-4821", member: "Avery Kim", product: "Pro Annual", amount: "$940", status: "Paid", date: "2026-05-26" },
-  { id: "ORD-4817", member: "Mina Lee", product: "Team seats x 8", amount: "$2,880", status: "Paid", date: "2026-05-24" },
-  { id: "ORD-4812", member: "Noah Park", product: "Starter Monthly", amount: "$29", status: "Refund review", date: "2026-05-23" },
-  { id: "ORD-4803", member: "Ethan Choi", product: "Pro Monthly", amount: "$79", status: "Failed", date: "2026-05-21" },
+export type AdminOrder = {
+  id: string;
+  member: string;
+  email: string;
+  phone: string;
+  userId: string;
+  product: string;
+  amount: string;
+  paymentAmount: number;
+  refundAmount: number;
+  status: string;
+  paymentStatus: string;
+  orderStatus: string;
+  shippingStatus: string;
+  date: string;
+  paidAt: string | null;
+  couponUsed: boolean;
+  pointsUsed: boolean;
+};
+
+export const orders: AdminOrder[] = [
+  {
+    id: "ORD-4924",
+    member: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    userId: "SM-1024",
+    product: "비즈니스 회화 집중반",
+    amount: "₩229,000",
+    paymentAmount: 229000,
+    refundAmount: 0,
+    status: "결제완료",
+    paymentStatus: "결제완료",
+    orderStatus: "완료",
+    shippingStatus: "배송대기",
+    date: "2026-05-29",
+    paidAt: "2026-05-29 09:18",
+    couponUsed: true,
+    pointsUsed: false,
+  },
+  {
+    id: "ORD-4923",
+    member: "민서 박",
+    email: "minseo.park@example.com",
+    phone: "010-3488-1023",
+    userId: "SM-1023",
+    product: "스페인어 베이직",
+    amount: "₩149,000",
+    paymentAmount: 149000,
+    refundAmount: 0,
+    status: "결제대기",
+    paymentStatus: "결제대기",
+    orderStatus: "주문접수",
+    shippingStatus: "배송전",
+    date: "2026-05-29",
+    paidAt: null,
+    couponUsed: false,
+    pointsUsed: true,
+  },
+  {
+    id: "ORD-4919",
+    member: "서준 이",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    userId: "SM-1022",
+    product: "영어 리스닝 스타터",
+    amount: "₩99,000",
+    paymentAmount: 99000,
+    refundAmount: 99000,
+    status: "환불요청",
+    paymentStatus: "환불요청",
+    orderStatus: "처리중",
+    shippingStatus: "배송대기",
+    date: "2026-05-28",
+    paidAt: "2026-05-28 17:42",
+    couponUsed: false,
+    pointsUsed: false,
+  },
+  {
+    id: "ORD-4917",
+    member: "서준 이",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    userId: "SM-1022",
+    product: "영어 리스닝 스타터",
+    amount: "₩99,000",
+    paymentAmount: 99000,
+    refundAmount: 0,
+    status: "결제완료",
+    paymentStatus: "결제완료",
+    orderStatus: "완료",
+    shippingStatus: "배송완료",
+    date: "2026-05-21",
+    paidAt: "2026-05-21 13:08",
+    couponUsed: false,
+    pointsUsed: false,
+  },
+  {
+    id: "ORD-4914",
+    member: "하린 최",
+    email: "harin.choi@example.com",
+    phone: "010-7752-1021",
+    userId: "SM-1021",
+    product: "일본어 문법 완성",
+    amount: "₩179,000",
+    paymentAmount: 179000,
+    refundAmount: 0,
+    status: "결제완료",
+    paymentStatus: "결제완료",
+    orderStatus: "완료",
+    shippingStatus: "배송중",
+    date: "2026-05-18",
+    paidAt: "2026-05-18 10:31",
+    couponUsed: true,
+    pointsUsed: true,
+  },
+  {
+    id: "ORD-4908",
+    member: "도윤 정",
+    email: "doyoon.jung@example.com",
+    phone: "010-6643-1020",
+    userId: "SM-1020",
+    product: "1:1 코칭",
+    amount: "₩50,000",
+    paymentAmount: 50000,
+    refundAmount: 50000,
+    status: "환불완료",
+    paymentStatus: "환불완료",
+    orderStatus: "취소",
+    shippingStatus: "배송없음",
+    date: "2026-05-12",
+    paidAt: "2026-05-12 16:26",
+    couponUsed: false,
+    pointsUsed: false,
+  },
 ];
 
 export const inquiries = [
