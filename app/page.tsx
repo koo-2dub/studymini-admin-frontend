@@ -14,7 +14,7 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow="Command center"
         title="A polished operating dashboard for every StudyMini admin workflow."
-        description="Monitor revenue, learners, support queues, content questions, campaigns, points, vouchers, and popup promotions from one modern SaaS workspace."
+        description="Monitor revenue, users, support queues, content questions, campaigns, points, vouchers, and popup promotions from one modern SaaS workspace."
         action={<Button size="lg">Review today <ArrowUpRight className="h-4 w-4" /></Button>}
       />
 
@@ -72,14 +72,14 @@ export default function DashboardPage() {
 
       <section className="mt-6 grid gap-6 xl:grid-cols-2">
         <DataTable
-          title="Recent members"
-          description="High-value learner accounts and engagement status."
+          title="최근 유저"
+          description="주요 유저 계정과 활동 상태입니다."
           data={members.slice(0, 4)}
           columns={[
-            { key: "name", header: "Member" },
-            { key: "plan", header: "Plan" },
-            { key: "status", header: "Status", render: (member) => <StatusBadge value={member.status} /> },
-            { key: "spend", header: "Spend" },
+            { key: "name", header: "유저" },
+            { key: "plan", header: "요금제" },
+            { key: "status", header: "상태", render: (member) => <StatusBadge value={member.status} /> },
+            { key: "spend", header: "결제액" },
           ]}
         />
         <DataTable
@@ -88,9 +88,9 @@ export default function DashboardPage() {
           data={orders}
           columns={[
             { key: "id", header: "Order" },
-            { key: "member", header: "Member" },
+            { key: "member", header: "유저" },
             { key: "amount", header: "Amount" },
-            { key: "status", header: "Status", render: (order) => <StatusBadge value={order.status} /> },
+            { key: "status", header: "상태", render: (order) => <StatusBadge value={order.status} /> },
           ]}
         />
       </section>

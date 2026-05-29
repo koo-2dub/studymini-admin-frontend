@@ -7,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { id: "overview", label: "Overview", icon: Sparkles },
-  { id: "orders", label: "Orders", icon: CreditCard },
-  { id: "lessons", label: "Lessons", icon: BookOpenCheck },
-  { id: "support", label: "Support", icon: MessageSquareText },
+  { id: "overview", label: "개요", icon: Sparkles },
+  { id: "orders", label: "주문", icon: CreditCard },
+  { id: "lessons", label: "레슨", icon: BookOpenCheck },
+  { id: "support", label: "문의", icon: MessageSquareText },
 ] as const;
 
 type Member = {
@@ -28,8 +28,8 @@ export function MemberTabs({ member, timeline }: { member: Member; timeline: str
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Member workspace</CardTitle>
-        <CardDescription>Client-side App Router tabs for account operations.</CardDescription>
+        <CardTitle>유저 관리 워크스페이스</CardTitle>
+        <CardDescription>유저 계정 운영에 필요한 정보를 탭으로 확인합니다.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-6 grid gap-2 rounded-2xl bg-slate-100 p-2 md:grid-cols-4">
@@ -54,14 +54,14 @@ export function MemberTabs({ member, timeline }: { member: Member; timeline: str
 
         {active === "overview" && (
           <div className="grid gap-4 md:grid-cols-3">
-            {["Plan: " + member.plan, "Segment: " + member.segment, "Points: " + member.points.toLocaleString()].map((item) => (
+            {["요금제: " + member.plan, "세그먼트: " + member.segment, "포인트: " + member.points.toLocaleString()].map((item) => (
               <div key={item} className="rounded-3xl border bg-white p-5 font-bold shadow-sm">{item}</div>
             ))}
           </div>
         )}
-        {active === "orders" && <Panel title="Payment history" items={[`${member.spend} lifetime spend`, "Latest renewal paid successfully", "No chargebacks in mock data"]} />}
-        {active === "lessons" && <Panel title="Learning activity" items={[`${member.lessons} lessons completed`, ...timeline.filter((item) => item.includes("lesson") || item.includes("Algebra") || item.includes("Physics"))]} />}
-        {active === "support" && <Panel title="Support context" items={["Preferred channel: email", "Last satisfaction score: 96%", "No escalations currently open"]} />}
+        {active === "orders" && <Panel title="결제 내역" items={[`${member.spend} 누적 결제`, "최근 갱신 결제 성공", "mock data 기준 차지백 없음"]} />}
+        {active === "lessons" && <Panel title="학습 활동" items={[`${member.lessons}개 레슨 완료`, ...timeline.filter((item) => item.includes("lesson") || item.includes("Algebra") || item.includes("Physics"))]} />}
+        {active === "support" && <Panel title="문의 컨텍스트" items={["선호 채널: 이메일", "최근 만족도 점수: 96%", "현재 에스컬레이션 없음"]} />}
       </CardContent>
     </Card>
   );
