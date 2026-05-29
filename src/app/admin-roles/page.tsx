@@ -1,0 +1,6 @@
+import { AppShell } from "@/components/admin/app-shell";
+import { PageHeader } from "@/components/admin/page-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { permissions, roles } from "@/lib/mock-data";
+export default function AdminRolesPage() { return <AppShell><PageHeader title="Admin Roles / Permissions" description="Super admin, General, Finance, CS, Content, Marketing, Learning Q&A 권한 매트릭스 UI입니다." primaryAction="권한 저장" /><Card><CardContent className="overflow-x-auto p-0"><Table><TableHeader><TableRow><TableHead>권한</TableHead>{roles.map((role) => <TableHead key={role}>{role}</TableHead>)}</TableRow></TableHeader><TableBody>{permissions.map((permission, row) => <TableRow key={permission}><TableCell className="font-bold">{permission}</TableCell>{roles.map((role, col) => <TableCell key={role}><label className="inline-flex items-center gap-2"><input type="checkbox" defaultChecked={col === 0 || (row + col) % 3 !== 0} className="h-4 w-4 accent-orange-500" /><span className="text-xs text-muted-foreground">허용</span></label></TableCell>)}</TableRow>)}</TableBody></Table></CardContent></Card></AppShell>; }

@@ -1,0 +1,5 @@
+import { AppShell } from "@/components/admin/app-shell";
+import { OrdersChart, RevenueChart } from "@/components/admin/mock-chart";
+import { PageHeader } from "@/components/admin/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+export default function AnalyticsPage() { return <AppShell><PageHeader title="Analytics" description="매출, 상품 판매, 쿠폰 성과, 팝업 성과, 문의 응답 시간을 목업 차트로 확인합니다." primaryAction="리포트 다운로드" /><div className="grid gap-6 xl:grid-cols-2"><Card><CardHeader><CardTitle>Sales overview / Revenue</CardTitle></CardHeader><CardContent><RevenueChart /></CardContent></Card><Card><CardHeader><CardTitle>Product sales</CardTitle></CardHeader><CardContent><OrdersChart /></CardContent></Card><Card><CardHeader><CardTitle>Coupon performance</CardTitle></CardHeader><CardContent><RevenueChart /></CardContent></Card><Card><CardHeader><CardTitle>Popup performance / Inquiry response time</CardTitle></CardHeader><CardContent><OrdersChart /></CardContent></Card></div></AppShell>; }
