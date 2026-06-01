@@ -17,8 +17,15 @@ export const navItems = [
   { title: "Dashboard", href: "/", icon: LineChart },
   { title: "Members", href: "/members", icon: UsersRound },
   { title: "Orders / Payments", href: "/orders", icon: CreditCard },
-  { title: "General inquiries", href: "/inquiries", icon: HelpCircle },
-  { title: "Lesson questions", href: "/lesson-questions", icon: BookOpenCheck },
+  {
+    title: "문의 관리",
+    href: "/inquiries",
+    icon: HelpCircle,
+    children: [
+      { title: "일반 문의", href: "/inquiries/general" },
+      { title: "학습 문의", href: "/inquiries/lesson" },
+    ],
+  },
   { title: "Coupons", href: "/coupons", icon: BadgePercent },
   { title: "Vouchers", href: "/vouchers", icon: WalletCards },
   { title: "Points", href: "/points", icon: Coins },
@@ -466,4 +473,291 @@ export const salesSeries = [
 export const alerts = [
   { icon: BellRing, title: "38 tickets need triage", detail: "5 high priority conversations are older than 2 hours." },
   { icon: ReceiptText, title: "Refund queue improved", detail: "Automated policy checks cleared 12 payment reviews." },
+];
+export type InquiryAnswer = {
+  answeredAt: string;
+  adminName: string;
+  content: string;
+};
+
+export type GeneralInquiryStatus = "미답변" | "답변완료" | "보류";
+
+export type GeneralInquiry = {
+  inquiryId: string;
+  userId: string;
+  userName: string;
+  email: string;
+  phone: string;
+  memberStatus: string;
+  status: GeneralInquiryStatus;
+  assignee: string;
+  createdAt: string;
+  answeredAt: string;
+  title: string;
+  content: string;
+  answerHistory: InquiryAnswer[];
+  internalMemo: string;
+  processLogs: string[];
+  attachments: string[];
+};
+
+export type LessonInquiryPublicStatus = "승인 대기" | "승인됨" | "휴지통";
+export type LessonInquiryAnswerStatus = "미답변" | "답변완료" | "보류";
+export type LessonInquiryWorkflowStatus = "승인 대기" | "승인됨" | "답변 완료" | "보류" | "휴지통";
+
+export type LessonInquiry = {
+  inquiryId: string;
+  userId: string;
+  userName: string;
+  email: string;
+  phone: string;
+  memberStatus: string;
+  workflowStatus: LessonInquiryWorkflowStatus;
+  publicStatus: LessonInquiryPublicStatus;
+  answerStatus: LessonInquiryAnswerStatus;
+  assignee: string;
+  createdAt: string;
+  answeredAt: string;
+  language: string;
+  courseStage: string;
+  lessonDay: string;
+  lessonTitle: string;
+  courseDisplay: string;
+  question: string;
+  content: string;
+  answerHistory: InquiryAnswer[];
+  internalMemo: string;
+  processLogs: string[];
+  attachments: string[];
+  deletedAt?: string;
+  deletedBy?: string;
+};
+
+export const generalInquiries: GeneralInquiry[] = [
+  {
+    inquiryId: "GINQ-20260601-001",
+    userId: "SM-1024",
+    userName: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    memberStatus: "정상",
+    status: "미답변",
+    assignee: "김운영",
+    createdAt: "2026-06-01 09:18",
+    answeredAt: "-",
+    title: "결제 문의 - 카드 승인 문자가 두 번 왔어요",
+    content: "비즈니스 회화 집중반 결제 후 카드 승인 알림이 두 번 도착했습니다. 실제로 중복 결제된 것인지 확인 부탁드립니다.",
+    answerHistory: [],
+    internalMemo: "주문 ORD-5028 결제 로그 확인 필요. PG 승인번호 2건 여부 체크.",
+    processLogs: ["2026-06-01 09:18 문의 접수", "2026-06-01 09:25 김운영 담당자 배정"],
+    attachments: ["card-alert.png"],
+  },
+  {
+    inquiryId: "GINQ-20260531-014",
+    userId: "SM-1023",
+    userName: "민서 박",
+    email: "minseo.park@example.com",
+    phone: "010-3488-1023",
+    memberStatus: "정상",
+    status: "답변완료",
+    assignee: "이서포트",
+    createdAt: "2026-05-31 16:42",
+    answeredAt: "2026-05-31 17:05",
+    title: "계정 문의 - 이메일 인증 메일이 오지 않습니다",
+    content: "회원가입 후 인증 메일을 여러 번 요청했지만 받은 편지함과 스팸함 모두에서 확인되지 않습니다.",
+    answerHistory: [
+      { answeredAt: "2026-05-31 17:05", adminName: "이서포트", content: "이메일 발송 로그를 확인했고 인증 메일을 재발송했습니다. 10분 내 수신되지 않으면 다른 이메일 주소로 변경을 도와드리겠습니다." },
+    ],
+    internalMemo: "메일 발송 성공. 도메인 수신 제한 가능성 안내함.",
+    processLogs: ["2026-05-31 16:42 문의 접수", "2026-05-31 17:05 답변 완료 처리"],
+    attachments: [],
+  },
+  {
+    inquiryId: "GINQ-20260530-009",
+    userId: "SM-1022",
+    userName: "서준 이",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    memberStatus: "정상",
+    status: "보류",
+    assignee: "박정산",
+    createdAt: "2026-05-30 11:20",
+    answeredAt: "-",
+    title: "환불 문의 - 수강 시작 전 취소 가능 여부",
+    content: "영어 리스닝 스타터를 구매했는데 아직 첫 강의를 듣지 않았습니다. 전액 환불이 가능한지 궁금합니다.",
+    answerHistory: [],
+    internalMemo: "환불 정책 예외 여부 확인 중. 결제일 2026-05-27.",
+    processLogs: ["2026-05-30 11:20 문의 접수", "2026-05-30 11:45 정책 확인 보류"],
+    attachments: [],
+  },
+  {
+    inquiryId: "GINQ-20260529-021",
+    userId: "SM-1020",
+    userName: "도윤 정",
+    email: "doyoon.jung@example.com",
+    phone: "010-6610-1020",
+    memberStatus: "정상",
+    status: "답변완료",
+    assignee: "김운영",
+    createdAt: "2026-05-29 14:06",
+    answeredAt: "2026-05-29 15:22",
+    title: "포인트 문의 - 포인트 사용 내역 확인 요청",
+    content: "지난 주문에서 포인트가 얼마나 사용되었는지 상세 내역을 알고 싶습니다.",
+    answerHistory: [
+      { answeredAt: "2026-05-29 15:22", adminName: "김운영", content: "ORD-4875 주문에서 8,000P가 사용되었습니다. 포인트 탭에서도 상세 내역을 확인하실 수 있습니다." },
+    ],
+    internalMemo: "포인트 사용 내역 정상.",
+    processLogs: ["2026-05-29 14:06 문의 접수", "2026-05-29 15:22 답변 완료 처리"],
+    attachments: [],
+  },
+  {
+    inquiryId: "GINQ-20260528-006",
+    userId: "SM-1018",
+    userName: "태오 임",
+    email: "taeo.lim@example.com",
+    phone: "010-1209-1018",
+    memberStatus: "정상",
+    status: "미답변",
+    assignee: "미배정",
+    createdAt: "2026-05-28 10:12",
+    answeredAt: "-",
+    title: "배송 문의 - 교재 배송지 변경",
+    content: "프랑스어 회화 교재 배송지를 회사 주소로 변경하고 싶습니다. 아직 배송 전이면 변경 부탁드립니다.",
+    answerHistory: [],
+    internalMemo: "배송 상태 확인 후 주소 변경 가능 여부 회신 필요.",
+    processLogs: ["2026-05-28 10:12 문의 접수"],
+    attachments: [],
+  },
+];
+
+export const lessonInquiries: LessonInquiry[] = [
+  {
+    inquiryId: "LINQ-20260601-007",
+    userId: "SM-1021",
+    userName: "하린 최",
+    email: "harin.choi@example.com",
+    phone: "010-7752-1021",
+    memberStatus: "휴면",
+    workflowStatus: "승인 대기",
+    publicStatus: "승인 대기",
+    answerStatus: "미답변",
+    assignee: "최튜터",
+    createdAt: "2026-06-01 08:55",
+    answeredAt: "-",
+    language: "일본어",
+    courseStage: "일본어 1단계",
+    lessonDay: "日目 2",
+    lessonTitle: "ありがとうございます",
+    courseDisplay: "일본어 1단계 / 日目 2 - ありがとうございます",
+    question: "ありがとうございます와 ありがとう의 차이가 궁금합니다.",
+    content: "강의에서 정중한 표현으로 ありがとうございます를 배웠는데 친구에게 말할 때는 ありがとう만 써도 되는지, 수업 상황에서는 어떤 표현이 자연스러운지 궁금합니다.",
+    answerHistory: [],
+    internalMemo: "승인 후 답변 필요. 표현 비교 예시 포함 권장.",
+    processLogs: ["2026-06-01 08:55 질문 등록", "2026-06-01 09:02 승인 검수 대기열 진입"],
+    attachments: [],
+  },
+  {
+    inquiryId: "LINQ-20260531-011",
+    userId: "SM-1022",
+    userName: "서준 이",
+    email: "seojoon.lee@example.com",
+    phone: "010-9082-1022",
+    memberStatus: "정상",
+    workflowStatus: "승인됨",
+    publicStatus: "승인됨",
+    answerStatus: "미답변",
+    assignee: "박튜터",
+    createdAt: "2026-05-31 20:12",
+    answeredAt: "-",
+    language: "영어",
+    courseStage: "영어 미션 1단계",
+    lessonDay: "Day 3",
+    lessonTitle: "Nice to meet you",
+    courseDisplay: "영어 미션 1단계 / Day 3 - Nice to meet you",
+    question: "Nice to meet you와 Nice meeting you는 언제 다르게 쓰나요?",
+    content: "처음 만났을 때와 헤어질 때 표현이 다르다고 들었습니다. 강의 예문에서는 하나만 나와서 실제 대화에서 어떻게 구분하는지 알고 싶어요.",
+    answerHistory: [],
+    internalMemo: "공개 승인 완료. 답변 대기.",
+    processLogs: ["2026-05-31 20:12 질문 등록", "2026-05-31 20:40 박튜터 승인"],
+    attachments: [],
+  },
+  {
+    inquiryId: "LINQ-20260530-018",
+    userId: "SM-1024",
+    userName: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    phone: "010-4821-1024",
+    memberStatus: "정상",
+    workflowStatus: "답변 완료",
+    publicStatus: "승인됨",
+    answerStatus: "답변완료",
+    assignee: "정튜터",
+    createdAt: "2026-05-30 13:31",
+    answeredAt: "2026-05-30 16:02",
+    language: "스페인어",
+    courseStage: "스페인어 2단계",
+    lessonDay: "Día 5",
+    lessonTitle: "¿Dónde está la estación?",
+    courseDisplay: "스페인어 2단계 / Día 5 - ¿Dónde está la estación?",
+    question: "está와 hay를 장소 설명에서 어떻게 구분하나요?",
+    content: "역이 어디에 있는지 묻는 문장에서는 está를 쓰는데, 주변에 역이 있는지 말할 때는 hay를 쓰는 것 같아 헷갈립니다.",
+    answerHistory: [
+      { answeredAt: "2026-05-30 16:02", adminName: "정튜터", content: "특정한 대상의 위치를 말할 때는 está를, 존재 여부를 말할 때는 hay를 사용합니다. 예: La estación está cerca. / Hay una estación cerca." },
+    ],
+    internalMemo: "문법 카드 링크 추후 연결.",
+    processLogs: ["2026-05-30 13:31 질문 등록", "2026-05-30 14:05 승인", "2026-05-30 16:02 답변 공개"],
+    attachments: ["spanish-note.jpg"],
+  },
+  {
+    inquiryId: "LINQ-20260529-004",
+    userId: "SM-1018",
+    userName: "태오 임",
+    email: "taeo.lim@example.com",
+    phone: "010-1209-1018",
+    memberStatus: "정상",
+    workflowStatus: "보류",
+    publicStatus: "승인 대기",
+    answerStatus: "보류",
+    assignee: "이튜터",
+    createdAt: "2026-05-29 18:04",
+    answeredAt: "-",
+    language: "프랑스어",
+    courseStage: "프랑스어 회화",
+    lessonDay: "Leçon 4",
+    lessonTitle: "Je voudrais un café",
+    courseDisplay: "프랑스어 회화 / Leçon 4 - Je voudrais un café",
+    question: "voudrais 발음이 강의와 다르게 들립니다.",
+    content: "제가 따라 하면 v 발음과 r 발음이 어색합니다. 발음 팁이나 입 모양 설명을 추가로 받을 수 있을까요?",
+    answerHistory: [],
+    internalMemo: "발음 파일 첨부 요청 여부 검토. 승인 전 보류.",
+    processLogs: ["2026-05-29 18:04 질문 등록", "2026-05-29 18:22 보류 처리"],
+    attachments: ["voice-recording.m4a"],
+  },
+  {
+    inquiryId: "LINQ-20260527-009",
+    userId: "SM-1020",
+    userName: "도윤 정",
+    email: "doyoon.jung@example.com",
+    phone: "010-6610-1020",
+    memberStatus: "정상",
+    workflowStatus: "휴지통",
+    publicStatus: "휴지통",
+    answerStatus: "미답변",
+    assignee: "김운영",
+    createdAt: "2026-05-27 12:48",
+    answeredAt: "-",
+    language: "중국어",
+    courseStage: "중국어 올인원",
+    lessonDay: "8강",
+    lessonTitle: "방향보어 정리",
+    courseDisplay: "중국어 올인원 / 8강 - 방향보어 정리",
+    question: "강의와 무관한 홍보성 문구가 포함된 질문",
+    content: "외부 링크 홍보 문구가 포함되어 운영 정책에 따라 비공개 휴지통으로 이동한 질문입니다.",
+    answerHistory: [],
+    internalMemo: "스팸성 콘텐츠. 영구 삭제 후보.",
+    processLogs: ["2026-05-27 12:48 질문 등록", "2026-05-27 13:02 김운영 휴지통 이동"],
+    attachments: [],
+    deletedAt: "2026-05-27 13:02",
+    deletedBy: "김운영",
+  },
 ];

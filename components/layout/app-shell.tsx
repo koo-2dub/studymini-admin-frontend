@@ -29,17 +29,37 @@ export function AppShell({ children }: { children: ReactNode }) {
             const Icon = item.icon;
             const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:bg-white hover:text-slate-950 hover:shadow-sm",
-                  active && "bg-white text-primary shadow-sm ring-1 ring-indigo-100",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.title}
-              </Link>
+              <div key={item.href}>
+                <Link
+                  href={item.children?.[0]?.href ?? item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:bg-white hover:text-slate-950 hover:shadow-sm",
+                    active && "bg-white text-primary shadow-sm ring-1 ring-indigo-100",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.title}
+                </Link>
+                {item.children && active ? (
+                  <div className="ml-7 mt-1 space-y-1 border-l border-indigo-100 pl-3">
+                    {item.children.map((child) => {
+                      const childActive = pathname.startsWith(child.href);
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={cn(
+                            "block rounded-xl px-3 py-2 text-xs font-bold text-slate-500 transition-all hover:bg-white hover:text-slate-950",
+                            childActive && "bg-indigo-50 text-primary",
+                          )}
+                        >
+                          {child.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
             );
           })}
         </nav>
