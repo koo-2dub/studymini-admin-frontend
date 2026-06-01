@@ -419,16 +419,177 @@ export const orders: AdminOrder[] = [
   },
 ];
 
-export const inquiries = [
-  { id: "INQ-304", subject: "Invoice name change", requester: "Mina Lee", priority: "Normal", status: "Open" },
-  { id: "INQ-305", subject: "Cannot access recorded lesson", requester: "Avery Kim", priority: "High", status: "In progress" },
-  { id: "INQ-306", subject: "Cancel team seat", requester: "Daniel Wu", priority: "Low", status: "Waiting" },
+export const adminAssignees = ["김운영", "이서포트", "박튜터", "정튜터", "미배정"] as const;
+export type AdminAssignee = (typeof adminAssignees)[number];
+export type InquiryAnswerStatus = "미답변" | "답변완료" | "보류";
+export type LessonVisibilityStatus = "승인 대기" | "승인됨" | "휴지통";
+
+export type GeneralInquiry = {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  title: string;
+  content: string;
+  answerStatus: InquiryAnswerStatus;
+  assignee: AdminAssignee;
+  inquiryDate: string;
+  answerDate: string;
+  answer: string;
+  logs: string[];
+};
+
+export const inquiries: GeneralInquiry[] = [
+  {
+    id: "INQ-304",
+    userId: "SM-1024",
+    userName: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    title: "영수증 발급 요청",
+    content: "비즈니스 회화 집중반 결제 건의 회사 제출용 영수증을 받을 수 있을까요? 결제자명과 수강자명이 달라서 증빙에 필요한 이름 변경 가능 여부도 함께 확인 부탁드립니다.",
+    answerStatus: "답변완료",
+    assignee: "김운영",
+    inquiryDate: "2026-05-29 10:12",
+    answerDate: "2026-05-29 11:03",
+    answer: "안녕하세요. 요청하신 영수증을 결제자명 기준으로 재발급해드렸습니다. 마이페이지 결제 내역에서도 다시 다운로드하실 수 있습니다.",
+    logs: ["2026-05-29 10:20 담당자 변경: 미배정 → 김운영", "2026-05-29 11:03 답변 완료 처리"],
+  },
+  {
+    id: "INQ-305",
+    userId: "SM-1022",
+    userName: "서준 이",
+    email: "seojoon.lee@example.com",
+    title: "녹화 강의 접근 오류",
+    content: "영어 리스닝 스타터 4강 녹화 영상 재생 버튼을 누르면 권한이 없다는 안내가 나옵니다. 결제는 완료했고 다른 강의는 정상적으로 재생됩니다.",
+    answerStatus: "미답변",
+    assignee: "미배정",
+    inquiryDate: "2026-05-30 09:48",
+    answerDate: "-",
+    answer: "",
+    logs: ["2026-05-30 09:48 문의 접수"],
+  },
+  {
+    id: "INQ-306",
+    userId: "SM-1021",
+    userName: "하린 최",
+    email: "harin.choi@example.com",
+    title: "휴면 계정 해제 문의",
+    content: "오랜만에 로그인했는데 휴면 상태라고 표시됩니다. 일본어 문법 완성 강의를 다시 보고 싶어서 계정 복구 방법을 알고 싶습니다.",
+    answerStatus: "보류",
+    assignee: "이서포트",
+    inquiryDate: "2026-05-30 14:31",
+    answerDate: "-",
+    answer: "본인 확인 자료 확인 후 안내 예정입니다.",
+    logs: ["2026-05-30 14:40 담당자 변경: 미배정 → 이서포트", "2026-05-30 15:02 본인 확인 자료 요청"],
+  },
+  {
+    id: "INQ-307",
+    userId: "SM-1019",
+    userName: "유나 강",
+    email: "yuna.kang@example.com",
+    title: "탈퇴 후 개인정보 삭제 확인",
+    content: "탈퇴 신청 후 개인정보 삭제가 완료되었는지 확인하고 싶습니다. 이메일 수신도 중단되었는지 함께 알려주세요.",
+    answerStatus: "미답변",
+    assignee: "정튜터",
+    inquiryDate: "2026-06-01 08:20",
+    answerDate: "-",
+    answer: "",
+    logs: ["2026-06-01 08:20 문의 접수", "2026-06-01 08:45 담당자 변경: 미배정 → 정튜터"],
+  },
 ];
 
-export const lessonQuestions = [
-  { id: "LQ-772", lesson: "Physics Lab 08", member: "Avery Kim", status: "Teacher assigned", age: "18m" },
-  { id: "LQ-773", lesson: "Geometry Proofs", member: "Noah Park", status: "Needs answer", age: "42m" },
-  { id: "LQ-774", lesson: "Essay Structure", member: "Mina Lee", status: "Answered", age: "2h" },
+export type LessonQuestion = {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  language: "영어" | "일본어" | "중국어" | "스페인어" | "프랑스어" | "독일어" | "이탈리아어";
+  course: string;
+  day: string;
+  lessonTitle: string;
+  question: string;
+  visibilityStatus: LessonVisibilityStatus;
+  answerStatus: InquiryAnswerStatus;
+  assignee: AdminAssignee;
+  inquiryDate: string;
+  answerDate: string;
+  answer: string;
+  logs: string[];
+};
+
+export const lessonQuestions: LessonQuestion[] = [
+  {
+    id: "LQ-772",
+    userId: "SM-1024",
+    userName: "지윤 김",
+    email: "jiyoon.kim@example.com",
+    language: "일본어",
+    course: "일본어 1단계",
+    day: "日目 2",
+    lessonTitle: "ありがとうございます",
+    question: "ありがとうございます와 ありがとう의 차이를 실제 회화에서 어느 정도로 구분해서 사용해야 하나요? 친구에게는 짧게 말해도 괜찮은지 궁금합니다.",
+    visibilityStatus: "승인됨",
+    answerStatus: "답변완료",
+    assignee: "박튜터",
+    inquiryDate: "2026-05-28 16:02",
+    answerDate: "2026-05-28 18:20",
+    answer: "ありがとう는 친한 사이에서 자연스럽고, ありがとうございます는 정중한 표현입니다. 수업 예문처럼 처음 만난 사람이나 선생님께는 정중형을 권장합니다.",
+    logs: ["2026-05-28 16:12 승인됨", "2026-05-28 16:20 담당자 변경: 미배정 → 박튜터", "2026-05-28 18:20 답변 완료 처리"],
+  },
+  {
+    id: "LQ-773",
+    userId: "SM-1022",
+    userName: "서준 이",
+    email: "seojoon.lee@example.com",
+    language: "영어",
+    course: "영어 미션 1단계",
+    day: "Day 4",
+    lessonTitle: "Listening for gist",
+    question: "dictation을 할 때 관사 a, the가 자꾸 들리지 않습니다. 전체 의미를 먼저 잡는 연습과 세부 단어를 받아쓰는 연습 중 무엇을 먼저 해야 할까요?",
+    visibilityStatus: "승인 대기",
+    answerStatus: "미답변",
+    assignee: "미배정",
+    inquiryDate: "2026-05-30 12:14",
+    answerDate: "-",
+    answer: "",
+    logs: ["2026-05-30 12:14 학습 문의 접수"],
+  },
+  {
+    id: "LQ-774",
+    userId: "SM-1018",
+    userName: "준호 임",
+    email: "junho.lim@example.com",
+    language: "프랑스어",
+    course: "프랑스어 회화",
+    day: "Jour 3",
+    lessonTitle: "Je voudrais",
+    question: "Je veux와 Je voudrais를 식당 주문 상황에서 어떻게 다르게 써야 하는지 예문을 더 보고 싶습니다.",
+    visibilityStatus: "승인됨",
+    answerStatus: "보류",
+    assignee: "정튜터",
+    inquiryDate: "2026-05-31 09:05",
+    answerDate: "-",
+    answer: "예문 추가 자료 확인 중입니다.",
+    logs: ["2026-05-31 09:20 담당자 변경: 미배정 → 정튜터"],
+  },
+  {
+    id: "LQ-775",
+    userId: "SM-1020",
+    userName: "도윤 정",
+    email: "doyoon.jung@example.com",
+    language: "중국어",
+    course: "중국어 올인원",
+    day: "8강",
+    lessonTitle: "了의 용법",
+    question: "문장 끝의 了와 동사 뒤의 了를 구분하는 기준이 아직 헷갈립니다. 같은 문장에서 둘 다 나오는 경우도 있나요?",
+    visibilityStatus: "휴지통",
+    answerStatus: "미답변",
+    assignee: "이서포트",
+    inquiryDate: "2026-06-01 07:50",
+    answerDate: "-",
+    answer: "",
+    logs: ["2026-06-01 07:55 중복 문의로 휴지통 이동", "2026-06-01 08:10 담당자 변경: 미배정 → 이서포트"],
+  },
 ];
 
 export const coupons = [
