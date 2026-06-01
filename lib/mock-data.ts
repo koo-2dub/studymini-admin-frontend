@@ -420,15 +420,102 @@ export const orders: AdminOrder[] = [
 ];
 
 export const inquiries = [
-  { id: "INQ-304", subject: "Invoice name change", requester: "Mina Lee", priority: "Normal", status: "Open" },
-  { id: "INQ-305", subject: "Cannot access recorded lesson", requester: "Avery Kim", priority: "High", status: "In progress" },
-  { id: "INQ-306", subject: "Cancel team seat", requester: "Daniel Wu", priority: "Low", status: "Waiting" },
+  {
+    id: "INQ-304",
+    subject: "Invoice name change request after company reimbursement review",
+    requester: "지윤 김",
+    priority: "Normal",
+    category: "Billing",
+    status: "Open",
+    createdAt: "2026-05-29 10:12",
+    content: "회사 비용 처리 때문에 결제 영수증의 수신자명을 변경하고 싶습니다. 기존 영수증은 개인명으로 발급되어 있어 회계팀에서 반려되었습니다. 주문번호 ORD-4924의 영수증을 회사명으로 다시 발급할 수 있는지 확인 부탁드립니다. 필요한 사업자 정보는 답변을 주시면 바로 전달하겠습니다.",
+    user: { id: "SM-1024", name: "지윤 김", email: "jiyoon.kim@example.com", phone: "010-4821-1024", customerType: "구매회원" },
+    answerHistory: [
+      { admin: "Admin Yuna", answeredAt: "2026-05-29 11:05", message: "영수증 재발급 가능 여부를 결제 기록과 함께 확인 중입니다." },
+    ],
+  },
+  {
+    id: "INQ-305",
+    subject: "Cannot access recorded lesson on mobile browser",
+    requester: "Avery Kim",
+    priority: "High",
+    category: "Technical",
+    status: "In progress",
+    createdAt: "2026-05-28 16:40",
+    content: "모바일 브라우저에서 녹화 강의 재생 버튼이 회색으로 비활성화됩니다. 데스크톱에서는 정상 재생되지만 출퇴근 시간에 모바일로 수강해야 해서 빠른 확인이 필요합니다. 캐시 삭제와 재로그인은 이미 시도했습니다.",
+    user: { id: "SM-1022", name: "Avery Kim", email: "avery.kim@example.com", phone: "010-9912-1022", customerType: "구매회원" },
+    answerHistory: [
+      { admin: "Admin Joon", answeredAt: "2026-05-28 17:20", message: "모바일 재생 권한과 기기 정보를 확인했습니다. 플레이어 로그를 추가로 점검하겠습니다." },
+    ],
+  },
+  {
+    id: "INQ-306",
+    subject: "Cancel team seat before next renewal date",
+    requester: "Daniel Wu",
+    priority: "Low",
+    category: "Account",
+    status: "Waiting",
+    createdAt: "2026-05-27 09:18",
+    content: "팀 플랜에서 사용하지 않는 좌석 1개를 다음 갱신 전에 제거하고 싶습니다. 현재 좌석별 학습 이력은 유지되어야 하며, 다음 청구서부터 변경된 좌석 수가 반영되면 됩니다.",
+    user: { id: "SM-1021", name: "Daniel Wu", email: "daniel.wu@example.com", phone: "010-7810-1021", customerType: "구매회원" },
+    answerHistory: [
+      { admin: "Admin Mina", answeredAt: "2026-05-27 10:02", message: "팀 관리자 권한 확인을 요청드렸습니다. 확인 후 좌석 조정 절차를 안내하겠습니다." },
+    ],
+  },
 ];
 
 export const lessonQuestions = [
-  { id: "LQ-772", lesson: "Physics Lab 08", member: "Avery Kim", status: "Teacher assigned", age: "18m" },
-  { id: "LQ-773", lesson: "Geometry Proofs", member: "Noah Park", status: "Needs answer", age: "42m" },
-  { id: "LQ-774", lesson: "Essay Structure", member: "Mina Lee", status: "Answered", age: "2h" },
+  {
+    id: "LQ-772",
+    member: "지윤 김",
+    status: "Teacher assigned",
+    createdAt: "2026-05-29 14:26",
+    question: "스페인어 베이직 12강에서 직접목적격 대명사를 동사 앞에 두는 경우와 동사 뒤에 붙이는 경우가 모두 나오는데, 두 문장이 모두 가능한 상황의 뉘앙스 차이가 궁금합니다. 예문 3번의 lo quiero comprar와 quiero comprarlo가 시험 답안에서 같은 점수로 인정되는지도 알려주세요.",
+    user: { id: "SM-1024", name: "지윤 김", email: "jiyoon.kim@example.com", phone: "010-4821-1024" },
+    lesson: { id: "LES-SP-012", title: "스페인어 베이직 12강 · 직접목적격 대명사 활용", course: "스페인어 베이직", teacher: "Teacher Elena", href: "/lesson-questions/LQ-772#lesson" },
+    answerHistory: [
+      { admin: "Teacher Elena", answeredAt: "2026-05-29 15:10", message: "두 형태 모두 문법적으로 가능합니다. 조동사 구조에서는 대명사를 앞에 두거나 부정사 뒤에 붙일 수 있으며 의미 차이는 거의 없습니다." },
+    ],
+  },
+  {
+    id: "LQ-773",
+    member: "민서 박",
+    status: "Needs answer",
+    createdAt: "2026-05-28 18:44",
+    question: "영어 리스닝 스타터 04강 dictation 문제에서 will have been과 would have been의 발음이 너무 비슷하게 들립니다. 실제 대화 속에서 둘을 구분할 때 강세나 앞뒤 문맥 중 무엇을 우선으로 봐야 하나요?",
+    user: { id: "SM-1023", name: "민서 박", email: "minseo.park@example.com", phone: "010-3488-1023" },
+    lesson: { id: "LES-EN-004", title: "영어 리스닝 스타터 04강 · 조동사 완료형 듣기", course: "영어 리스닝 스타터", teacher: "Teacher Olivia", href: "/lesson-questions/LQ-773#lesson" },
+    answerHistory: [],
+  },
+  {
+    id: "LQ-774",
+    member: "Avery Kim",
+    status: "Answered",
+    createdAt: "2026-05-27 11:08",
+    question: "Essay Structure 강의의 thesis statement 예시에서 although로 시작하는 양보절을 먼저 쓰는 방식이 소개됐습니다. 실제 IELTS writing task 2에서도 이런 구조를 첫 문장에 사용해도 자연스러운지, 아니면 두 번째 문장에 배치하는 편이 안전한지 궁금합니다.",
+    user: { id: "SM-1022", name: "Avery Kim", email: "avery.kim@example.com", phone: "010-9912-1022" },
+    lesson: { id: "LES-WR-009", title: "Essay Structure · Thesis statement and concession", course: "Academic Writing", teacher: "Teacher Grace", href: "/lesson-questions/LQ-774#lesson" },
+    answerHistory: [
+      { admin: "Teacher Grace", answeredAt: "2026-05-27 13:30", message: "IELTS에서도 사용할 수 있습니다. 다만 첫 문장이 길어질 경우 핵심 입장이 흐려질 수 있으므로 두 번째 문장에 배치하는 방식을 추천합니다." },
+    ],
+  },
+];
+
+export const deletedLessonQuestions = [
+  {
+    id: "LQ-761",
+    member: "서준 이",
+    question: "HSK 실전반 08강 독해 지문 2번에서 접속사 위치를 잘못 이해한 것 같습니다. 해설 기준으로 다시 확인 부탁드립니다.",
+    deletedAt: "2026-05-26 09:42",
+    deletedBy: "Admin Joon",
+  },
+  {
+    id: "LQ-758",
+    member: "하린 최",
+    question: "프랑스어 회화 03강 발음 질문을 중복으로 올렸습니다. 이전 문의에 답변이 달려 이 항목은 휴지통으로 이동했습니다.",
+    deletedAt: "2026-05-24 17:15",
+    deletedBy: "Admin Mina",
+  },
 ];
 
 export const coupons = [
