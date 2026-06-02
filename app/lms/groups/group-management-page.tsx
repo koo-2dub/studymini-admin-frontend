@@ -1,7 +1,8 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -85,6 +86,15 @@ export function GroupManagementPage() {
         eyebrow="LMS management"
         title="그룹 관리"
         description="기간제 수강 권한을 제공하는 마케팅, B2B, 내부 테스트 그룹을 관리합니다."
+        action={
+          <Link
+            href="/lms/groups/create"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-all hover:bg-secondary/80"
+          >
+            <Plus className="h-4 w-4" />
+            그룹 생성
+          </Link>
+        }
       />
 
       <section className="mb-6 grid gap-4 md:grid-cols-4">
