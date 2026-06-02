@@ -27,7 +27,47 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="mt-8 space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const children = item.children;
+            const active = children
+              ? children.some((child) => pathname.startsWith(child.href))
+              : item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+
+            if (children) {
+              return (
+                <div key={item.title}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:bg-white hover:text-slate-950 hover:shadow-sm",
+                      active && "bg-white text-primary shadow-sm ring-1 ring-indigo-100",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.title}
+                  </div>
+                  <div className="mt-1 space-y-1.5 pl-7">
+                    {children.map((child) => {
+                      const childActive = pathname.startsWith(child.href);
+
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={cn(
+                            "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all hover:bg-white hover:text-slate-950 hover:shadow-sm",
+                            childActive && "bg-white text-primary shadow-sm ring-1 ring-indigo-100",
+                          )}
+                        >
+                          {child.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
