@@ -1,3 +1,5 @@
+import { lessons as lmsLessons, type Lesson } from "../lessons/data";
+
 export type CourseVisibility = "공개" | "비공개";
 
 export type CourseLesson = {
@@ -5,6 +7,7 @@ export type CourseLesson = {
   lessonName: string;
   visibility: CourseVisibility;
   contentCount: number;
+  updatedAt: string;
 };
 
 export type CourseClass = {
@@ -17,85 +20,44 @@ export type CourseClass = {
   lessons: CourseLesson[];
 };
 
-function createLessons(prefix: string, count: number, privateLessonNumbers: number[] = []): CourseLesson[] {
-  return Array.from({ length: count }, (_, index) => {
-    const lessonNumber = index + 1;
-    const isPrivate = privateLessonNumbers.includes(lessonNumber);
-
-    return {
-      id: `${prefix}-${String(lessonNumber).padStart(2, "0")}`,
-      lessonName: `${lessonNumber}일차`,
-      visibility: isPrivate ? "비공개" : "공개",
-      contentCount: isPrivate ? 2 : 3 + (lessonNumber % 2),
-    };
-  });
+function toCourseClassId(lesson: Lesson) {
+  return lesson.id.replace(/^LSN-/, "CLS-").replace(/-\d{2}$/, "");
 }
 
-export const courseClasses: CourseClass[] = [
-  {
-    id: "CLS-JP-BSC-01",
-    language: "일본어",
-    course: "베이직",
-    className: "일본어 1단계",
-    visibility: "공개",
-    updatedAt: "2026-05-31",
-    lessons: createLessons("L-JP-BSC-01", 30, [29, 30]),
-  },
-  {
-    id: "CLS-JP-BSC-02",
-    language: "일본어",
-    course: "베이직",
-    className: "일본어 2단계",
-    visibility: "공개",
-    updatedAt: "2026-05-27",
-    lessons: createLessons("L-JP-BSC-02", 28, [27, 28]),
-  },
-  {
-    id: "CLS-JP-GRM-01",
-    language: "일본어",
-    course: "문법 완성",
-    className: "일본어 문법 1단계",
-    visibility: "비공개",
-    updatedAt: "2026-05-23",
-    lessons: createLessons("L-JP-GRM-01", 24, [1, 2, 23, 24]),
-  },
-  {
-    id: "CLS-EN-LSN-01",
-    language: "영어",
-    course: "리스닝 스타터",
-    className: "영어 리스닝 1단계",
-    visibility: "공개",
-    updatedAt: "2026-05-25",
-    lessons: createLessons("L-EN-LSN-01", 26, [26]),
-  },
-  {
-    id: "CLS-EN-LSN-02",
-    language: "영어",
-    course: "리스닝 스타터",
-    className: "영어 리스닝 2단계",
-    visibility: "비공개",
-    updatedAt: "2026-05-22",
-    lessons: createLessons("L-EN-LSN-02", 22, [1, 21, 22]),
-  },
-  {
-    id: "CLS-ES-BSC-01",
-    language: "스페인어",
-    course: "베이직",
-    className: "스페인어 1단계",
-    visibility: "공개",
-    updatedAt: "2026-05-20",
-    lessons: createLessons("L-ES-BSC-01", 30, [30]),
-  },
-  {
-    id: "CLS-ES-BSC-02",
-    language: "스페인어",
-    course: "베이직",
-    className: "스페인어 2단계",
-    visibility: "공개",
-    updatedAt: "2026-05-18",
-    lessons: createLessons("L-ES-BSC-02", 28, [27, 28]),
-  },
-];
+function toCourseLesson(lesson: Lesson): CourseLesson {
+  return {
+    id: lesson.id,
+    lessonName: lesson.lessonName,
+    visibility: lesson.visibility,
+    contentCount: lesson.contents.length,
+    updatedAt: lesson.updatedAt,
+  };
+}
+
+const classKeys = Array.from(
+  new Set(lmsLessons.map((lesson) => `${lesson.language}|${lesson.course}|${lesson.className}`)),
+);
+
+export const courseClasses: CourseClass[] = classKeys.map((classKey) => {
+  const [language, course, className] = classKey.split("|");
+  const classLessons = lmsLessons.filter(
+    (lesson) => lesson.language === language && lesson.course === course && lesson.className === className,
+  );
+  const hasPrivateLesson = classLessons.some((lesson) => lesson.visibility === "비공개");
+  const latestUpdatedAt = classLessons
+    .map((lesson) => lesson.updatedAt)
+    .sort((first, second) => second.localeCompare(first))[0];
+
+  return {
+    id: toCourseClassId(classLessons[0]),
+    language,
+    course,
+    className,
+    visibility: hasPrivateLesson ? "비공개" : "공개",
+    updatedAt: latestUpdatedAt,
+    lessons: classLessons.map(toCourseLesson),
+  };
+});
 
 export const courseVisibilityOptions: Array<"전체" | CourseVisibility> = ["전체", "공개", "비공개"];
 

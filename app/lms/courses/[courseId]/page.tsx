@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, GraduationCap, Languages, Layers3 } from "lucide-react";
+import { ArrowLeft, BookOpen, GraduationCap, Languages, Layers3, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -42,13 +42,24 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
         title="수업 상세"
         description="수업의 기본 정보와 포함된 레슨 구성을 확인합니다."
         action={
-          <Link
-            href="/lms/courses"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-all hover:bg-secondary/80"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            목록으로
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/lms/courses"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-all hover:bg-secondary/80"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              목록으로
+            </Link>
+            <button
+              type="button"
+              disabled
+              className="inline-flex h-10 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground opacity-60"
+              title="수업 수정 기능은 준비 중입니다."
+            >
+              <Pencil className="h-4 w-4" />
+              수업 수정
+            </button>
+          </div>
         }
       />
       <section className="mb-6 grid gap-4 md:grid-cols-4">
@@ -95,7 +106,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
               <BookOpen className="h-5 w-5 text-indigo-500" />
               <CardTitle>포함된 레슨 목록</CardTitle>
             </div>
-            <CardDescription>레슨명, 공개 여부, 콘텐츠 수를 표시합니다.</CardDescription>
+            <CardDescription>레슨명, 공개 여부, 콘텐츠 수, 수정일을 표시합니다.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
@@ -104,16 +115,32 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
                   <TableHead>레슨명</TableHead>
                   <TableHead>공개 여부</TableHead>
                   <TableHead>콘텐츠 수</TableHead>
+                  <TableHead>수정일</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {courseClass.lessons.map((lesson) => (
-                  <TableRow key={lesson.id}>
-                    <TableCell className="min-w-32 font-bold text-slate-900">{lesson.lessonName}</TableCell>
-                    <TableCell>
-                      <Badge variant={lesson.visibility === "공개" ? "success" : "slate"}>{lesson.visibility}</Badge>
+                  <TableRow key={lesson.id} className="cursor-pointer hover:bg-slate-50">
+                    <TableCell className="min-w-32 p-0 font-bold text-slate-900">
+                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
+                        {lesson.lessonName}
+                      </Link>
                     </TableCell>
-                    <TableCell className="font-semibold text-slate-900">{lesson.contentCount}개</TableCell>
+                    <TableCell className="p-0">
+                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
+                        <Badge variant={lesson.visibility === "공개" ? "success" : "slate"}>{lesson.visibility}</Badge>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="p-0 font-semibold text-slate-900">
+                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
+                        {lesson.contentCount}개
+                      </Link>
+                    </TableCell>
+                    <TableCell className="p-0">
+                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
+                        {lesson.updatedAt}
+                      </Link>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
