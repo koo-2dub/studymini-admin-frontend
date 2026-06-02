@@ -225,7 +225,7 @@ export default async function CourseCatalogDetailPage({
           <CardDescription>수업명, 단계, 레슨 수, 공개상태를 확인하고 수업 상세로 이동합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[720px]">
+          <Table className="min-w-[720px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-44">수업명</TableHead>
@@ -274,7 +274,7 @@ export default async function CourseCatalogDetailPage({
           <CardDescription>이 코스가 포함된 패키지 판매 단위를 확인합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[760px]">
+          <Table className="min-w-[760px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-52">패키지명</TableHead>
@@ -291,12 +291,7 @@ export default async function CourseCatalogDetailPage({
                     <span className="line-clamp-2 leading-5">{lmsPackage.displayName}</span>
                   </TableCell>
                   <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
-                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">
-                    <div className="space-y-1">
-                      <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
-                      <Badge variant="warning">배송 필요</Badge>
-                    </div>
-                  </TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</TableCell>
                   <TableCell className="whitespace-nowrap">
                     <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
                   </TableCell>

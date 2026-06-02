@@ -142,7 +142,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           <CardDescription>패키지는 코스를 포함하며, 코스는 반드시 특정 언어에 소속됩니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[1040px]">
+          <Table className="min-w-[1040px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">순서</TableHead>
@@ -166,12 +166,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                     <p className="mt-1 font-mono text-xs text-slate-500">{course.id}</p>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <div className="space-y-1">
-                      <p>{formatWon(getPaperDigitalOption(course.productOptions).price)}</p>
-                      <Badge variant="warning">배송 필요</Badge>
-                    </div>
-                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{formatWon(getPaperDigitalOption(course.productOptions).price)}</TableCell>
                   <TableCell className="whitespace-nowrap">{course.classCount}개</TableCell>
                   <TableCell className="whitespace-nowrap">{course.lessonCount}개</TableCell>
                   <TableCell className="whitespace-nowrap">{course.packageCount}개</TableCell>

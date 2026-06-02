@@ -190,7 +190,7 @@ export function CourseCatalogManagementPage() {
           <CardDescription>목록의 아무 행이나 클릭하면 코스 상세 화면으로 이동합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[1120px]">
+          <Table className="min-w-[1120px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-56">코스명</TableHead>

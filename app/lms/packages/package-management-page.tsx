@@ -183,7 +183,7 @@ export function PackageManagementPage() {
           <CardDescription>단일 언어·복수 언어 패키지를 모두 표시합니다. 행을 클릭하면 패키지 상세로 이동합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[1320px]">
+          <Table className="min-w-[1320px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-64">패키지명</TableHead>
