@@ -190,19 +190,19 @@ export function CourseCatalogManagementPage() {
           <CardDescription>목록의 아무 행이나 클릭하면 코스 상세 화면으로 이동합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1120px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
-                <TableHead>코스명</TableHead>
-                <TableHead>언어</TableHead>
-                <TableHead>디지털 가격</TableHead>
-                <TableHead>페이퍼+디지털 가격</TableHead>
-                <TableHead>판매상태</TableHead>
-                <TableHead>공개상태</TableHead>
-                <TableHead>포함 수업 수</TableHead>
-                <TableHead>포함 레슨 수</TableHead>
-                <TableHead>포함 패키지 수</TableHead>
-                <TableHead>수정일</TableHead>
+                <TableHead className="min-w-56">코스명</TableHead>
+                <TableHead className="whitespace-nowrap">언어</TableHead>
+                <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">판매상태</TableHead>
+                <TableHead className="whitespace-nowrap">공개상태</TableHead>
+                <TableHead className="whitespace-nowrap">포함 수업 수</TableHead>
+                <TableHead className="whitespace-nowrap">포함 레슨 수</TableHead>
+                <TableHead className="whitespace-nowrap">포함 패키지 수</TableHead>
+                <TableHead className="whitespace-nowrap">수정일</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,25 +219,22 @@ export function CourseCatalogManagementPage() {
                     }
                   }}
                 >
-                  <TableCell className="min-w-48 font-bold text-slate-900">{course.displayName}</TableCell>
-                  <TableCell>{course.language}</TableCell>
-                  <TableCell className="font-semibold text-slate-900">{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
-                  <TableCell className="font-semibold text-slate-900">
-                    <div className="space-y-1">
-                      <p>{formatWon(getPaperDigitalOption(course.productOptions).price)}</p>
-                      <Badge variant="warning">배송 필요</Badge>
-                    </div>
+                  <TableCell className="min-w-56 max-w-72 font-bold text-slate-900">
+                    <span className="line-clamp-2 leading-5">{course.displayName}</span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">{course.language}</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getPaperDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Badge variant={getSalesStatusTone(course.salesStatus)}>{course.salesStatus}</Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <Badge variant={course.visibility === "공개" ? "success" : "slate"}>{course.visibility}</Badge>
                   </TableCell>
-                  <TableCell className="font-semibold text-slate-900">{course.classCount}개</TableCell>
-                  <TableCell className="font-semibold text-slate-900">{course.lessonCount}개</TableCell>
-                  <TableCell className="font-semibold text-slate-900">{course.packageCount}개</TableCell>
-                  <TableCell>{course.updatedAt}</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{course.classCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{course.lessonCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{course.packageCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.updatedAt}</TableCell>
                 </TableRow>
               ))}
               {filteredCourses.length === 0 && (

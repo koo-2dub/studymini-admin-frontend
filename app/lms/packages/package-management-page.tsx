@@ -47,7 +47,6 @@ export function PackageManagementPage() {
     const reviewPackages = packageSummaries.filter(
       (lmsPackage) => lmsPackage.salesStatus !== "판매중" || lmsPackage.visibility === "비공개",
     );
-    const totalRevenue = packageSummaries.reduce((sum, lmsPackage) => sum + lmsPackage.revenue, 0);
     const averageDiscountRate = packageSummaries.length
       ? packageSummaries.reduce((sum, lmsPackage) => sum + getDigitalOption(lmsPackage.optionSummaries).discountRate, 0) / packageSummaries.length
       : 0;
@@ -56,7 +55,6 @@ export function PackageManagementPage() {
       totalCount: packageSummaries.length,
       sellingCount: sellingPackages.length,
       reviewCount: reviewPackages.length,
-      totalRevenue,
       averageDiscountRate,
     };
   }, []);
@@ -120,11 +118,10 @@ export function PackageManagementPage() {
         }
       />
 
-      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="전체 패키지" value={String(summary.totalCount)} change="Mock 데이터 기준" tone="indigo" />
         <StatCard label="판매중" value={String(summary.sellingCount)} change="현재 판매 가능" tone="emerald" />
         <StatCard label="검수 필요" value={String(summary.reviewCount)} change="비공개 또는 판매중지" tone="amber" />
-        <StatCard label="패키지 매출" value={formatWon(summary.totalRevenue)} change="결제 완료 기준" tone="rose" />
         <StatCard label="평균 할인율" value={`${summary.averageDiscountRate.toFixed(1)}%`} change="정가 합계 대비" tone="indigo" />
       </section>
 
@@ -186,20 +183,20 @@ export function PackageManagementPage() {
           <CardDescription>단일 언어·복수 언어 패키지를 모두 표시합니다. 행을 클릭하면 패키지 상세로 이동합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1320px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
-                <TableHead>패키지명</TableHead>
-                <TableHead>언어</TableHead>
-                <TableHead>포함 코스</TableHead>
-                <TableHead>코스 수</TableHead>
-                <TableHead>수업/레슨</TableHead>
-                <TableHead>디지털 가격</TableHead>
-                <TableHead>페이퍼+디지털 가격</TableHead>
-                <TableHead>할인율</TableHead>
-                <TableHead>판매상태</TableHead>
-                <TableHead>주문</TableHead>
-                <TableHead>수정일</TableHead>
+                <TableHead className="min-w-64">패키지명</TableHead>
+                <TableHead className="min-w-32 whitespace-nowrap">언어</TableHead>
+                <TableHead className="min-w-60">포함 코스</TableHead>
+                <TableHead className="whitespace-nowrap">코스 수</TableHead>
+                <TableHead className="min-w-24 whitespace-nowrap">수업/레슨</TableHead>
+                <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">할인율</TableHead>
+                <TableHead className="whitespace-nowrap">판매상태</TableHead>
+                <TableHead className="whitespace-nowrap">공개상태</TableHead>
+                <TableHead className="whitespace-nowrap">수정일</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -216,37 +213,31 @@ export function PackageManagementPage() {
                     }
                   }}
                 >
-                  <TableCell className="min-w-64 font-bold text-slate-900">
-                    <div>{lmsPackage.displayName}</div>
+                  <TableCell className="min-w-64 max-w-80 font-bold text-slate-900">
+                    <div className="line-clamp-2 leading-5">{lmsPackage.displayName}</div>
                     <div className="mt-1 font-mono text-xs font-semibold text-slate-500">{lmsPackage.id}</div>
                   </TableCell>
                   <TableCell className="min-w-32">
                     <Badge variant={lmsPackage.languageScope === "복수 언어" ? "warning" : "default"}>{lmsPackage.languageScope}</Badge>
                     <div className="mt-1 text-xs font-semibold text-slate-500">{lmsPackage.languages.join(", ")}</div>
                   </TableCell>
-                  <TableCell className="min-w-52 text-sm font-semibold text-slate-700">
-                    {lmsPackage.courses.map((course) => `${course.language} ${course.name}`).join(" · ")}
+                  <TableCell className="min-w-60 max-w-72 text-sm font-semibold text-slate-700">
+                    <span className="line-clamp-2 leading-5">{lmsPackage.courses.map((course) => `${course.language} ${course.name}`).join(" · ")}</span>
                   </TableCell>
-                  <TableCell>{lmsPackage.courses.length}개</TableCell>
-                  <TableCell>{lmsPackage.classCount}개 / {lmsPackage.lessonCount}개</TableCell>
-                  <TableCell className="font-bold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
-                  <TableCell className="font-bold text-slate-900">
-                    <div className="space-y-1">
-                      <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
-                      <Badge variant="warning">배송 필요</Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-bold text-indigo-700">
+                  <TableCell className="whitespace-nowrap">{lmsPackage.courses.length}개</TableCell>
+                  <TableCell className="min-w-24 whitespace-nowrap">{lmsPackage.classCount}개 / {lmsPackage.lessonCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap font-bold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap font-bold text-slate-900">{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap font-bold text-indigo-700">
                     {getDigitalOption(lmsPackage.optionSummaries).discountRate.toFixed(1)}% / {getPaperDigitalOption(lmsPackage.optionSummaries).discountRate.toFixed(1)}%
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
-                      <div><Badge variant={lmsPackage.visibility === "공개" ? "success" : "slate"}>{lmsPackage.visibility}</Badge></div>
-                    </div>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
                   </TableCell>
-                  <TableCell>{lmsPackage.paidOrderCount} / {lmsPackage.orderCount}건</TableCell>
-                  <TableCell>{lmsPackage.updatedAt}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge variant={lmsPackage.visibility === "공개" ? "success" : "slate"}>{lmsPackage.visibility}</Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{lmsPackage.updatedAt}</TableCell>
                 </TableRow>
               ))}
               {filteredPackages.length === 0 && (

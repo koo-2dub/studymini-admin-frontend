@@ -112,7 +112,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
 
         <Card>
           <CardHeader>
-            <CardTitle>상품 옵션 / 주문 요약</CardTitle>
+            <CardTitle>상품 옵션 / 할인율</CardTitle>
             <CardDescription>디지털과 페이퍼 + 디지털은 운영자가 직접 입력한 별도 판매 옵션입니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -128,18 +128,10 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant={option.isSelling ? "success" : "slate"}>{option.isSelling ? "판매 ON" : "판매 OFF"}</Badge>
-                    <Badge variant={option.requiresShipping ? "warning" : "slate"}>
-                      {option.requiresShipping ? "배송 필요" : "배송 필요 없음"}
-                    </Badge>
                   </div>
                 </div>
               </div>
             ))}
-            <div className="h-px bg-slate-100" />
-            <PriceRow label="주문 수" value={`${lmsPackage.orderCount}건`} />
-            <PriceRow label="결제 완료" value={`${lmsPackage.paidOrderCount}건`} />
-            <PriceRow label="환불" value={`${lmsPackage.refundCount}건`} />
-            <PriceRow label="매출" value={formatWon(lmsPackage.revenue)} strong />
           </CardContent>
         </Card>
       </div>
@@ -150,40 +142,35 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           <CardDescription>패키지는 코스를 포함하며, 코스는 반드시 특정 언어에 소속됩니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1040px] [word-break:keep-all]">
             <TableHeader>
               <TableRow>
-                <TableHead>순서</TableHead>
-                <TableHead>언어</TableHead>
-                <TableHead>코스명</TableHead>
-                <TableHead>디지털 가격</TableHead>
-                <TableHead>페이퍼+디지털 가격</TableHead>
-                <TableHead>수업 수</TableHead>
-                <TableHead>레슨 수</TableHead>
-                <TableHead>포함 패키지</TableHead>
-                <TableHead>상태</TableHead>
+                <TableHead className="whitespace-nowrap">순서</TableHead>
+                <TableHead className="whitespace-nowrap">언어</TableHead>
+                <TableHead className="min-w-56">코스명</TableHead>
+                <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">수업 수</TableHead>
+                <TableHead className="whitespace-nowrap">레슨 수</TableHead>
+                <TableHead className="whitespace-nowrap">포함 패키지</TableHead>
+                <TableHead className="whitespace-nowrap">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lmsPackage.courses.map((course, index) => (
                 <TableRow key={course.id}>
-                  <TableCell className="font-mono font-bold">{index + 1}</TableCell>
-                  <TableCell>{course.language}</TableCell>
-                  <TableCell className="min-w-52 font-bold text-slate-900">
-                    {course.displayName}
+                  <TableCell className="whitespace-nowrap font-mono font-bold">{index + 1}</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.language}</TableCell>
+                  <TableCell className="min-w-56 max-w-72 font-bold text-slate-900">
+                    <span className="line-clamp-2 leading-5">{course.displayName}</span>
                     <p className="mt-1 font-mono text-xs text-slate-500">{course.id}</p>
                   </TableCell>
-                  <TableCell>{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p>{formatWon(getPaperDigitalOption(course.productOptions).price)}</p>
-                      <Badge variant="warning">배송 필요</Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>{course.classCount}개</TableCell>
-                  <TableCell>{course.lessonCount}개</TableCell>
-                  <TableCell>{course.packageCount}개</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{formatWon(getPaperDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.classCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.lessonCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.packageCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="space-y-1">
                       <Badge variant={getSalesStatusTone(course.salesStatus)}>{course.salesStatus}</Badge>
                       <div><Badge variant={course.visibility === "공개" ? "success" : "slate"}>{course.visibility}</Badge></div>
@@ -231,15 +218,6 @@ function DetailItem({ label, value, mono = false, badgeVariant }: { label: strin
       ) : (
         <p className={`mt-2 font-bold text-slate-900 ${mono ? "font-mono" : ""}`}>{value}</p>
       )}
-    </div>
-  );
-}
-
-function PriceRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className={strong ? "text-lg font-black text-slate-950" : "font-bold text-slate-800"}>{value}</p>
     </div>
   );
 }
