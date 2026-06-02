@@ -5,6 +5,7 @@ import {
   CircleDollarSign,
   Coins,
   CreditCard,
+  GraduationCap,
   HelpCircle,
   LineChart,
   Megaphone,
@@ -12,11 +13,24 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-export const navItems = [
+type NavLinkItem = { title: string; href: string; icon: LucideIcon; children?: never };
+type NavGroupItem = { title: string; icon: LucideIcon; children: { title: string; href: string }[]; href?: never };
+
+export const navItems: (NavLinkItem | NavGroupItem)[] = [
   { title: "Dashboard", href: "/", icon: LineChart },
   { title: "Members", href: "/members", icon: UsersRound },
   { title: "Orders / Payments", href: "/orders", icon: CreditCard },
+  {
+    title: "LMS 관리",
+    icon: GraduationCap,
+    children: [
+      { title: "레슨 관리", href: "/lms/lessons" },
+      { title: "수업 관리", href: "/lms/courses" },
+      { title: "그룹 관리", href: "/lms/groups" },
+    ],
+  },
   { title: "General inquiries", href: "/inquiries", icon: HelpCircle },
   { title: "Lesson questions", href: "/lesson-questions", icon: BookOpenCheck },
   { title: "Coupons", href: "/coupons", icon: BadgePercent },
