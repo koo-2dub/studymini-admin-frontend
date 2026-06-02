@@ -26,6 +26,7 @@ export const navItems: (NavLinkItem | NavGroupItem)[] = [
     title: "LMS 관리",
     icon: GraduationCap,
     children: [
+      { title: "패키지 관리", href: "/lms/packages" },
       { title: "레슨 관리", href: "/lms/lessons" },
       { title: "수업 관리", href: "/lms/courses" },
       { title: "그룹 관리", href: "/lms/groups" },
