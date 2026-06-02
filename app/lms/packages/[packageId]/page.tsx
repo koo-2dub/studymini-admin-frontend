@@ -112,7 +112,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
 
         <Card>
           <CardHeader>
-            <CardTitle>상품 옵션 / 주문 요약</CardTitle>
+            <CardTitle>상품 옵션 / 할인율</CardTitle>
             <CardDescription>디지털과 페이퍼 + 디지털은 운영자가 직접 입력한 별도 판매 옵션입니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -128,18 +128,10 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant={option.isSelling ? "success" : "slate"}>{option.isSelling ? "판매 ON" : "판매 OFF"}</Badge>
-                    <Badge variant={option.requiresShipping ? "warning" : "slate"}>
-                      {option.requiresShipping ? "배송 필요" : "배송 필요 없음"}
-                    </Badge>
                   </div>
                 </div>
               </div>
             ))}
-            <div className="h-px bg-slate-100" />
-            <PriceRow label="주문 수" value={`${lmsPackage.orderCount}건`} />
-            <PriceRow label="결제 완료" value={`${lmsPackage.paidOrderCount}건`} />
-            <PriceRow label="환불" value={`${lmsPackage.refundCount}건`} />
-            <PriceRow label="매출" value={formatWon(lmsPackage.revenue)} strong />
           </CardContent>
         </Card>
       </div>
@@ -231,15 +223,6 @@ function DetailItem({ label, value, mono = false, badgeVariant }: { label: strin
       ) : (
         <p className={`mt-2 font-bold text-slate-900 ${mono ? "font-mono" : ""}`}>{value}</p>
       )}
-    </div>
-  );
-}
-
-function PriceRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className={strong ? "text-lg font-black text-slate-950" : "font-bold text-slate-800"}>{value}</p>
     </div>
   );
 }

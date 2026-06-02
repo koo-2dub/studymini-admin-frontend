@@ -41,9 +41,6 @@ function ProductOptionCard({ option }: { option: ReturnType<typeof getDigitalOpt
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant={option.isSelling ? "success" : "slate"}>{option.isSelling ? "판매 ON" : "판매 OFF"}</Badge>
-          <Badge variant={option.requiresShipping ? "warning" : "slate"}>
-            {option.requiresShipping ? "배송 필요" : "배송 필요 없음"}
-          </Badge>
         </div>
       </div>
     </div>
@@ -194,135 +191,133 @@ export default async function CourseCatalogDetailPage({
             ))}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-indigo-500" />
-              <CardTitle>권한 미리보기</CardTitle>
-            </div>
-            <CardDescription>이 코스를 구매하면 열리는 수업/레슨 요약입니다.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-3xl bg-indigo-50 p-5">
-              <p className="text-sm font-bold text-indigo-700">{course.language} → {course.name}</p>
-              <ul className="mt-4 space-y-3 text-sm font-semibold leading-6 text-slate-700">
-                {course.permissionSummary.map((item) => (
-                  <li key={item} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.85fr]">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Layers3 className="h-5 w-5 text-indigo-500" />
-              <CardTitle>포함 수업</CardTitle>
-            </div>
-            <CardDescription>수업명, 단계, 레슨 수, 공개상태를 확인하고 수업 상세로 이동합니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Table className="min-w-[720px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-44">수업명</TableHead>
-                  <TableHead className="whitespace-nowrap">단계</TableHead>
-                  <TableHead className="whitespace-nowrap">레슨 수</TableHead>
-                  <TableHead className="whitespace-nowrap">공개상태</TableHead>
-                  <TableHead className="whitespace-nowrap">수업 상세 이동</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {course.classes.map((courseClass) => (
-                  <TableRow key={courseClass.id} className="hover:bg-slate-50">
-                    <TableCell className="min-w-44 max-w-64 font-bold text-slate-900">
-                      <span className="line-clamp-2 leading-5">{courseClass.className}</span>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">{courseClass.step}</TableCell>
-                    <TableCell className="whitespace-nowrap font-semibold text-slate-900">{courseClass.lessons.length}개</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Badge variant={courseClass.visibility === "공개" ? "success" : "slate"}>{courseClass.visibility}</Badge>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Link href={`/lms/courses/${courseClass.id}`} className="font-bold text-primary hover:underline">
-                        상세 보기
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {course.classes.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center font-semibold text-slate-500">
-                      연결된 수업 상세 데이터가 없습니다. 요약 수업 수는 {course.classCount}개입니다.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-indigo-500" />
+            <CardTitle>권한 미리보기</CardTitle>
+          </div>
+          <CardDescription>이 코스를 구매하면 열리는 수업/레슨 요약입니다.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-3xl bg-indigo-50 p-5">
+            <p className="text-sm font-bold text-indigo-700">{course.language} → {course.name}</p>
+            <ul className="mt-4 space-y-3 text-sm font-semibold leading-6 text-slate-700">
+              {course.permissionSummary.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Link2 className="h-5 w-5 text-indigo-500" />
-              <CardTitle>포함 패키지</CardTitle>
-            </div>
-            <CardDescription>이 코스가 포함된 패키지 판매 단위를 확인합니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Table className="min-w-[760px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-52">패키지명</TableHead>
-                  <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
-                  <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
-                  <TableHead className="whitespace-nowrap">판매상태</TableHead>
-                  <TableHead className="whitespace-nowrap">패키지 상세 이동</TableHead>
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Layers3 className="h-5 w-5 text-indigo-500" />
+            <CardTitle>포함 수업</CardTitle>
+          </div>
+          <CardDescription>수업명, 단계, 레슨 수, 공개상태를 확인하고 수업 상세로 이동합니다.</CardDescription>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[720px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-44">수업명</TableHead>
+                <TableHead className="whitespace-nowrap">단계</TableHead>
+                <TableHead className="whitespace-nowrap">레슨 수</TableHead>
+                <TableHead className="whitespace-nowrap">공개상태</TableHead>
+                <TableHead className="whitespace-nowrap">수업 상세 이동</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {course.classes.map((courseClass) => (
+                <TableRow key={courseClass.id} className="hover:bg-slate-50">
+                  <TableCell className="min-w-44 max-w-64 font-bold text-slate-900">
+                    <span className="line-clamp-2 leading-5">{courseClass.className}</span>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{courseClass.step}</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{courseClass.lessons.length}개</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge variant={courseClass.visibility === "공개" ? "success" : "slate"}>{courseClass.visibility}</Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Link href={`/lms/courses/${courseClass.id}`} className="font-bold text-primary hover:underline">
+                      상세 보기
+                    </Link>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {course.packages.map((lmsPackage) => (
-                  <TableRow key={lmsPackage.id} className="hover:bg-slate-50">
-                    <TableCell className="min-w-52 max-w-72 font-bold text-slate-900">
-                      <span className="line-clamp-2 leading-5">{lmsPackage.displayName}</span>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
-                    <TableCell className="whitespace-nowrap font-semibold text-slate-900">
-                      <div className="space-y-1">
-                        <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
-                        <Badge variant="warning">배송 필요</Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Link href={`/lms/packages/${lmsPackage.id}`} className="font-bold text-primary hover:underline">
-                        상세 보기
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {course.packages.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center font-semibold text-slate-500">
-                      이 코스를 포함한 패키지가 없습니다.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+              ))}
+              {course.classes.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-10 text-center font-semibold text-slate-500">
+                    연결된 수업 상세 데이터가 없습니다. 요약 수업 수는 {course.classCount}개입니다.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Link2 className="h-5 w-5 text-indigo-500" />
+            <CardTitle>포함 패키지</CardTitle>
+          </div>
+          <CardDescription>이 코스가 포함된 패키지 판매 단위를 확인합니다.</CardDescription>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-52">패키지명</TableHead>
+                <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">판매상태</TableHead>
+                <TableHead className="whitespace-nowrap">패키지 상세 이동</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {course.packages.map((lmsPackage) => (
+                <TableRow key={lmsPackage.id} className="hover:bg-slate-50">
+                  <TableCell className="min-w-52 max-w-72 font-bold text-slate-900">
+                    <span className="line-clamp-2 leading-5">{lmsPackage.displayName}</span>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap font-semibold text-slate-900">
+                    <div className="space-y-1">
+                      <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
+                      <Badge variant="warning">배송 필요</Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Link href={`/lms/packages/${lmsPackage.id}`} className="font-bold text-primary hover:underline">
+                      상세 보기
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {course.packages.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-10 text-center font-semibold text-slate-500">
+                    이 코스를 포함한 패키지가 없습니다.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <Card className="mt-6">
         <CardHeader>
