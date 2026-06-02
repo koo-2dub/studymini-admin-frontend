@@ -14,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 import {
   formatWon,
+  getDigitalOption,
+  getPaperDigitalOption,
   getSalesStatusTone,
   languageScopeOptions,
   packageSummaries,
@@ -47,7 +49,7 @@ export function PackageManagementPage() {
     );
     const totalRevenue = packageSummaries.reduce((sum, lmsPackage) => sum + lmsPackage.revenue, 0);
     const averageDiscountRate = packageSummaries.length
-      ? packageSummaries.reduce((sum, lmsPackage) => sum + lmsPackage.discountRate, 0) / packageSummaries.length
+      ? packageSummaries.reduce((sum, lmsPackage) => sum + getDigitalOption(lmsPackage.optionSummaries).discountRate, 0) / packageSummaries.length
       : 0;
 
     return {
@@ -192,8 +194,8 @@ export function PackageManagementPage() {
                 <TableHead>포함 코스</TableHead>
                 <TableHead>코스 수</TableHead>
                 <TableHead>수업/레슨</TableHead>
-                <TableHead>정가 합계</TableHead>
-                <TableHead>판매가</TableHead>
+                <TableHead>디지털 가격</TableHead>
+                <TableHead>페이퍼+디지털 가격</TableHead>
                 <TableHead>할인율</TableHead>
                 <TableHead>판매상태</TableHead>
                 <TableHead>주문</TableHead>
@@ -227,9 +229,16 @@ export function PackageManagementPage() {
                   </TableCell>
                   <TableCell>{lmsPackage.courses.length}개</TableCell>
                   <TableCell>{lmsPackage.classCount}개 / {lmsPackage.lessonCount}개</TableCell>
-                  <TableCell>{formatWon(lmsPackage.regularPrice)}</TableCell>
-                  <TableCell className="font-bold text-slate-900">{formatWon(lmsPackage.salePrice)}</TableCell>
-                  <TableCell className="font-bold text-indigo-700">{lmsPackage.discountRate.toFixed(1)}%</TableCell>
+                  <TableCell className="font-bold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
+                  <TableCell className="font-bold text-slate-900">
+                    <div className="space-y-1">
+                      <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
+                      <Badge variant="warning">배송 필요</Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-bold text-indigo-700">
+                    {getDigitalOption(lmsPackage.optionSummaries).discountRate.toFixed(1)}% / {getPaperDigitalOption(lmsPackage.optionSummaries).discountRate.toFixed(1)}%
+                  </TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>

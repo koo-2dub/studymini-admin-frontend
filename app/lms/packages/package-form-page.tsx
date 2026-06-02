@@ -14,6 +14,8 @@ import {
   calculateDiscountAmount,
   calculateDiscountRate,
   formatWon,
+  getDigitalOption,
+  getPaperDigitalOption,
   getSalesStatusTone,
   lmsCourses,
 } from "../_data/catalog";
@@ -25,7 +27,10 @@ type PackageFormState = {
   internalName: string;
   description: string;
   selectedCourseIds: string[];
-  salePrice: number;
+  digitalPrice: number;
+  paperDigitalPrice: number;
+  digitalIsSelling: boolean;
+  paperDigitalIsSelling: boolean;
   salesStatus: SalesStatus;
   visibility: LmsVisibility;
   saleStartsAt: string;
@@ -46,7 +51,10 @@ function createInitialForm(lmsPackage?: LmsPackage): PackageFormState {
     internalName: lmsPackage?.internalName ?? "",
     description: lmsPackage?.description ?? "",
     selectedCourseIds: lmsPackage?.courseIds ?? [],
-    salePrice: lmsPackage?.salePrice ?? 0,
+    digitalPrice: lmsPackage ? getDigitalOption(lmsPackage.productOptions).price : 0,
+    paperDigitalPrice: lmsPackage ? getPaperDigitalOption(lmsPackage.productOptions).price : 0,
+    digitalIsSelling: lmsPackage ? getDigitalOption(lmsPackage.productOptions).isSelling : true,
+    paperDigitalIsSelling: lmsPackage ? getPaperDigitalOption(lmsPackage.productOptions).isSelling : true,
     salesStatus: lmsPackage?.salesStatus ?? "판매중지",
     visibility: lmsPackage?.visibility ?? "비공개",
     saleStartsAt: lmsPackage?.saleStartsAt ?? "",
@@ -67,9 +75,12 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
     [form.selectedCourseIds],
   );
   const languageOptions = useMemo(() => ["전체", ...Array.from(new Set(lmsCourses.map((course) => course.language)))], []);
-  const regularPrice = selectedCourses.reduce((sum, course) => sum + course.price, 0);
-  const discountAmount = calculateDiscountAmount(regularPrice, form.salePrice);
-  const discountRate = calculateDiscountRate(regularPrice, form.salePrice);
+  const digitalRegularPrice = selectedCourses.reduce((sum, course) => sum + getDigitalOption(course.productOptions).price, 0);
+  const paperDigitalRegularPrice = selectedCourses.reduce((sum, course) => sum + getPaperDigitalOption(course.productOptions).price, 0);
+  const digitalDiscountAmount = calculateDiscountAmount(digitalRegularPrice, form.digitalPrice);
+  const paperDigitalDiscountAmount = calculateDiscountAmount(paperDigitalRegularPrice, form.paperDigitalPrice);
+  const digitalDiscountRate = calculateDiscountRate(digitalRegularPrice, form.digitalPrice);
+  const paperDigitalDiscountRate = calculateDiscountRate(paperDigitalRegularPrice, form.paperDigitalPrice);
   const classCount = selectedCourses.reduce((sum, course) => sum + course.classCount, 0);
   const lessonCount = selectedCourses.reduce((sum, course) => sum + course.lessonCount, 0);
   const languageScope = new Set(selectedCourses.map((course) => course.language)).size > 1 ? "복수 언어" : "단일 언어";
@@ -107,8 +118,12 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
   const validationMessages = [
     !form.name ? "패키지명을 입력해야 저장할 수 있습니다." : "",
     form.selectedCourseIds.length === 0 ? "최소 1개 이상의 코스를 선택해야 합니다." : "",
-    form.salePrice <= 0 ? "패키지 판매가를 입력해야 합니다." : "",
-    form.salePrice > regularPrice && regularPrice > 0 ? "패키지 판매가가 코스 정가 합계보다 높습니다." : "",
+    form.digitalIsSelling && form.digitalPrice <= 0 ? "디지털 판매 ON 상태에서는 패키지 가격을 입력해야 합니다." : "",
+    form.paperDigitalIsSelling && form.paperDigitalPrice <= 0 ? "페이퍼 + 디지털 판매 ON 상태에서는 패키지 가격을 입력해야 합니다." : "",
+    form.paperDigitalPrice < form.digitalPrice ? "페이퍼 + 디지털 가격이 디지털 가격보다 낮습니다." : "",
+    !form.digitalIsSelling && !form.paperDigitalIsSelling ? "두 옵션 중 최소 하나는 판매 ON이어야 합니다." : "",
+    form.digitalPrice > digitalRegularPrice && digitalRegularPrice > 0 ? "디지털 패키지 가격이 코스 정가 합계보다 높습니다." : "",
+    form.paperDigitalPrice > paperDigitalRegularPrice && paperDigitalRegularPrice > 0 ? "페이퍼 + 디지털 패키지 가격이 코스 정가 합계보다 높습니다." : "",
     form.hasSalesHistory ? "판매 이력이 있는 패키지는 코스 제거 시 기본 금지 또는 매우 강한 경고가 필요합니다." : "",
   ].filter(Boolean);
 
@@ -151,8 +166,27 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
                   <FormInput value={form.internalName} onChange={(event) => updateForm("internalName", event.target.value)} placeholder="운영팀 관리용 이름" />
                 </label>
                 <label>
-                  <FieldLabel>패키지 판매가</FieldLabel>
-                  <FormInput type="number" value={String(form.salePrice)} onChange={(event) => updateForm("salePrice", Number(event.target.value))} />
+                  <FieldLabel>디지털 가격</FieldLabel>
+                  <FormInput type="number" value={String(form.digitalPrice)} onChange={(event) => updateForm("digitalPrice", Number(event.target.value))} />
+                </label>
+                <label>
+                  <FieldLabel>페이퍼 + 디지털 가격</FieldLabel>
+                  <FormInput type="number" value={String(form.paperDigitalPrice)} onChange={(event) => updateForm("paperDigitalPrice", Number(event.target.value))} />
+                  <span className="mt-2 inline-flex"><Badge variant="warning">배송 필요</Badge></span>
+                </label>
+                <label>
+                  <FieldLabel>디지털 판매 여부</FieldLabel>
+                  <FormSelect value={form.digitalIsSelling ? "ON" : "OFF"} onChange={(event) => updateForm("digitalIsSelling", event.target.value === "ON")}>
+                    <option>ON</option>
+                    <option>OFF</option>
+                  </FormSelect>
+                </label>
+                <label>
+                  <FieldLabel>페이퍼 + 디지털 판매 여부</FieldLabel>
+                  <FormSelect value={form.paperDigitalIsSelling ? "ON" : "OFF"} onChange={(event) => updateForm("paperDigitalIsSelling", event.target.value === "ON")}>
+                    <option>ON</option>
+                    <option>OFF</option>
+                  </FormSelect>
                 </label>
                 <label>
                   <FieldLabel>판매상태</FieldLabel>
@@ -240,7 +274,7 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="font-black text-slate-950">{course.displayName}</p>
-                              <p className="mt-1 text-xs font-semibold text-slate-500">{formatWon(course.price)} · 수업 {course.classCount}개 · 레슨 {course.lessonCount}개</p>
+                              <p className="mt-1 text-xs font-semibold text-slate-500">디지털 {formatWon(getDigitalOption(course.productOptions).price)} · 페이퍼+디지털 {formatWon(getPaperDigitalOption(course.productOptions).price)} · 수업 {course.classCount}개 · 레슨 {course.lessonCount}개</p>
                             </div>
                             <Badge variant={selected ? "success" : "slate"}>{selected ? "선택됨" : course.language}</Badge>
                           </div>
@@ -259,7 +293,7 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
                           <div>
                             <p className="text-xs font-bold uppercase tracking-wider text-indigo-500">#{index + 1} · {course.language}</p>
                             <p className="mt-1 font-black text-slate-950">{course.displayName}</p>
-                            <p className="mt-1 text-xs font-semibold text-slate-500">{formatWon(course.price)} · 수업 {course.classCount}개 · 레슨 {course.lessonCount}개</p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">디지털 {formatWon(getDigitalOption(course.productOptions).price)} · 페이퍼+디지털 {formatWon(getPaperDigitalOption(course.productOptions).price)} · 수업 {course.classCount}개 · 레슨 {course.lessonCount}개</p>
                           </div>
                           <Button type="button" variant="outline" size="sm" onClick={() => toggleCourse(course.id)}>제거</Button>
                         </div>
@@ -302,22 +336,29 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
                 <Calculator className="h-5 w-5 text-indigo-500" />
                 <CardTitle>계산 미리보기</CardTitle>
               </div>
-              <CardDescription>선택한 코스 기준으로 자동 계산됩니다.</CardDescription>
+              <CardDescription>정가 합계와 할인율은 선택 코스 기준으로 계산되며, 패키지 옵션 가격은 운영자가 직접 입력합니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <SummaryRow label="언어 구성" value={selectedCourses.length ? languageScope : "-"} />
               <SummaryRow label="코스 수" value={`${selectedCourses.length}개`} />
               <SummaryRow label="수업 / 레슨" value={`${classCount}개 / ${lessonCount}개`} />
-              <SummaryRow label="코스 정가 합계" value={formatWon(regularPrice)} />
-              <SummaryRow label="패키지 판매가" value={formatWon(form.salePrice)} strong />
-              <SummaryRow label="할인 금액" value={formatWon(discountAmount)} />
-              <SummaryRow label="할인율" value={`${discountRate.toFixed(1)}%`} />
+              <SummaryRow label="디지털 정가 합계" value={formatWon(digitalRegularPrice)} />
+              <SummaryRow label="디지털 패키지 가격" value={formatWon(form.digitalPrice)} strong />
+              <SummaryRow label="디지털 할인율" value={`${digitalDiscountRate.toFixed(1)}%`} />
+              <SummaryRow label="페이퍼+디지털 정가 합계" value={formatWon(paperDigitalRegularPrice)} />
+              <SummaryRow label="페이퍼+디지털 가격" value={formatWon(form.paperDigitalPrice)} strong />
+              <SummaryRow label="페이퍼+디지털 할인율" value={`${paperDigitalDiscountRate.toFixed(1)}%`} />
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={form.digitalIsSelling ? "success" : "slate"}>디지털 {form.digitalIsSelling ? "판매 ON" : "판매 OFF"}</Badge>
+                <Badge variant={form.paperDigitalIsSelling ? "success" : "slate"}>페이퍼+디지털 {form.paperDigitalIsSelling ? "판매 ON" : "판매 OFF"}</Badge>
+                <Badge variant="warning">페이퍼+디지털 배송 필요</Badge>
+              </div>
               <div className="h-px bg-slate-100" />
               <div className="space-y-2">
                 <Badge variant={getSalesStatusTone(form.salesStatus)}>{form.salesStatus}</Badge>
                 <Badge variant={form.visibility === "공개" ? "success" : "slate"}>{form.visibility}</Badge>
               </div>
-              <Button type="button" className="w-full" onClick={() => alert("Mock 화면입니다. 저장 API 연결은 다음 단계에서 진행합니다.")}> 
+              <Button type="button" className="w-full" onClick={() => alert("Mock 화면입니다. 저장 API 연결은 다음 단계에서 진행합니다.")} disabled={validationMessages.length > 0}>
                 <Save className="h-4 w-4" />
                 {mode === "create" ? "패키지 생성" : "패키지 수정"}
               </Button>
@@ -371,7 +412,8 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
               <TableRow>
                 <TableHead>언어</TableHead>
                 <TableHead>코스명</TableHead>
-                <TableHead>가격</TableHead>
+                <TableHead>디지털 가격</TableHead>
+                <TableHead>페이퍼+디지털 가격</TableHead>
                 <TableHead>판매상태</TableHead>
                 <TableHead>수업 수</TableHead>
                 <TableHead>레슨 수</TableHead>
@@ -383,7 +425,8 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
                 <TableRow key={course.id}>
                   <TableCell>{course.language}</TableCell>
                   <TableCell className="font-bold text-slate-900">{course.displayName}</TableCell>
-                  <TableCell>{formatWon(course.price)}</TableCell>
+                  <TableCell>{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell>{formatWon(getPaperDigitalOption(course.productOptions).price)}</TableCell>
                   <TableCell><Badge variant={getSalesStatusTone(course.salesStatus)}>{course.salesStatus}</Badge></TableCell>
                   <TableCell>{course.classCount}개</TableCell>
                   <TableCell>{course.lessonCount}개</TableCell>
@@ -392,7 +435,7 @@ export function PackageFormPage({ mode, lmsPackage }: { mode: "create" | "edit";
               ))}
               {selectedCourses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center font-semibold text-slate-500">선택된 코스가 없습니다.</TableCell>
+                  <TableCell colSpan={8} className="py-8 text-center font-semibold text-slate-500">선택된 코스가 없습니다.</TableCell>
                 </TableRow>
               )}
             </TableBody>

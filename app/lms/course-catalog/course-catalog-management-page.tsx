@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { formatWon, getSalesStatusTone, lmsCourses } from "../_data/catalog";
+import { formatWon, getDigitalOption, getPaperDigitalOption, getSalesStatusTone, lmsCourses } from "../_data/catalog";
 import type { LmsCourse } from "../_data/types";
 import {
   courseCatalogLanguageOptions,
@@ -195,7 +195,8 @@ export function CourseCatalogManagementPage() {
               <TableRow>
                 <TableHead>코스명</TableHead>
                 <TableHead>언어</TableHead>
-                <TableHead>가격</TableHead>
+                <TableHead>디지털 가격</TableHead>
+                <TableHead>페이퍼+디지털 가격</TableHead>
                 <TableHead>판매상태</TableHead>
                 <TableHead>공개상태</TableHead>
                 <TableHead>포함 수업 수</TableHead>
@@ -220,7 +221,13 @@ export function CourseCatalogManagementPage() {
                 >
                   <TableCell className="min-w-48 font-bold text-slate-900">{course.displayName}</TableCell>
                   <TableCell>{course.language}</TableCell>
-                  <TableCell className="font-semibold text-slate-900">{formatWon(course.price)}</TableCell>
+                  <TableCell className="font-semibold text-slate-900">{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell className="font-semibold text-slate-900">
+                    <div className="space-y-1">
+                      <p>{formatWon(getPaperDigitalOption(course.productOptions).price)}</p>
+                      <Badge variant="warning">배송 필요</Badge>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={getSalesStatusTone(course.salesStatus)}>{course.salesStatus}</Badge>
                   </TableCell>
@@ -235,7 +242,7 @@ export function CourseCatalogManagementPage() {
               ))}
               {filteredCourses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-10 text-center font-semibold text-slate-500">
+                  <TableCell colSpan={10} className="py-10 text-center font-semibold text-slate-500">
                     필터 조건에 맞는 코스가 없습니다.
                   </TableCell>
                 </TableRow>
