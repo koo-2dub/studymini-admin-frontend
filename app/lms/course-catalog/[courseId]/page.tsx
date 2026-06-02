@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Boxes, Coins, KeyRound, Layers3, Link2, PackageCheck, ScrollText } from "lucide-react";
+import { ArrowLeft, BookOpen, Boxes, Coins, KeyRound, Layers3, Link2, PackageCheck, Pencil, ScrollText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { formatWon, getSalesStatusTone, lmsCourses } from "../../_data/catalog";
-import { getCourseCatalogDetail } from "../data";
+import { getCourseCatalogDetail, getCourseCatalogDraftDetail, type CourseCatalogDraftDetailInput } from "../data";
 
 export function generateStaticParams() {
   return lmsCourses.map((course) => ({ courseId: course.id }));
@@ -40,11 +40,50 @@ function DetailItem({ label, value, mono = false }: { label: string; value: stri
   );
 }
 
-export default async function CourseCatalogDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
+function toParamValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getDraftFromSearchParams(searchParams: Record<string, string | string[] | undefined>): CourseCatalogDraftDetailInput | undefined {
+  if (toParamValue(searchParams.source) !== "course-form") return undefined;
+
+  const name = toParamValue(searchParams.name) ?? "신규 코스";
+  const language = toParamValue(searchParams.language) ?? "일본어";
+  const description = toParamValue(searchParams.description) ?? "코스 생성/수정 화면에서 저장한 상세 미리보기입니다.";
+  const price = Number(toParamValue(searchParams.price) ?? 0);
+  const salesStatus = (toParamValue(searchParams.salesStatus) ?? "판매중지") as CourseCatalogDraftDetailInput["salesStatus"];
+  const visibility = (toParamValue(searchParams.visibility) ?? "비공개") as CourseCatalogDraftDetailInput["visibility"];
+  const selectedClassIds = (toParamValue(searchParams.classIds) ?? "").split(",").filter(Boolean);
+
+  return {
+    language,
+    name,
+    description,
+    price,
+    salesStatus,
+    visibility,
+    selectedClassIds,
+    updatedAt: "2026-06-02",
+  };
+}
+
+export default async function CourseCatalogDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ courseId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { courseId } = await params;
-  const course = getCourseCatalogDetail(courseId);
+  const resolvedSearchParams = await searchParams;
+  const draft = getDraftFromSearchParams(resolvedSearchParams);
+  const course = draft ? getCourseCatalogDraftDetail(courseId, draft) : getCourseCatalogDetail(courseId);
 
   if (!course) notFound();
+
+  const editHref = lmsCourses.some((item) => item.id === course.id)
+    ? `/lms/course-catalog/${course.id}/edit`
+    : "/lms/course-catalog/create";
 
   return (
     <>
@@ -53,13 +92,22 @@ export default async function CourseCatalogDetailPage({ params }: { params: Prom
         title="코스 상세"
         description="판매 단위 코스의 기본 정보, 포함 수업/레슨, 패키지 연결 관계와 권한 범위를 확인합니다."
         action={
-          <Link
-            href="/lms/course-catalog"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-all hover:bg-secondary/80"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            목록으로
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={editHref}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:bg-primary/90"
+            >
+              <Pencil className="h-4 w-4" />
+              코스 수정
+            </Link>
+            <Link
+              href="/lms/course-catalog"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-all hover:bg-secondary/80"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              목록으로
+            </Link>
+          </div>
         }
       />
 

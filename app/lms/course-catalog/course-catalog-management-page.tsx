@@ -1,6 +1,6 @@
 "use client";
 
-import { Boxes, Search, SlidersHorizontal } from "lucide-react";
+import { Boxes, PlusCircle, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -88,6 +88,12 @@ export function CourseCatalogManagementPage() {
         eyebrow="LMS commerce"
         title="코스 관리"
         description="언어별 판매 단위인 코스와 패키지 포함 관계, 수업/레슨 권한 범위를 확인합니다."
+        action={
+          <Button type="button" onClick={() => router.push("/lms/course-catalog/create")}>
+            <PlusCircle className="h-4 w-4" />
+            코스 생성
+          </Button>
+        }
       />
 
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
