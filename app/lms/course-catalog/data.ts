@@ -6,6 +6,7 @@ import {
   packageCourses,
   salesStatusOptions,
   packageVisibilityOptions,
+  createProductOptions,
 } from "../_data/catalog";
 import type { LmsCourse, LmsPackage, LmsVisibility, SalesStatus } from "../_data/types";
 
@@ -15,7 +16,7 @@ export type CourseIncludedClass = CourseClass & {
   step: string;
 };
 
-export type CourseIncludedPackage = Pick<LmsPackage, "id" | "displayName" | "salePrice" | "salesStatus">;
+export type CourseIncludedPackage = Pick<LmsPackage, "id" | "displayName" | "productOptions" | "salesStatus">;
 
 export type CourseCatalogDetail = LmsCourse & {
   classes: CourseIncludedClass[];
@@ -28,7 +29,10 @@ export type CourseCatalogFormState = {
   language: string;
   name: string;
   description: string;
-  price: number;
+  digitalPrice: number;
+  paperDigitalPrice: number;
+  digitalIsSelling: boolean;
+  paperDigitalIsSelling: boolean;
   salesStatus: SalesStatus;
   visibility: LmsVisibility;
   selectedClassIds: string[];
@@ -77,7 +81,7 @@ export function getCourseIncludedPackages(courseId: string): CourseIncludedPacka
     .map((lmsPackage) => ({
       id: lmsPackage.id,
       displayName: lmsPackage.displayName,
-      salePrice: lmsPackage.salePrice,
+      productOptions: lmsPackage.productOptions,
       salesStatus: lmsPackage.salesStatus,
     }));
 }
@@ -131,7 +135,12 @@ export function getCourseCatalogDraftDetail(
     name: draft.name,
     displayName: draft.name,
     description: draft.description,
-    price: draft.price,
+    productOptions: createProductOptions(
+      draft.digitalPrice,
+      draft.paperDigitalPrice,
+      draft.digitalIsSelling,
+      draft.paperDigitalIsSelling,
+    ),
     salesStatus: draft.salesStatus,
     visibility: draft.visibility,
     classCount,
@@ -162,7 +171,10 @@ export function createInitialCourseCatalogForm(course?: LmsCourse): CourseCatalo
     language: course?.language ?? lmsLanguages[0]?.name ?? "일본어",
     name: course?.displayName ?? "",
     description: course?.description ?? "",
-    price: course?.price ?? 0,
+    digitalPrice: course?.productOptions.find((option) => option.type === "digital")?.price ?? 0,
+    paperDigitalPrice: course?.productOptions.find((option) => option.type === "paper_digital")?.price ?? 0,
+    digitalIsSelling: course?.productOptions.find((option) => option.type === "digital")?.isSelling ?? true,
+    paperDigitalIsSelling: course?.productOptions.find((option) => option.type === "paper_digital")?.isSelling ?? true,
     salesStatus: course?.salesStatus ?? "판매중지",
     visibility: course?.visibility ?? "비공개",
     selectedClassIds: includedClasses.map((courseClass) => courseClass.id),
@@ -175,7 +187,10 @@ export function getCourseCatalogFormSaveHref(courseId: string, form: CourseCatal
     language: form.language,
     name: form.name,
     description: form.description,
-    price: String(form.price),
+    digitalPrice: String(form.digitalPrice),
+    paperDigitalPrice: String(form.paperDigitalPrice),
+    digitalIsSelling: String(form.digitalIsSelling),
+    paperDigitalIsSelling: String(form.paperDigitalIsSelling),
     salesStatus: form.salesStatus,
     visibility: form.visibility,
     classIds: form.selectedClassIds.join(","),

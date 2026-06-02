@@ -1,6 +1,46 @@
 import { lessons } from "../lessons/data";
 
-import type { LmsCourse, LmsLanguage, LmsPackage, PackageCourse, PackageSummary, SalesStatus } from "./types";
+import type { LmsCourse, LmsLanguage, LmsPackage, PackageCourse, PackageSummary, ProductOption, ProductOptionType, SalesStatus } from "./types";
+
+export const productOptionTypes: ProductOptionType[] = ["digital", "paper_digital"];
+
+export function createProductOptions(
+  digitalPrice: number,
+  paperDigitalPrice: number,
+  digitalIsSelling = true,
+  paperDigitalIsSelling = true,
+): ProductOption[] {
+  return [
+    {
+      type: "digital",
+      label: "디지털",
+      price: digitalPrice,
+      requiresShipping: false,
+      isSelling: digitalIsSelling,
+    },
+    {
+      type: "paper_digital",
+      label: "페이퍼 + 디지털",
+      price: paperDigitalPrice,
+      requiresShipping: true,
+      isSelling: paperDigitalIsSelling,
+    },
+  ];
+}
+
+export function getProductOption<T extends ProductOption>(options: T[], type: ProductOptionType): T {
+  return options.find((option) => option.type === type) ?? ({
+    ...createProductOptions(0, 0).find((option) => option.type === type)!,
+  } as T);
+}
+
+export function getDigitalOption<T extends ProductOption>(options: T[]) {
+  return getProductOption(options, "digital");
+}
+
+export function getPaperDigitalOption<T extends ProductOption>(options: T[]) {
+  return getProductOption(options, "paper_digital");
+}
 
 export const lmsLanguages: LmsLanguage[] = [
   { id: "LANG-JP", name: "일본어" },
@@ -15,7 +55,7 @@ const courseBase = [
     name: "베이직",
     displayName: "일본어 베이직",
     description: "일본어 입문자를 위한 문자, 발음, 기본 표현 중심 코스입니다.",
-    price: 50000,
+    productOptions: createProductOptions(50000, 59000),
     salesStatus: "판매중" as SalesStatus,
     visibility: "공개" as const,
     updatedAt: "2026-05-31",
@@ -26,7 +66,7 @@ const courseBase = [
     name: "문법",
     displayName: "일본어 문법",
     description: "기초 문형부터 활용까지 단계적으로 학습하는 문법 코스입니다.",
-    price: 30000,
+    productOptions: createProductOptions(30000, 36000),
     salesStatus: "판매중" as SalesStatus,
     visibility: "공개" as const,
     updatedAt: "2026-05-29",
@@ -39,7 +79,7 @@ const courseBase = [
     name: "네이티브",
     displayName: "일본어 네이티브",
     description: "실제 회화 뉘앙스와 자연스러운 표현을 다루는 심화 코스입니다.",
-    price: 45000,
+    productOptions: createProductOptions(45000, 52000),
     salesStatus: "예약" as SalesStatus,
     visibility: "비공개" as const,
     updatedAt: "2026-05-22",
@@ -52,7 +92,7 @@ const courseBase = [
     name: "베이직",
     displayName: "영어 베이직",
     description: "영어 기초 문장과 필수 회화 패턴을 익히는 입문 코스입니다.",
-    price: 55000,
+    productOptions: createProductOptions(55000, 64000),
     salesStatus: "판매중" as SalesStatus,
     visibility: "공개" as const,
     updatedAt: "2026-05-28",
@@ -65,7 +105,7 @@ const courseBase = [
     name: "리스닝",
     displayName: "영어 리스닝",
     description: "짧은 대화부터 실전 듣기까지 구성된 리스닝 집중 코스입니다.",
-    price: 40000,
+    productOptions: createProductOptions(40000, 47000),
     salesStatus: "판매중" as SalesStatus,
     visibility: "공개" as const,
     updatedAt: "2026-05-27",
@@ -76,7 +116,7 @@ const courseBase = [
     name: "패턴",
     displayName: "영어 패턴",
     description: "자주 쓰는 문장 패턴을 반복 학습하는 실전 코스입니다.",
-    price: 35000,
+    productOptions: createProductOptions(35000, 41000, false, true),
     salesStatus: "판매중지" as SalesStatus,
     visibility: "비공개" as const,
     updatedAt: "2026-05-20",
@@ -89,7 +129,7 @@ const courseBase = [
     name: "베이직",
     displayName: "스페인어 베이직",
     description: "스페인어 첫 학습자를 위한 기본 발음과 회화 코스입니다.",
-    price: 52000,
+    productOptions: createProductOptions(52000, 60000),
     salesStatus: "판매중" as SalesStatus,
     visibility: "공개" as const,
     updatedAt: "2026-05-24",
@@ -148,7 +188,7 @@ export const lmsCourses: LmsCourse[] = courseBase.map((course) => {
     name: course.name,
     displayName: course.displayName,
     description: course.description,
-    price: course.price,
+    productOptions: course.productOptions,
     salesStatus: course.salesStatus,
     visibility: course.visibility,
     classCount: counts.classCount,
@@ -166,7 +206,7 @@ export const lmsPackages: LmsPackage[] = [
     description: "일본어 입문과 핵심 문법을 함께 학습하는 대표 패키지입니다.",
     internalName: "JP 기본 문법 번들 2026",
     courseIds: ["CRS-JP-BASIC", "CRS-JP-GRAMMAR"],
-    salePrice: 70000,
+    productOptions: createProductOptions(70000, 82000),
     currency: "KRW",
     salesStatus: "판매중",
     visibility: "공개",
@@ -188,7 +228,7 @@ export const lmsPackages: LmsPackage[] = [
     description: "서로 다른 언어의 입문/리스닝 코스를 함께 제공하는 복수 언어 패키지입니다.",
     internalName: "멀티랭귀지 스타터 프로모션",
     courseIds: ["CRS-JP-BASIC", "CRS-EN-LISTENING"],
-    salePrice: 82000,
+    productOptions: createProductOptions(82000, 96000),
     currency: "KRW",
     salesStatus: "예약",
     visibility: "공개",
@@ -211,7 +251,7 @@ export const lmsPackages: LmsPackage[] = [
     description: "단일 코스를 이벤트 가격으로 제공하는 프로모션 패키지입니다.",
     internalName: "EN 리스닝 단일 패키지",
     courseIds: ["CRS-EN-LISTENING"],
-    salePrice: 35000,
+    productOptions: createProductOptions(35000, 42000),
     currency: "KRW",
     salesStatus: "판매중",
     visibility: "공개",
@@ -234,7 +274,7 @@ export const lmsPackages: LmsPackage[] = [
     description: "일본어 문법과 영어 패턴 코스를 함께 구성한 복수 언어 실험 패키지입니다.",
     internalName: "JP 문법 EN 패턴 크로스셀",
     courseIds: ["CRS-JP-GRAMMAR", "CRS-EN-PATTERN"],
-    salePrice: 59000,
+    productOptions: createProductOptions(59000, 72000, false, false),
     currency: "KRW",
     salesStatus: "판매중지",
     visibility: "비공개",
@@ -279,7 +319,17 @@ export function getPackageCourses(packageId: string) {
 export function summarizePackage(lmsPackage: LmsPackage): PackageSummary {
   const courses = getPackageCourses(lmsPackage.id);
   const languages = Array.from(new Set(courses.map((course) => course.language)));
-  const regularPrice = courses.reduce((sum, course) => sum + course.price, 0);
+  const optionSummaries = productOptionTypes.map((type) => {
+    const packageOption = getProductOption(lmsPackage.productOptions, type);
+    const regularPrice = courses.reduce((sum, course) => sum + getProductOption(course.productOptions, type).price, 0);
+
+    return {
+      ...packageOption,
+      regularPrice,
+      discountAmount: calculateDiscountAmount(regularPrice, packageOption.price),
+      discountRate: calculateDiscountRate(regularPrice, packageOption.price),
+    };
+  });
   const classCount = courses.reduce((sum, course) => sum + course.classCount, 0);
   const lessonCount = courses.reduce((sum, course) => sum + course.lessonCount, 0);
 
@@ -288,9 +338,7 @@ export function summarizePackage(lmsPackage: LmsPackage): PackageSummary {
     courses,
     languageScope: languages.length > 1 ? "복수 언어" : "단일 언어",
     languages,
-    regularPrice,
-    discountAmount: calculateDiscountAmount(regularPrice, lmsPackage.salePrice),
-    discountRate: calculateDiscountRate(regularPrice, lmsPackage.salePrice),
+    optionSummaries,
     classCount,
     lessonCount,
   };

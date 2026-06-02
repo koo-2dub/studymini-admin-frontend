@@ -89,7 +89,10 @@ export function CourseFormPage({ mode, course }: { mode: "create" | "edit"; cour
   const validationMessages = [
     !form.name.trim() ? "코스명을 입력해야 저장할 수 있습니다." : "",
     !form.description.trim() ? "설명을 입력해야 운영자가 코스 내용을 확인할 수 있습니다." : "",
-    form.price <= 0 ? "가격을 0원보다 크게 입력해야 합니다." : "",
+    form.digitalIsSelling && form.digitalPrice <= 0 ? "디지털 판매 ON 상태에서는 가격을 0원보다 크게 입력해야 합니다." : "",
+    form.paperDigitalIsSelling && form.paperDigitalPrice <= 0 ? "페이퍼 + 디지털 판매 ON 상태에서는 가격을 0원보다 크게 입력해야 합니다." : "",
+    form.paperDigitalPrice < form.digitalPrice ? "페이퍼 + 디지털 가격이 디지털 가격보다 낮습니다." : "",
+    !form.digitalIsSelling && !form.paperDigitalIsSelling ? "두 옵션 중 최소 하나는 판매 ON이어야 합니다." : "",
     form.selectedClassIds.length === 0 ? "최소 1개 이상의 포함 수업을 선택해야 합니다." : "",
     selectedLanguageCount > 1 ? "하나의 코스에 여러 언어 수업이 포함되어 있습니다. 언어 선택값을 다시 확인하세요." : "",
     selectedClasses.some((courseClass) => courseClass.language !== form.language)
@@ -124,7 +127,7 @@ export function CourseFormPage({ mode, course }: { mode: "create" | "edit"; cour
           <Card>
             <CardHeader>
               <CardTitle>기본 정보</CardTitle>
-              <CardDescription>언어, 코스명, 설명, 가격, 판매상태와 공개상태를 설정합니다.</CardDescription>
+              <CardDescription>언어, 코스명, 설명, 옵션별 가격/판매 여부와 공개상태를 설정합니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
@@ -145,12 +148,41 @@ export function CourseFormPage({ mode, course }: { mode: "create" | "edit"; cour
                   />
                 </label>
                 <label>
-                  <FieldLabel>가격</FieldLabel>
+                  <FieldLabel>디지털 가격</FieldLabel>
                   <FormInput
                     type="number"
-                    value={String(form.price)}
-                    onChange={(event) => updateForm("price", Number(event.target.value))}
+                    value={String(form.digitalPrice)}
+                    onChange={(event) => updateForm("digitalPrice", Number(event.target.value))}
                   />
+                </label>
+                <label>
+                  <FieldLabel>페이퍼 + 디지털 가격</FieldLabel>
+                  <FormInput
+                    type="number"
+                    value={String(form.paperDigitalPrice)}
+                    onChange={(event) => updateForm("paperDigitalPrice", Number(event.target.value))}
+                  />
+                  <span className="mt-2 inline-flex"><Badge variant="warning">배송 필요</Badge></span>
+                </label>
+                <label>
+                  <FieldLabel>디지털 판매 여부</FieldLabel>
+                  <FormSelect
+                    value={form.digitalIsSelling ? "ON" : "OFF"}
+                    onChange={(event) => updateForm("digitalIsSelling", event.target.value === "ON")}
+                  >
+                    <option>ON</option>
+                    <option>OFF</option>
+                  </FormSelect>
+                </label>
+                <label>
+                  <FieldLabel>페이퍼 + 디지털 판매 여부</FieldLabel>
+                  <FormSelect
+                    value={form.paperDigitalIsSelling ? "ON" : "OFF"}
+                    onChange={(event) => updateForm("paperDigitalIsSelling", event.target.value === "ON")}
+                  >
+                    <option>ON</option>
+                    <option>OFF</option>
+                  </FormSelect>
                 </label>
                 <label>
                   <FieldLabel>판매상태</FieldLabel>
@@ -308,7 +340,13 @@ export function CourseFormPage({ mode, course }: { mode: "create" | "edit"; cour
             <CardContent className="space-y-4">
               <SummaryRow label="언어" value={form.language} />
               <SummaryRow label="코스명" value={form.name || "-"} strong />
-              <SummaryRow label="가격" value={formatWon(form.price)} />
+              <SummaryRow label="디지털 가격" value={formatWon(form.digitalPrice)} />
+              <SummaryRow label="페이퍼+디지털 가격" value={formatWon(form.paperDigitalPrice)} />
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={form.digitalIsSelling ? "success" : "slate"}>디지털 {form.digitalIsSelling ? "판매 ON" : "판매 OFF"}</Badge>
+                <Badge variant={form.paperDigitalIsSelling ? "success" : "slate"}>페이퍼+디지털 {form.paperDigitalIsSelling ? "판매 ON" : "판매 OFF"}</Badge>
+                <Badge variant="warning">페이퍼+디지털 배송 필요</Badge>
+              </div>
               <SummaryRow label="수업 / 레슨" value={`${selectedClasses.length}개 / ${selectedLessonCount}개`} />
               <div className="h-px bg-slate-100" />
               <div className="flex flex-wrap gap-2">

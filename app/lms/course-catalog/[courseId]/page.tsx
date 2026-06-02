@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { formatWon, getSalesStatusTone, lmsCourses } from "../../_data/catalog";
+import { formatWon, getDigitalOption, getPaperDigitalOption, getSalesStatusTone, lmsCourses } from "../../_data/catalog";
 import { getCourseCatalogDetail, getCourseCatalogDraftDetail, type CourseCatalogDraftDetailInput } from "../data";
 
 export function generateStaticParams() {
@@ -31,6 +31,25 @@ function InfoCard({ icon: Icon, label, value, detail }: { icon: typeof Boxes; la
   );
 }
 
+function ProductOptionCard({ option }: { option: ReturnType<typeof getDigitalOption> }) {
+  return (
+    <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-black text-slate-950">{option.label}</p>
+          <p className="mt-2 text-2xl font-black text-indigo-700">{formatWon(option.price)}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant={option.isSelling ? "success" : "slate"}>{option.isSelling ? "판매 ON" : "판매 OFF"}</Badge>
+          <Badge variant={option.requiresShipping ? "warning" : "slate"}>
+            {option.requiresShipping ? "배송 필요" : "배송 필요 없음"}
+          </Badge>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DetailItem({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4">
@@ -50,7 +69,10 @@ function getDraftFromSearchParams(searchParams: Record<string, string | string[]
   const name = toParamValue(searchParams.name) ?? "신규 코스";
   const language = toParamValue(searchParams.language) ?? "일본어";
   const description = toParamValue(searchParams.description) ?? "코스 생성/수정 화면에서 저장한 상세 미리보기입니다.";
-  const price = Number(toParamValue(searchParams.price) ?? 0);
+  const digitalPrice = Number(toParamValue(searchParams.digitalPrice) ?? 0);
+  const paperDigitalPrice = Number(toParamValue(searchParams.paperDigitalPrice) ?? 0);
+  const digitalIsSelling = toParamValue(searchParams.digitalIsSelling) !== "false";
+  const paperDigitalIsSelling = toParamValue(searchParams.paperDigitalIsSelling) !== "false";
   const salesStatus = (toParamValue(searchParams.salesStatus) ?? "판매중지") as CourseCatalogDraftDetailInput["salesStatus"];
   const visibility = (toParamValue(searchParams.visibility) ?? "비공개") as CourseCatalogDraftDetailInput["visibility"];
   const selectedClassIds = (toParamValue(searchParams.classIds) ?? "").split(",").filter(Boolean);
@@ -59,7 +81,10 @@ function getDraftFromSearchParams(searchParams: Record<string, string | string[]
     language,
     name,
     description,
-    price,
+    digitalPrice,
+    paperDigitalPrice,
+    digitalIsSelling,
+    paperDigitalIsSelling,
     salesStatus,
     visibility,
     selectedClassIds,
@@ -84,6 +109,8 @@ export default async function CourseCatalogDetailPage({
   const editHref = lmsCourses.some((item) => item.id === course.id)
     ? `/lms/course-catalog/${course.id}/edit`
     : "/lms/course-catalog/create";
+  const digitalOption = getDigitalOption(course.productOptions);
+  const paperDigitalOption = getPaperDigitalOption(course.productOptions);
 
   return (
     <>
@@ -115,7 +142,7 @@ export default async function CourseCatalogDetailPage({
         <InfoCard icon={Boxes} label="포함 수업 수" value={`${course.classCount}개`} detail="코스 구매 시 열리는 수업" />
         <InfoCard icon={BookOpen} label="포함 레슨 수" value={`${course.lessonCount}개`} detail="학습 권한 부여 대상" />
         <InfoCard icon={PackageCheck} label="포함 패키지 수" value={`${course.packageCount}개`} detail="이 코스를 포함한 패키지" />
-        <InfoCard icon={Coins} label="코스 가격" value={formatWon(course.price)} detail="단일 코스 판매가" />
+        <InfoCard icon={Coins} label="디지털 가격" value={formatWon(digitalOption.price)} detail="배송지 입력 불필요" />
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_0.85fr]">
@@ -132,7 +159,8 @@ export default async function CourseCatalogDetailPage({
             <div className="grid gap-4 md:grid-cols-2">
               <DetailItem label="코스 ID" value={course.id} mono />
               <DetailItem label="언어" value={course.language} />
-              <DetailItem label="가격" value={formatWon(course.price)} />
+              <DetailItem label="디지털 가격" value={formatWon(digitalOption.price)} />
+              <DetailItem label="페이퍼+디지털 가격" value={formatWon(paperDigitalOption.price)} />
               <DetailItem label="수정일" value={course.updatedAt} />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -149,6 +177,21 @@ export default async function CourseCatalogDetailPage({
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Coins className="h-5 w-5 text-indigo-500" />
+              <CardTitle>상품 옵션</CardTitle>
+            </div>
+            <CardDescription>디지털과 페이퍼 + 디지털은 가격과 판매 여부를 독립적으로 관리합니다.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {course.productOptions.map((option) => (
+              <ProductOptionCard key={option.type} option={option} />
+            ))}
           </CardContent>
         </Card>
 
@@ -237,7 +280,8 @@ export default async function CourseCatalogDetailPage({
               <TableHeader>
                 <TableRow>
                   <TableHead>패키지명</TableHead>
-                  <TableHead>판매가</TableHead>
+                  <TableHead>디지털 가격</TableHead>
+                  <TableHead>페이퍼+디지털 가격</TableHead>
                   <TableHead>판매상태</TableHead>
                   <TableHead>패키지 상세 이동</TableHead>
                 </TableRow>
@@ -246,7 +290,13 @@ export default async function CourseCatalogDetailPage({
                 {course.packages.map((lmsPackage) => (
                   <TableRow key={lmsPackage.id} className="hover:bg-slate-50">
                     <TableCell className="min-w-48 font-bold text-slate-900">{lmsPackage.displayName}</TableCell>
-                    <TableCell className="font-semibold text-slate-900">{formatWon(lmsPackage.salePrice)}</TableCell>
+                    <TableCell className="font-semibold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
+                    <TableCell className="font-semibold text-slate-900">
+                      <div className="space-y-1">
+                        <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
+                        <Badge variant="warning">배송 필요</Badge>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
                     </TableCell>
@@ -259,7 +309,7 @@ export default async function CourseCatalogDetailPage({
                 ))}
                 {course.packages.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-10 text-center font-semibold text-slate-500">
+                    <TableCell colSpan={5} className="py-10 text-center font-semibold text-slate-500">
                       이 코스를 포함한 패키지가 없습니다.
                     </TableCell>
                   </TableRow>

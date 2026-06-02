@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-import { formatWon, getPackageById, getSalesStatusTone, packageSummaries } from "../../_data/catalog";
+import { formatWon, getDigitalOption, getPackageById, getPaperDigitalOption, getSalesStatusTone, packageSummaries } from "../../_data/catalog";
 
 export function generateStaticParams() {
   return packageSummaries.map((lmsPackage) => ({ packageId: lmsPackage.id }));
@@ -35,6 +35,11 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
   const lmsPackage = getPackageById(packageId);
 
   if (!lmsPackage) notFound();
+
+  const digitalOption = getDigitalOption(lmsPackage.productOptions);
+  const paperDigitalOption = getPaperDigitalOption(lmsPackage.productOptions);
+  const digitalSummary = getDigitalOption(lmsPackage.optionSummaries);
+  const paperDigitalSummary = getPaperDigitalOption(lmsPackage.optionSummaries);
 
   return (
     <>
@@ -65,7 +70,7 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <InfoCard icon={Languages} label="언어 구성" value={lmsPackage.languageScope} detail={lmsPackage.languages.join(", ")} />
         <InfoCard icon={PackageCheck} label="포함 코스" value={`${lmsPackage.courses.length}개`} detail={`${lmsPackage.classCount}개 수업 · ${lmsPackage.lessonCount}개 레슨`} />
-        <InfoCard icon={Coins} label="판매가" value={formatWon(lmsPackage.salePrice)} detail={`정가 ${formatWon(lmsPackage.regularPrice)} · ${lmsPackage.discountRate.toFixed(1)}% 할인`} />
+        <InfoCard icon={Coins} label="디지털 가격" value={formatWon(digitalOption.price)} detail={`${digitalSummary.discountRate.toFixed(1)}% 할인`} />
         <InfoCard icon={CalendarDays} label="판매 기간" value={lmsPackage.saleStartsAt ?? "미설정"} detail={lmsPackage.saleEndsAt ? `${lmsPackage.saleEndsAt} 종료` : "종료일 없음"} />
       </section>
 
@@ -107,14 +112,29 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
 
         <Card>
           <CardHeader>
-            <CardTitle>가격 / 주문 요약</CardTitle>
-            <CardDescription>패키지 판매가와 주문/매출 현황입니다.</CardDescription>
+            <CardTitle>상품 옵션 / 주문 요약</CardTitle>
+            <CardDescription>디지털과 페이퍼 + 디지털은 운영자가 직접 입력한 별도 판매 옵션입니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <PriceRow label="코스 정가 합계" value={formatWon(lmsPackage.regularPrice)} />
-            <PriceRow label="패키지 판매가" value={formatWon(lmsPackage.salePrice)} strong />
-            <PriceRow label="할인 금액" value={formatWon(lmsPackage.discountAmount)} />
-            <PriceRow label="할인율" value={`${lmsPackage.discountRate.toFixed(1)}%`} />
+            {lmsPackage.optionSummaries.map((option) => (
+              <div key={option.type} className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-slate-950">{option.label}</p>
+                    <p className="mt-2 text-2xl font-black text-indigo-700">{formatWon(option.price)}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-500">
+                      정가 {formatWon(option.regularPrice)} · 할인 {formatWon(option.discountAmount)} · {option.discountRate.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant={option.isSelling ? "success" : "slate"}>{option.isSelling ? "판매 ON" : "판매 OFF"}</Badge>
+                    <Badge variant={option.requiresShipping ? "warning" : "slate"}>
+                      {option.requiresShipping ? "배송 필요" : "배송 필요 없음"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
             <div className="h-px bg-slate-100" />
             <PriceRow label="주문 수" value={`${lmsPackage.orderCount}건`} />
             <PriceRow label="결제 완료" value={`${lmsPackage.paidOrderCount}건`} />
@@ -136,7 +156,8 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                 <TableHead>순서</TableHead>
                 <TableHead>언어</TableHead>
                 <TableHead>코스명</TableHead>
-                <TableHead>가격</TableHead>
+                <TableHead>디지털 가격</TableHead>
+                <TableHead>페이퍼+디지털 가격</TableHead>
                 <TableHead>수업 수</TableHead>
                 <TableHead>레슨 수</TableHead>
                 <TableHead>포함 패키지</TableHead>
@@ -152,7 +173,13 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
                     {course.displayName}
                     <p className="mt-1 font-mono text-xs text-slate-500">{course.id}</p>
                   </TableCell>
-                  <TableCell>{formatWon(course.price)}</TableCell>
+                  <TableCell>{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <p>{formatWon(getPaperDigitalOption(course.productOptions).price)}</p>
+                      <Badge variant="warning">배송 필요</Badge>
+                    </div>
+                  </TableCell>
                   <TableCell>{course.classCount}개</TableCell>
                   <TableCell>{course.lessonCount}개</TableCell>
                   <TableCell>{course.packageCount}개</TableCell>
