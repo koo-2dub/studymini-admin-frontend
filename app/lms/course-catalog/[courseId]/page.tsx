@@ -229,26 +229,28 @@ export default async function CourseCatalogDetailPage({
             <CardDescription>수업명, 단계, 레슨 수, 공개상태를 확인하고 수업 상세로 이동합니다.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>수업명</TableHead>
-                  <TableHead>단계</TableHead>
-                  <TableHead>레슨 수</TableHead>
-                  <TableHead>공개상태</TableHead>
-                  <TableHead>수업 상세 이동</TableHead>
+                  <TableHead className="min-w-44">수업명</TableHead>
+                  <TableHead className="whitespace-nowrap">단계</TableHead>
+                  <TableHead className="whitespace-nowrap">레슨 수</TableHead>
+                  <TableHead className="whitespace-nowrap">공개상태</TableHead>
+                  <TableHead className="whitespace-nowrap">수업 상세 이동</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {course.classes.map((courseClass) => (
                   <TableRow key={courseClass.id} className="hover:bg-slate-50">
-                    <TableCell className="min-w-40 font-bold text-slate-900">{courseClass.className}</TableCell>
-                    <TableCell>{courseClass.step}</TableCell>
-                    <TableCell className="font-semibold text-slate-900">{courseClass.lessons.length}개</TableCell>
-                    <TableCell>
+                    <TableCell className="min-w-44 max-w-64 font-bold text-slate-900">
+                      <span className="line-clamp-2 leading-5">{courseClass.className}</span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{courseClass.step}</TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold text-slate-900">{courseClass.lessons.length}개</TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge variant={courseClass.visibility === "공개" ? "success" : "slate"}>{courseClass.visibility}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Link href={`/lms/courses/${courseClass.id}`} className="font-bold text-primary hover:underline">
                         상세 보기
                       </Link>
@@ -276,31 +278,33 @@ export default async function CourseCatalogDetailPage({
             <CardDescription>이 코스가 포함된 패키지 판매 단위를 확인합니다.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>패키지명</TableHead>
-                  <TableHead>디지털 가격</TableHead>
-                  <TableHead>페이퍼+디지털 가격</TableHead>
-                  <TableHead>판매상태</TableHead>
-                  <TableHead>패키지 상세 이동</TableHead>
+                  <TableHead className="min-w-52">패키지명</TableHead>
+                  <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
+                  <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
+                  <TableHead className="whitespace-nowrap">판매상태</TableHead>
+                  <TableHead className="whitespace-nowrap">패키지 상세 이동</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {course.packages.map((lmsPackage) => (
                   <TableRow key={lmsPackage.id} className="hover:bg-slate-50">
-                    <TableCell className="min-w-48 font-bold text-slate-900">{lmsPackage.displayName}</TableCell>
-                    <TableCell className="font-semibold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
-                    <TableCell className="font-semibold text-slate-900">
+                    <TableCell className="min-w-52 max-w-72 font-bold text-slate-900">
+                      <span className="line-clamp-2 leading-5">{lmsPackage.displayName}</span>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold text-slate-900">{formatWon(getDigitalOption(lmsPackage.productOptions).price)}</TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold text-slate-900">
                       <div className="space-y-1">
                         <p>{formatWon(getPaperDigitalOption(lmsPackage.productOptions).price)}</p>
                         <Badge variant="warning">배송 필요</Badge>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Badge variant={getSalesStatusTone(lmsPackage.salesStatus)}>{lmsPackage.salesStatus}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <Link href={`/lms/packages/${lmsPackage.id}`} className="font-bold text-primary hover:underline">
                         상세 보기
                       </Link>

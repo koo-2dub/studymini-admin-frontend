@@ -150,40 +150,40 @@ export default async function PackageDetailPage({ params }: { params: Promise<{ 
           <CardDescription>패키지는 코스를 포함하며, 코스는 반드시 특정 언어에 소속됩니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[1040px]">
             <TableHeader>
               <TableRow>
-                <TableHead>순서</TableHead>
-                <TableHead>언어</TableHead>
-                <TableHead>코스명</TableHead>
-                <TableHead>디지털 가격</TableHead>
-                <TableHead>페이퍼+디지털 가격</TableHead>
-                <TableHead>수업 수</TableHead>
-                <TableHead>레슨 수</TableHead>
-                <TableHead>포함 패키지</TableHead>
-                <TableHead>상태</TableHead>
+                <TableHead className="whitespace-nowrap">순서</TableHead>
+                <TableHead className="whitespace-nowrap">언어</TableHead>
+                <TableHead className="min-w-56">코스명</TableHead>
+                <TableHead className="whitespace-nowrap">디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">페이퍼+디지털 가격</TableHead>
+                <TableHead className="whitespace-nowrap">수업 수</TableHead>
+                <TableHead className="whitespace-nowrap">레슨 수</TableHead>
+                <TableHead className="whitespace-nowrap">포함 패키지</TableHead>
+                <TableHead className="whitespace-nowrap">상태</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lmsPackage.courses.map((course, index) => (
                 <TableRow key={course.id}>
-                  <TableCell className="font-mono font-bold">{index + 1}</TableCell>
-                  <TableCell>{course.language}</TableCell>
-                  <TableCell className="min-w-52 font-bold text-slate-900">
-                    {course.displayName}
+                  <TableCell className="whitespace-nowrap font-mono font-bold">{index + 1}</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.language}</TableCell>
+                  <TableCell className="min-w-56 max-w-72 font-bold text-slate-900">
+                    <span className="line-clamp-2 leading-5">{course.displayName}</span>
                     <p className="mt-1 font-mono text-xs text-slate-500">{course.id}</p>
                   </TableCell>
-                  <TableCell>{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">{formatWon(getDigitalOption(course.productOptions).price)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="space-y-1">
                       <p>{formatWon(getPaperDigitalOption(course.productOptions).price)}</p>
                       <Badge variant="warning">배송 필요</Badge>
                     </div>
                   </TableCell>
-                  <TableCell>{course.classCount}개</TableCell>
-                  <TableCell>{course.lessonCount}개</TableCell>
-                  <TableCell>{course.packageCount}개</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">{course.classCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.lessonCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">{course.packageCount}개</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     <div className="space-y-1">
                       <Badge variant={getSalesStatusTone(course.salesStatus)}>{course.salesStatus}</Badge>
                       <div><Badge variant={course.visibility === "공개" ? "success" : "slate"}>{course.visibility}</Badge></div>
