@@ -187,12 +187,13 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   }, [filteredOrders]);
 
   const todayOrders = orders.filter((order) => order.date === TODAY);
-  const todayPaidOrders = orders.filter((order) => order.date === TODAY && order.paymentStatus === "결제완료");
+  const paidOrders = orders.filter((order) => order.paymentStatus === "결제완료" || order.paymentStatus === "환불요청");
   const pendingPayments = orders.filter((order) => order.paymentStatus === "결제대기");
   const waitingShipping = orders.filter((order) => order.shippingStatus === "배송대기");
   const refundRequests = refundRows.filter((refund) => refund.status === "환불 요청" || refund.status === "환불 승인 대기");
-  const todayRevenue = todayPaidOrders.reduce((sum, order) => sum + order.paymentAmount, 0);
+  const totalPaymentAmount = paidOrders.reduce((sum, order) => sum + order.paymentAmount, 0);
   const refundTotal = orders.reduce((sum, order) => sum + order.refundAmount, 0);
+  const netRevenue = totalPaymentAmount - refundTotal;
 
   const updateFilter = (key: keyof OrderFilters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -208,16 +209,17 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-black text-slate-950">핵심 KPI</h2>
-          <p className="text-sm font-semibold text-slate-500">운영자가 먼저 확인해야 하는 주문량, 매출, 환불 규모입니다.</p>
+          <p className="text-sm font-semibold text-slate-500">총 결제금액, 총 환불금액, 실제 순매출을 먼저 확인합니다.</p>
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
-          <SummaryCard label="오늘 주문" value={`${todayOrders.length.toLocaleString()}건`} detail={`주문일 ${TODAY}`} onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY })} size="primary" />
-          <SummaryCard label="오늘 매출" value={formatCurrency(todayRevenue)} detail="오늘 결제완료 합계" onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY, paymentStatus: "결제완료" })} size="primary" />
-          <SummaryCard label="총 환불 금액" value={formatCurrency(refundTotal)} detail="환불 이력 주문" onClick={() => applyQuickFilter({ refundStatus: "has" })} tone="rose" size="primary" />
+          <SummaryCard label="순매출" value={formatCurrency(netRevenue)} detail="총 결제금액 - 총 환불금액" onClick={() => applyQuickFilter({})} size="primary" />
+          <SummaryCard label="총 결제금액" value={formatCurrency(totalPaymentAmount)} detail="결제완료 및 환불요청 주문 합계" onClick={() => applyQuickFilter({ paymentStatus: "결제완료" })} size="primary" />
+          <SummaryCard label="총 환불금액" value={formatCurrency(refundTotal)} detail="환불 이력 주문" onClick={() => applyQuickFilter({ refundStatus: "has" })} tone="rose" size="primary" />
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard label="오늘 주문" value={`${todayOrders.length.toLocaleString()}건`} detail={`주문일 ${TODAY}`} onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY })} />
         <SummaryCard label="결제 대기" value={`${pendingPayments.length.toLocaleString()}건`} detail="결제상태 결제대기" onClick={() => applyQuickFilter({ paymentStatus: "결제대기" })} />
         <SummaryCard label="배송 대기" value={`${waitingShipping.length.toLocaleString()}건`} detail="배송상태 배송대기" onClick={() => applyQuickFilter({ shippingStatus: "배송대기" })} />
         <SummaryCard label="환불 요청" value={`${refundRequests.length.toLocaleString()}건`} detail="환불 관리로 이동" onClick={() => applyQuickFilter({}, "refunds")} tone="rose" />
