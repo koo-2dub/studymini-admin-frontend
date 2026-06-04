@@ -36,37 +36,47 @@ export default function AccessTrialsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">체험단명</TableHead>
-                <TableHead className="whitespace-nowrap">상태</TableHead>
+                <TableHead className="w-[96px] whitespace-nowrap">상태</TableHead>
+                <TableHead className="whitespace-nowrap">참여 회원</TableHead>
                 <TableHead className="whitespace-nowrap">대상 콘텐츠</TableHead>
                 <TableHead className="whitespace-nowrap">기간</TableHead>
-                <TableHead className="whitespace-nowrap">참여 회원</TableHead>
                 <TableHead className="whitespace-nowrap">담당</TableHead>
-                <TableHead className="whitespace-nowrap">액션</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trialCampaigns.map((trial) => (
-                <TableRow key={trial.id}>
-                  <TableCell>
-                    <div className="min-w-[220px]">
-                      <p className="font-bold text-slate-900">{trial.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">{trial.memo}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell><Badge variant={statusVariant(trial.status)}>{trial.status}</Badge></TableCell>
-                  <TableCell className="min-w-[240px] text-sm text-slate-600">
-                    {trial.content.map((content) => `${content.type}: ${content.title}`).join(" / ")}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">{trial.startDate} ~ {trial.endDate}</TableCell>
-                  <TableCell className="whitespace-nowrap font-semibold">{trial.memberCount}명</TableCell>
-                  <TableCell className="whitespace-nowrap">{trial.owner}</TableCell>
-                  <TableCell>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/access/trials/${trial.id}`}>상세 보기</Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {trialCampaigns.map((trial) => {
+                const detailHref = `/access/trials/${trial.id}`;
+
+                return (
+                  <TableRow key={trial.id} className="cursor-pointer">
+                    <TableCell>
+                      <Link href={detailHref} className="block min-w-[220px] py-1">
+                        <span className="block font-bold text-slate-900">{trial.name}</span>
+                        <span className="mt-1 block text-xs text-slate-500">{trial.memo}</span>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="w-[96px] whitespace-nowrap">
+                      <Link href={detailHref} className="block py-1">
+                        <Badge variant={statusVariant(trial.status)} className="whitespace-nowrap">{trial.status}</Badge>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold">
+                      <Link href={detailHref} className="block py-1">{trial.memberCount}명</Link>
+                    </TableCell>
+                    <TableCell className="min-w-[240px] text-sm text-slate-600">
+                      <Link href={detailHref} className="block py-1">
+                        {trial.content.map((content) => `${content.type}: ${content.title}`).join(" / ")}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Link href={detailHref} className="block py-1">{trial.startDate} ~ {trial.endDate}</Link>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Link href={detailHref} className="block py-1">{trial.owner}</Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

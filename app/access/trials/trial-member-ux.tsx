@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Check, Search, Upload, X } from "lucide-react";
 
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { buildTrialMember, csvPreviewRows, mockMembers, type CsvPreviewMember, type SearchableMember, type TrialContent, type TrialMember } from "./data";
+import { buildTrialMember, csvPreviewRows, mockMembers, trialContents, type CsvPreviewMember, type SearchableMember, type TrialContent, type TrialMember } from "./data";
 
 type MemberManagerProps = {
   title?: string;
@@ -49,18 +50,6 @@ export function TrialMemberManager({
     setActivePanel(null);
   };
 
-  const removeMember = (memberId: string) => {
-    setMembers((current) => current.filter((member) => member.id !== memberId));
-  };
-
-  const extendPermission = (memberId: string) => {
-    setMembers((current) =>
-      current.map((member) =>
-        member.id === memberId ? { ...member, permissionStatus: "권한 활성", endDate: "2026-07-31" } : member,
-      ),
-    );
-  };
-
   return (
     <Card>
       <CardHeader className="gap-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
@@ -80,9 +69,119 @@ export function TrialMemberManager({
       <CardContent className="space-y-5">
         {activePanel === "search" ? <MemberSearchPanel addedIds={addedIds} onAdd={(selected) => addMembers(selected, "검색 추가")} onClose={() => setActivePanel(null)} /> : null}
         {activePanel === "csv" ? <CsvUploadPanel addedIds={addedIds} onAdd={(selected) => addMembers(selected, "CSV 업로드")} onClose={() => setActivePanel(null)} /> : null}
-        <MemberTable members={members} mode={mode} onExtend={extendPermission} onRemove={removeMember} />
+        <MemberTable members={members} mode={mode} />
       </CardContent>
     </Card>
+  );
+}
+
+export function TrialCreateParticipationSection() {
+  const [searchQuery, setSearchQuery] = useState("영어");
+  const [selectedContents, setSelectedContents] = useState<TrialContent[]>([trialContents[0], trialContents[2]]);
+
+  const filteredContents = trialContents.filter((content) => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return `${content.type} ${content.title} ${content.id}`.toLowerCase().includes(normalizedQuery);
+  });
+
+  const toggleContent = (content: TrialContent) => {
+    setSelectedContents((current) => {
+      const alreadySelected = current.some((item) => item.id === content.id);
+
+      if (alreadySelected) {
+        return current.filter((item) => item.id !== content.id);
+      }
+
+      return [...current, content];
+    });
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>대상 코스/패키지</CardTitle>
+          <CardDescription>코스 또는 패키지를 검색한 뒤 체험단 대상 콘텐츠로 선택합니다.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <label className="space-y-1 text-sm font-semibold text-slate-700">
+              대상 코스/패키지 검색
+              <input
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary"
+                placeholder="코스명 또는 패키지명을 입력하세요"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </label>
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-100 bg-white">
+              <Table className="min-w-[720px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">유형</TableHead>
+                    <TableHead className="whitespace-nowrap">콘텐츠명</TableHead>
+                    <TableHead className="whitespace-nowrap">콘텐츠 ID</TableHead>
+                    <TableHead className="whitespace-nowrap">선택</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContents.map((content) => {
+                    const isSelected = selectedContents.some((item) => item.id === content.id);
+
+                    return (
+                      <TableRow key={content.id}>
+                        <TableCell className="whitespace-nowrap"><Badge variant="slate">{content.type}</Badge></TableCell>
+                        <TableCell className="min-w-[260px] font-semibold text-slate-800">{content.title}</TableCell>
+                        <TableCell className="whitespace-nowrap text-slate-500">{content.id}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Button type="button" size="sm" variant={isSelected ? "secondary" : "outline"} onClick={() => toggleContent(content)}>
+                            {isSelected ? "선택 해제" : "선택"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {filteredContents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-8 text-center text-sm font-medium text-slate-500">
+                        검색 결과가 없습니다. 다른 코스명 또는 패키지명을 입력해주세요.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-white p-4">
+            <h4 className="font-bold text-slate-900">선택된 대상 콘텐츠</h4>
+            {selectedContents.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedContents.map((content) => (
+                  <Badge key={content.id} variant="default" className="whitespace-nowrap">
+                    {content.type}: {content.title}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm font-medium text-slate-500">아직 선택된 대상 콘텐츠가 없습니다.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <TrialMemberManager
+        title="참여 회원"
+        description="생성 화면에서도 회원 검색 추가와 CSV 업로드로 참여 회원을 미리 추가할 수 있습니다."
+        grantedContent={selectedContents}
+        mode="preview"
+      />
+    </>
   );
 }
 
@@ -254,13 +353,9 @@ function CsvUploadPanel({
 function MemberTable({
   members,
   mode,
-  onExtend,
-  onRemove,
 }: {
   members: TrialMember[];
   mode: "preview" | "detail";
-  onExtend: (memberId: string) => void;
-  onRemove: (memberId: string) => void;
 }) {
   if (members.length === 0) {
     return (
@@ -272,19 +367,16 @@ function MemberTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-100">
-      <Table className="min-w-[1320px]">
+      <Table className="min-w-[980px]">
         <TableHeader>
           <TableRow>
             <TableHead className="whitespace-nowrap">이름</TableHead>
             <TableHead className="whitespace-nowrap">이메일</TableHead>
-            <TableHead className="whitespace-nowrap">전화번호</TableHead>
             <TableHead className="whitespace-nowrap">User ID</TableHead>
-            <TableHead className="whitespace-nowrap">권한 상태</TableHead>
+            <TableHead className="whitespace-nowrap">현재 부여된 콘텐츠</TableHead>
             <TableHead className="whitespace-nowrap">시작일</TableHead>
             <TableHead className="whitespace-nowrap">종료일</TableHead>
-            <TableHead className="whitespace-nowrap">현재 부여된 콘텐츠(코스/패키지)</TableHead>
             <TableHead className="whitespace-nowrap">추가 방식</TableHead>
-            <TableHead className="whitespace-nowrap">액션</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -292,24 +384,24 @@ function MemberTable({
             <TableRow key={member.id}>
               <TableCell className="whitespace-nowrap font-semibold">{member.name}</TableCell>
               <TableCell className="whitespace-nowrap">{member.email}</TableCell>
-              <TableCell className="whitespace-nowrap">{member.phone}</TableCell>
-              <TableCell className="whitespace-nowrap">{member.userId}</TableCell>
-              <TableCell><Badge variant={statusVariant(member.permissionStatus)}>{member.permissionStatus}</Badge></TableCell>
+              <TableCell className="whitespace-nowrap">
+                <Link href={`/members/${member.userId}`} className="font-semibold text-primary underline-offset-4 hover:underline">
+                  {member.userId}
+                </Link>
+              </TableCell>
+              <TableCell className="min-w-[260px] text-sm text-slate-600">{contentText(member.grantedContent)}</TableCell>
               <TableCell className="whitespace-nowrap">{member.startDate}</TableCell>
               <TableCell className="whitespace-nowrap">{member.endDate}</TableCell>
-              <TableCell className="min-w-[260px] text-sm text-slate-600">{contentText(member.grantedContent)}</TableCell>
-              <TableCell><Badge variant="slate">{member.addMethod}</Badge></TableCell>
-              <TableCell>
-                <div className="flex min-w-[220px] flex-wrap gap-2">
-                  <Button type="button" size="sm" variant="outline">유저 상세 보기</Button>
-                  <Button type="button" size="sm" variant="secondary" onClick={() => onExtend(member.id)}>권한 연장</Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => onRemove(member.id)}>{mode === "preview" ? "제외" : "제거"}</Button>
-                </div>
-              </TableCell>
+              <TableCell className="whitespace-nowrap"><Badge variant="slate">{member.addMethod}</Badge></TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      {mode === "preview" ? (
+        <p className="border-t border-slate-100 px-4 py-3 text-xs font-medium text-slate-500">
+          저장 전 preview 목록입니다. User ID 링크는 mock 유저 상세 경로로 이동합니다.
+        </p>
+      ) : null}
     </div>
   );
 }
