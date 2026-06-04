@@ -135,16 +135,22 @@ function formatAxisValue(value: number, unit: "currency" | "count") {
   return unit === "count" ? `${Math.round(value)}건` : `₩${Math.round(value / 10000).toLocaleString("ko-KR")}만`;
 }
 
+function getChartPoint(value: number, index: number, length: number, width: number, height: number, padding: number, max: number, min: number) {
+  const x = padding + (index * (width - padding * 2)) / Math.max(1, length - 1);
+  const ratio = max === min ? 0.5 : (value - min) / (max - min);
+  const y = height - padding - ratio * (height - padding * 2);
+  return { x, y };
+}
+
 function buildPath(points: number[], width: number, height: number, padding: number, max: number, min: number) {
-  if (points.length === 1) return `M${padding},${height / 2} L${width - padding},${height / 2}`;
-  return points
-    .map((value, index) => {
-      const x = padding + (index * (width - padding * 2)) / (points.length - 1);
-      const ratio = max === min ? 0.5 : (value - min) / (max - min);
-      const y = height - padding - ratio * (height - padding * 2);
-      return `${index === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
+  const coordinates = points.map((value, index) => getChartPoint(value, index, points.length, width, height, padding, max, min));
+  if (coordinates.length === 1) return `M${padding},${height / 2} L${width - padding},${height / 2}`;
+  return coordinates.reduce((path, point, index) => {
+    if (index === 0) return `M${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+    const previous = coordinates[index - 1];
+    const controlX = (previous.x + point.x) / 2;
+    return `${path} C${controlX.toFixed(2)},${previous.y.toFixed(2)} ${controlX.toFixed(2)},${point.y.toFixed(2)} ${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+  }, "");
 }
 
 function getComparisonFactor(comparison: ComparisonOption) {
@@ -229,6 +235,7 @@ export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("최근 30일");
   const [selectedComparison, setSelectedComparison] = useState<ComparisonOption>("전월 대비");
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>("순매출");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [draftStart, setDraftStart] = useState("2026-05-20");
   const [draftEnd, setDraftEnd] = useState("2026-06-04");
   const [customStart, setCustomStart] = useState("2026-05-20");
@@ -257,6 +264,8 @@ export default function AnalyticsPage() {
     return {
       currentPath: buildPath(currentValues, width, height, padding, max, min),
       comparePath: buildPath(compareValues, width, height, padding, max, min),
+      currentCoordinates: currentValues.map((value, index) => getChartPoint(value, index, currentValues.length, width, height, padding, max, min)),
+      compareCoordinates: compareValues.map((value, index) => getChartPoint(value, index, compareValues.length, width, height, padding, max, min)),
       currentValues,
       compareValues,
       width,
@@ -281,7 +290,7 @@ export default function AnalyticsPage() {
     const repeatRate = Math.min(48, 34 + trend.points.length * 0.16 + (selectedComparison === "전년 대비" ? 3 : 0));
     const compareRepeatRate = repeatRate - 3.2;
 
-    return { netRevenue, compareNetRevenue, grossPayment, compareGrossPayment, refundAmount, compareRefundAmount, orderCount, newMembers, compareNewMembers, repeatRate, compareRepeatRate };
+    return { netRevenue, compareNetRevenue, grossPayment, compareGrossPayment, refundAmount, compareRefundAmount, orderCount, compareOrderCount, newMembers, compareNewMembers, repeatRate, compareRepeatRate };
   }, [selectedComparison, trend.points]);
 
   const kpis: Kpi[] = useMemo(() => {
@@ -317,10 +326,18 @@ export default function AnalyticsPage() {
   })), [selectedComparison, totals.netRevenue]);
 
   const dailySales = useMemo(() => makeDailyRows(trend.points, trend.isHourly), [trend.points, trend.isHourly]);
-  const lastPoint = trend.points[trend.points.length - 1];
-  const lastCurrent = Number(lastPoint[activeMetric.current]);
-  const lastCompare = Number(lastPoint[activeMetric.compare]);
-  const lastChange = getChange(lastCurrent, lastCompare, activeMetric.positiveDirection);
+  const hoveredPoint = hoveredIndex === null ? null : trend.points[hoveredIndex];
+  const hoveredCurrent = hoveredPoint ? Number(hoveredPoint[activeMetric.current]) : 0;
+  const hoveredCompare = hoveredPoint ? Number(hoveredPoint[activeMetric.compare]) : 0;
+  const hoveredChange = hoveredPoint ? getChange(hoveredCurrent, hoveredCompare, activeMetric.positiveDirection) : null;
+  const hoveredPosition = hoveredIndex === null ? null : chart.currentCoordinates[hoveredIndex];
+  const scopeLabel = `${selectedPeriod} 기준 · ${selectedComparison}`;
+  const newPurchaseChange = getChange(totals.netRevenue * 0.6, totals.compareNetRevenue * 0.62);
+  const repeatPurchaseChange = getChange(totals.netRevenue * 0.4, totals.compareNetRevenue * 0.38);
+  const refundCountChange = getChange(totals.orderCount * 0.052, totals.compareOrderCount * 0.057, "down");
+  const currentRefundRate = (totals.refundAmount / totals.grossPayment) * 100;
+  const compareRefundRate = (totals.compareRefundAmount / totals.compareGrossPayment) * 100;
+  const refundRateChange = getChange(currentRefundRate, compareRefundRate, "down");
   const couponTotal = Math.round(totals.grossPayment * 0.08);
   const shippingTotal = totals.orderCount * 900;
   const tableNetTotal = totals.grossPayment - totals.refundAmount - couponTotal;
@@ -393,39 +410,56 @@ export default function AnalyticsPage() {
         </CardHeader>
         <CardContent>
           <div className="rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-4">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-slate-600">
-              <div className="flex flex-wrap gap-4">
-                <span className="flex items-center gap-2"><span className="h-1 w-8 rounded-full bg-indigo-600" />현재 기간</span>
-                <span className="flex items-center gap-2"><span className="h-1 w-8 rounded-full border-t-2 border-dashed border-sky-400" />비교 기간</span>
-              </div>
-              <span className="rounded-full bg-white/80 px-3 py-1 shadow-sm">마지막 포인트: {lastPoint.date} · 현재 {formatMetricValue(lastCurrent, activeMetric.unit)} / 비교 {formatMetricValue(lastCompare, activeMetric.unit)} · {lastChange.label}</span>
+            <div className="mb-4 flex flex-wrap gap-4 text-xs font-bold text-slate-600">
+              <span className="flex items-center gap-2"><span className="h-0.5 w-8 rounded-full bg-indigo-500" />현재 기간</span>
+              <span className="flex items-center gap-2"><span className="h-0.5 w-8 rounded-full border-t-2 border-dashed border-sky-400" />비교 기간</span>
             </div>
+            <div className="relative" onMouseLeave={() => setHoveredIndex(null)}>
             <svg viewBox={`0 0 ${chart.width} ${chart.height}`} className="h-[360px] w-full" role="img" aria-label={`${selectedMetric} 현재 기간과 비교 기간 라인 그래프`}>
               {[0, 1, 2, 3].map((line) => {
                 const y = chart.padding + (line * (chart.height - chart.padding * 2)) / 3;
                 return <line key={line} x1={chart.padding} x2={chart.width - chart.padding} y1={y} y2={y} stroke="#dbeafe" strokeDasharray="4 8" />;
               })}
-              <path d={chart.comparePath} fill="none" stroke="#38bdf8" strokeDasharray="6 8" strokeLinecap="round" strokeWidth="2.25" />
-              <path d={chart.currentPath} fill="none" stroke="#4f46e5" strokeLinecap="round" strokeWidth="3" />
               {trend.points.map((item, index) => {
-                const x = chart.padding + (index * (chart.width - chart.padding * 2)) / Math.max(1, trend.points.length - 1);
-                const currentRatio = (chart.currentValues[index] - chart.min) / (chart.max - chart.min);
-                const compareRatio = (chart.compareValues[index] - chart.min) / (chart.max - chart.min);
-                const currentY = chart.height - chart.padding - currentRatio * (chart.height - chart.padding * 2);
-                const compareY = chart.height - chart.padding - compareRatio * (chart.height - chart.padding * 2);
+                const { x } = chart.currentCoordinates[index];
                 const showLabel = trend.isHourly || trend.points.length <= 14 || index % Math.ceil(trend.points.length / 12) === 0 || index === trend.points.length - 1;
+                return showLabel ? <line key={`x-grid-${item.date}-${index}`} x1={x} x2={x} y1={chart.padding} y2={chart.height - chart.padding} stroke="#e0f2fe" strokeWidth="1" opacity="0.75" /> : null;
+              })}
+              <path d={chart.comparePath} fill="none" stroke="#38bdf8" strokeDasharray="5 7" strokeLinecap="round" strokeWidth="1.75" opacity="0.72" />
+              <path d={chart.currentPath} fill="none" stroke="#4f46e5" strokeLinecap="round" strokeWidth="2.25" opacity="0.86" />
+              {trend.points.map((item, index) => {
+                const currentPoint = chart.currentCoordinates[index];
+                const comparePoint = chart.compareCoordinates[index];
+                const showLabel = trend.isHourly || trend.points.length <= 14 || index % Math.ceil(trend.points.length / 12) === 0 || index === trend.points.length - 1;
+                const isActive = hoveredIndex === index;
                 return (
-                  <g key={`${item.date}-${index}`}>
-                    <title>{`${item.date}\n현재 ${selectedMetric}: ${formatMetricValue(Number(item[activeMetric.current]), activeMetric.unit)}\n비교 ${selectedMetric}: ${formatMetricValue(Number(item[activeMetric.compare]), activeMetric.unit)}`}</title>
-                    <circle cx={x} cy={compareY} r="2.5" fill="#38bdf8" opacity="0.7" />
-                    <circle cx={x} cy={currentY} r="3" fill="#4f46e5" stroke="white" strokeWidth="1.5" />
-                    {showLabel && <text x={x} y={chart.height - 8} textAnchor="end" transform={`rotate(-35 ${x} ${chart.height - 8})`} className="fill-slate-500 text-[13px] font-bold">{item.label}</text>}
+                  <g key={`${item.date}-${index}`} onMouseEnter={() => setHoveredIndex(index)} onFocus={() => setHoveredIndex(index)} onClick={() => setHoveredIndex(index)} tabIndex={0} role="button" aria-label={`${item.date} ${selectedMetric} 보기`}>
+                    <circle cx={comparePoint.x} cy={comparePoint.y} r={isActive ? "3" : "2"} fill="#38bdf8" opacity="0.68" />
+                    <circle cx={currentPoint.x} cy={currentPoint.y} r={isActive ? "3.5" : "2.4"} fill="#4f46e5" stroke="white" strokeWidth="1.2" />
+                    <circle cx={currentPoint.x} cy={currentPoint.y} r="10" fill="transparent" />
+                    {showLabel && <text x={currentPoint.x} y={chart.height - 8} textAnchor="middle" className="fill-slate-500 text-[12px] font-bold">{item.label}</text>}
                   </g>
                 );
               })}
-              <text x={chart.padding} y="26" className="fill-slate-500 text-[16px] font-bold">{formatAxisValue(chart.max, activeMetric.unit)}</text>
-              <text x={chart.padding} y={chart.height - 22} className="fill-slate-500 text-[16px] font-bold">{formatAxisValue(chart.min, activeMetric.unit)}</text>
+              <text x={chart.padding} y="26" className="fill-slate-400 text-[12px] font-semibold">{formatAxisValue(chart.max, activeMetric.unit)}</text>
+              <text x={chart.padding} y={chart.height - 24} className="fill-slate-400 text-[12px] font-semibold">{formatAxisValue(chart.min, activeMetric.unit)}</text>
             </svg>
+            {hoveredPoint && hoveredPosition && hoveredChange && (
+              <div
+                className="pointer-events-none absolute z-10 min-w-[210px] rounded-2xl border border-slate-200 bg-white/95 p-3 text-xs shadow-xl backdrop-blur"
+                style={{
+                  left: `${(hoveredPosition.x / chart.width) * 100}%`,
+                  top: `${(hoveredPosition.y / chart.height) * 100}%`,
+                  transform: hoveredPosition.x > chart.width * 0.72 ? "translate(-100%, -110%)" : "translate(10px, -110%)",
+                }}
+              >
+                <p className="font-black text-slate-950">{hoveredPoint.date}</p>
+                <p className="mt-2 text-slate-600">현재 기간: <strong className="text-slate-950">{formatMetricValue(hoveredCurrent, activeMetric.unit)}</strong></p>
+                <p className="text-slate-600">비교 기간: <strong className="text-slate-950">{formatMetricValue(hoveredCompare, activeMetric.unit)}</strong></p>
+                <p className={hoveredChange.positive ? "mt-1 font-black text-emerald-600" : "mt-1 font-black text-rose-600"}>증감률: {hoveredChange.label}</p>
+              </div>
+            )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -451,7 +485,7 @@ export default function AnalyticsPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <CardTitle>상품별 매출 TOP10</CardTitle>
-                <CardDescription>어떤 언어 상품이 실제 순매출을 만들고 성장하는지 확인합니다.</CardDescription>
+                <CardDescription>{scopeLabel} · {selectedPeriod} 기준으로 상품별 순매출을 비교합니다.</CardDescription>
               </div>
               <Badge variant="success">중요</Badge>
             </div>
@@ -485,7 +519,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>국가별 매출</CardTitle>
-            <CardDescription>순매출 기준 국가별 기여도입니다.</CardDescription>
+            <CardDescription>{scopeLabel} · {selectedComparison} 국가별 매출 증감률입니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {countryRevenue.map((item) => (
@@ -504,11 +538,11 @@ export default function AnalyticsPage() {
 
       <section className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>신규 구매 vs 재구매</CardTitle><CardDescription>성장이 신규 유입인지 기존 회원 재구매인지 구분합니다.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>신규 구매 vs 재구매</CardTitle><CardDescription>{scopeLabel} · {selectedPeriod} 기준으로 신규/재구매 매출을 비교합니다.</CardDescription></CardHeader>
           <CardContent className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">신규 구매 매출</p><p className="mt-2 text-xl font-black">{formatCompactCurrency(totals.netRevenue * 0.6)}</p><p className="text-sm font-bold text-emerald-600">▲ 14.0%</p></div>
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">재구매 매출</p><p className="mt-2 text-xl font-black">{formatCompactCurrency(totals.netRevenue * 0.4)}</p><p className="text-sm font-bold text-emerald-600">▲ 25.5%</p></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">신규 구매 매출</p><p className="mt-2 text-xl font-black">{formatCompactCurrency(totals.netRevenue * 0.6)}</p><p className={newPurchaseChange.positive ? "text-sm font-bold text-emerald-600" : "text-sm font-bold text-rose-600"}>{newPurchaseChange.label}</p></div>
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">재구매 매출</p><p className="mt-2 text-xl font-black">{formatCompactCurrency(totals.netRevenue * 0.4)}</p><p className={repeatPurchaseChange.positive ? "text-sm font-bold text-emerald-600" : "text-sm font-bold text-rose-600"}>{repeatPurchaseChange.label}</p></div>
               <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">재구매율</p><p className="mt-2 text-xl font-black">{totals.repeatRate.toFixed(1)}%</p><p className="text-sm font-bold text-emerald-600">▲ 3.2%p</p></div>
             </div>
             <div className="space-y-2">
@@ -518,9 +552,9 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>환불 분석</CardTitle><CardDescription>순매출을 훼손하는 환불 흐름을 확인합니다.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>환불 분석</CardTitle><CardDescription>{scopeLabel} · {selectedComparison} 환불 증감률입니다.</CardDescription></CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
-            {[{ label: "총 환불금액", value: formatCurrency(totals.refundAmount), change: getChange(totals.refundAmount, totals.compareRefundAmount, "down").label }, { label: "환불건수", value: `${Math.round(totals.orderCount * 0.052)}건`, change: "▼ 4.2%" }, { label: "환불률", value: `${((totals.refundAmount / totals.grossPayment) * 100).toFixed(1)}%`, change: "▼ 0.8%p" }, { label: "환불 TOP 상품", value: "독일어 마스터", change: formatCurrency(totals.refundAmount * 0.23) }].map((item) => (
+            {[{ label: "총 환불금액", value: formatCurrency(totals.refundAmount), change: getChange(totals.refundAmount, totals.compareRefundAmount, "down").label }, { label: "환불건수", value: `${Math.round(totals.orderCount * 0.052)}건`, change: refundCountChange.label }, { label: "환불률", value: `${currentRefundRate.toFixed(1)}%`, change: refundRateChange.label }, { label: "환불 TOP 상품", value: "독일어 마스터", change: formatCurrency(totals.refundAmount * 0.23) }].map((item) => (
               <div key={item.label} className="rounded-2xl bg-slate-50 p-4">
                 <p className="text-xs font-bold text-slate-500">{item.label}</p>
                 <p className="mt-2 text-xl font-black text-slate-950">{item.value}</p>
@@ -533,7 +567,7 @@ export default function AnalyticsPage() {
 
       <Card className="mt-6">
         <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div><CardTitle>{trend.isHourly ? "시간대별" : "일별"} 판매 합계</CardTitle><CardDescription>필터 선택에 따라 mock 합계와 다운로드 대상이 함께 변경됩니다.</CardDescription></div>
+          <div><CardTitle>{trend.isHourly ? "시간대별" : "일별"} 판매 합계</CardTitle><CardDescription>{scopeLabel} · 필터 선택에 따라 합계와 다운로드 대상이 함께 변경됩니다.</CardDescription></div>
           <Button variant="outline" size="sm"><Download className="h-4 w-4" /> CSV 다운로드</Button>
         </CardHeader>
         <CardContent className="overflow-x-auto">
