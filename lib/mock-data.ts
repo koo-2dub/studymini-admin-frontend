@@ -129,9 +129,13 @@ export const members: MemberRecord[] = [
     groups: ["2026 상반기 집중 코호트"],
     coupons: ["WELCOME10 사용 완료"],
     vouchers: ["1:1 코칭 바우처 보유"],
-    inquiries: ["영수증 발급 요청 - 처리 완료"],
+    inquiries: ["영수증 발급 요청 - 처리 완료", "배송지 변경 문의 - 처리 완료"],
     lessonQuestions: ["스페인어 베이직 12강 질문 - 답변 완료"],
-    adminMemos: ["VIP 전환 후보.\n다음 갱신일 전 안내 필요."],
+    adminMemos: [
+      "VIP 전환 후보.\n다음 갱신일 전 안내 필요.",
+      "비즈니스 회화 집중반 만족도 높음. 추가 코칭 제안 가능.",
+      "CS 보상 포인트 지급 완료. 동일 이슈 재문의 시 이력 확인 필요.",
+    ],
     orders: [
       { id: "ORD-4924", product: "비즈니스 회화 집중반", amount: 229000, status: "결제완료", date: "2026-05-29" },
       { id: "ORD-4881", product: "스페인어 베이직", amount: 149000, status: "결제완료", date: "2026-05-13" },
