@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Copy,
   CreditCard,
@@ -12,6 +13,7 @@ import {
   PackageCheck,
   PlusCircle,
   ReceiptText,
+  RefreshCcw,
   RotateCcw,
   Search,
   Upload,
@@ -21,23 +23,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { AdminOrder, OrderRefund } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import type { AdminOrder } from "@/lib/mock-data";
 
 const TODAY = "2026-05-29";
 
-type FeatureKey = "list" | "manual" | "payment-link" | "export" | "order-upload" | "invoice-upload" | "pdf-logs";
+type FeatureKey = "list" | "refunds" | "manual" | "payment-link" | "export" | "order-upload" | "invoice-upload" | "pdf-logs";
 
 type OrderFilters = {
-  query: string;
+  orderId: string;
+  customerQuery: string;
   product: string;
-  startDate: string;
-  endDate: string;
+  country: string;
+  paymentMethod: string;
   paymentStatus: string;
   orderStatus: string;
   shippingStatus: string;
+  refundStatus: string;
   couponUsed: string;
   pointsUsed: string;
+  startDate: string;
+  endDate: string;
 };
 
 type ManualOrderFormState = {
@@ -45,6 +51,11 @@ type ManualOrderFormState = {
   customerName: string;
   email: string;
   customerPhone: string;
+  country: string;
+  language: string;
+  orderChannel: string;
+  paymentMethod: string;
+  shippingRequired: string;
   recipient: string;
   shippingPhone: string;
   shippingAddress: string;
@@ -60,16 +71,22 @@ type ManualOrderFormState = {
   shippingFee: number;
 };
 
+type RefundRow = OrderRefund & Pick<AdminOrder, "id" | "member" | "email" | "userId" | "product" | "paymentAmount">;
+
 const emptyFilters: OrderFilters = {
-  query: "",
+  orderId: "",
+  customerQuery: "",
   product: "all",
-  startDate: "",
-  endDate: "",
+  country: "all",
+  paymentMethod: "all",
   paymentStatus: "all",
   orderStatus: "all",
   shippingStatus: "all",
+  refundStatus: "all",
   couponUsed: "all",
   pointsUsed: "all",
+  startDate: "",
+  endDate: "",
 };
 
 const manualProducts = [
@@ -84,6 +101,11 @@ const defaultManualOrder: ManualOrderFormState = {
   customerName: "지윤 김",
   email: "jiyoon.kim@example.com",
   customerPhone: "010-4821-1024",
+  country: "KR",
+  language: "ko",
+  orderChannel: "관리자 생성",
+  paymentMethod: "결제링크",
+  shippingRequired: "true",
   recipient: "김지윤",
   shippingPhone: "010-4821-1024",
   shippingAddress: "서울특별시 강남구 테헤란로 123, 8층",
@@ -101,12 +123,13 @@ const defaultManualOrder: ManualOrderFormState = {
 
 const features: { key: FeatureKey; label: string; description: string; icon: typeof ListChecks }[] = [
   { key: "list", label: "주문 목록", description: "검색·상태·기간별 주문 조회", icon: ListChecks },
+  { key: "refunds", label: "환불 관리", description: "환불 요청·승인·완료 처리", icon: RefreshCcw },
   { key: "manual", label: "수동 주문 생성", description: "관리자 직접 주문 등록", icon: PlusCircle },
-  { key: "payment-link", label: "결제 링크", description: "결제 요청 링크 발급", icon: CreditCard },
-  { key: "export", label: "주문 Export", description: "필터 결과 엑셀 다운로드", icon: Download },
-  { key: "order-upload", label: "주문 Upload", description: "대량 주문 파일 업로드", icon: Upload },
-  { key: "invoice-upload", label: "송장 Upload", description: "배송 송장 일괄 반영", icon: PackageCheck },
-  { key: "pdf-logs", label: "PDF 다운로드 로그", description: "영수증·청구서 로그 확인", icon: FileText },
+  { key: "order-upload", label: "주문 업로드", description: "대량 주문 파일 업로드", icon: Upload },
+  { key: "invoice-upload", label: "송장 업로드", description: "배송 송장 일괄 반영", icon: PackageCheck },
+  { key: "export", label: "Export", description: "필터 결과 엑셀 다운로드", icon: Download },
+  { key: "pdf-logs", label: "PDF 로그", description: "영수증·청구서 로그 확인", icon: FileText },
+  { key: "payment-link", label: "결제 링크 생성", description: "결제 요청 링크 발급", icon: CreditCard },
 ];
 
 export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
@@ -114,129 +137,123 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   const [filters, setFilters] = useState(emptyFilters);
 
   const productOptions = useMemo(() => Array.from(new Set(orders.map((order) => order.product))), [orders]);
+  const countryOptions = useMemo(() => Array.from(new Set(orders.map((order) => order.country))), [orders]);
+  const paymentMethods = useMemo(() => Array.from(new Set(orders.map((order) => order.paymentMethod))), [orders]);
   const paymentStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.paymentStatus))), [orders]);
   const orderStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.orderStatus))), [orders]);
   const shippingStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.shippingStatus))), [orders]);
 
+  const refundRows = useMemo(
+    () => orders.flatMap((order) => order.refunds.map((refund) => ({ ...refund, id: order.id, member: order.member, email: order.email, userId: order.userId, product: order.product, paymentAmount: order.paymentAmount }))),
+    [orders],
+  );
+
   const filteredOrders = useMemo(() => {
-    const normalizedQuery = filters.query.trim().toLowerCase();
+    const normalizedOrderId = filters.orderId.trim().toLowerCase();
+    const normalizedCustomer = filters.customerQuery.trim().toLowerCase();
 
     return orders.filter((order) => {
-      const searchable = [order.id, order.member, order.email, order.phone, order.userId, order.product].join(" ").toLowerCase();
-      const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
+      const customerSearchable = [order.member, order.email, order.phone, order.userId].join(" ").toLowerCase();
+      const hasRefund = order.refundAmount > 0 || order.refunds.length > 0 || order.paymentStatus === "환불요청";
+      const matchesOrderId = !normalizedOrderId || order.id.toLowerCase().includes(normalizedOrderId);
+      const matchesCustomer = !normalizedCustomer || customerSearchable.includes(normalizedCustomer);
       const matchesProduct = filters.product === "all" || order.product === filters.product;
+      const matchesCountry = filters.country === "all" || order.country === filters.country;
+      const matchesPaymentMethod = filters.paymentMethod === "all" || order.paymentMethod === filters.paymentMethod;
       const matchesStart = !filters.startDate || order.date >= filters.startDate;
       const matchesEnd = !filters.endDate || order.date <= filters.endDate;
       const matchesPayment = filters.paymentStatus === "all" || order.paymentStatus === filters.paymentStatus;
       const matchesOrder = filters.orderStatus === "all" || order.orderStatus === filters.orderStatus;
       const matchesShipping = filters.shippingStatus === "all" || order.shippingStatus === filters.shippingStatus;
+      const matchesRefund = filters.refundStatus === "all" || (filters.refundStatus === "none" ? !hasRefund : hasRefund);
       const matchesCoupon = filters.couponUsed === "all" || String(order.couponUsed) === filters.couponUsed;
       const matchesPoints = filters.pointsUsed === "all" || String(order.pointsUsed) === filters.pointsUsed;
 
-      return matchesQuery && matchesProduct && matchesStart && matchesEnd && matchesPayment && matchesOrder && matchesShipping && matchesCoupon && matchesPoints;
+      return matchesOrderId && matchesCustomer && matchesProduct && matchesCountry && matchesPaymentMethod && matchesStart && matchesEnd && matchesPayment && matchesOrder && matchesShipping && matchesRefund && matchesCoupon && matchesPoints;
     });
   }, [filters, orders]);
 
   const todayOrders = orders.filter((order) => order.date === TODAY);
-  const paidOrders = orders.filter((order) => order.paymentStatus === "결제완료");
-  const waitingShipping = orders.filter((order) => order.shippingStatus === "배송대기");
   const todayPaidOrders = orders.filter((order) => order.date === TODAY && order.paymentStatus === "결제완료");
-  const refundRequests = orders.filter((order) => order.paymentStatus === "환불요청");
+  const pendingPayments = orders.filter((order) => order.paymentStatus === "결제대기");
+  const waitingShipping = orders.filter((order) => order.shippingStatus === "배송대기");
+  const refundRequests = refundRows.filter((refund) => refund.status === "환불 요청" || refund.status === "환불 승인 대기");
   const todayRevenue = todayPaidOrders.reduce((sum, order) => sum + order.paymentAmount, 0);
-  const refundTotal = refundRequests.reduce((sum, order) => sum + order.refundAmount, 0);
+  const refundTotal = orders.reduce((sum, order) => sum + order.refundAmount, 0);
 
   const updateFilter = (key: keyof OrderFilters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
 
-  const applyQuickFilter = (nextFilters: Partial<OrderFilters>) => {
-    setActiveFeature("list");
+  const applyQuickFilter = (nextFilters: Partial<OrderFilters>, feature: FeatureKey = "list") => {
+    setActiveFeature(feature);
     setFilters((current) => ({ ...current, ...nextFilters }));
   };
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {features.map((feature) => {
-          const Icon = feature.icon;
-          const active = activeFeature === feature.key;
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <SummaryCard label="오늘 주문" value={`${todayOrders.length.toLocaleString()}건`} detail={`주문일 ${TODAY}`} onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY })} />
+        <SummaryCard label="오늘 매출" value={formatCurrency(todayRevenue)} detail="오늘 결제완료 합계" onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY, paymentStatus: "결제완료" })} />
+        <SummaryCard label="결제 대기" value={`${pendingPayments.length.toLocaleString()}건`} detail="결제상태 결제대기" onClick={() => applyQuickFilter({ paymentStatus: "결제대기" })} />
+        <SummaryCard label="배송 대기" value={`${waitingShipping.length.toLocaleString()}건`} detail="배송상태 배송대기" onClick={() => applyQuickFilter({ shippingStatus: "배송대기" })} />
+        <SummaryCard label="환불 요청" value={`${refundRequests.length.toLocaleString()}건`} detail="환불 관리로 이동" onClick={() => applyQuickFilter({}, "refunds")} tone="rose" />
+        <SummaryCard label="총 환불 금액" value={formatCurrency(refundTotal)} detail="환불 이력 주문" onClick={() => applyQuickFilter({ refundStatus: "has" })} tone="rose" />
+      </section>
 
-          return (
-            <button
-              key={feature.key}
-              type="button"
-              onClick={() => setActiveFeature(feature.key)}
-              className={cn(
-                "rounded-3xl border p-4 text-left shadow-panel transition-all",
-                active ? "border-indigo-300 bg-indigo-600 text-white shadow-glow" : "border-white/70 bg-white/85 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white",
-              )}
-            >
-              <Icon className={cn("h-5 w-5", active ? "text-white" : "text-indigo-600")} />
-              <p className="mt-3 text-sm font-black">{feature.label}</p>
-              <p className={cn("mt-1 text-xs font-semibold", active ? "text-indigo-100" : "text-slate-500")}>{feature.description}</p>
-            </button>
-          );
-        })}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-black text-slate-950">운영 액션</h2>
+          <p className="text-sm font-semibold text-slate-500">Orders / Payments 내부에서 주문·환불·업로드·로그 업무를 처리합니다.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+            const active = activeFeature === feature.key;
+
+            return (
+              <button
+                key={feature.key}
+                type="button"
+                onClick={() => setActiveFeature(feature.key)}
+                className={cn(
+                  "rounded-3xl border p-4 text-left shadow-panel transition-all",
+                  active ? "border-indigo-300 bg-indigo-600 text-white shadow-glow" : "border-white/70 bg-white/85 hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white",
+                )}
+              >
+                <Icon className={cn("h-5 w-5", active ? "text-white" : "text-indigo-600")} />
+                <p className="mt-3 text-sm font-black">{feature.label}</p>
+                <p className={cn("mt-1 text-xs font-semibold", active ? "text-indigo-100" : "text-slate-500")}>{feature.description}</p>
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       {activeFeature === "list" && (
         <>
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard label="오늘 주문" value={`${todayOrders.length.toLocaleString()}건`} detail={`주문일 ${TODAY}`} onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY })} />
-            <SummaryCard label="결제완료" value={`${paidOrders.length.toLocaleString()}건`} detail="결제상태 결제완료" onClick={() => applyQuickFilter({ paymentStatus: "결제완료" })} />
-            <SummaryCard label="배송대기" value={`${waitingShipping.length.toLocaleString()}건`} detail="배송상태 배송대기" onClick={() => applyQuickFilter({ shippingStatus: "배송대기" })} />
-            <button
-              type="button"
-              onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY, paymentStatus: "결제완료" })}
-              className="rounded-3xl border border-white/70 bg-white/85 p-5 text-left shadow-panel transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white"
-            >
-              <p className="text-sm font-bold text-slate-500">오늘 매출</p>
-              <p className="mt-3 text-2xl font-black tracking-tight text-slate-950">{formatCurrency(todayRevenue)}</p>
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  applyQuickFilter({ paymentStatus: "환불요청" });
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    applyQuickFilter({ paymentStatus: "환불요청" });
-                  }
-                }}
-                className="mt-3 inline-flex rounded-2xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 outline-none ring-rose-200 transition hover:bg-rose-100 focus:ring-2"
-              >
-                환불요청 {refundRequests.length.toLocaleString()}건 · 총 환불금액 {formatCurrency(refundTotal)}
-              </span>
-            </button>
-          </section>
-
           <Card>
             <CardHeader>
               <CardTitle>주문 목록 필터</CardTitle>
-              <CardDescription>주문번호, 주문자, 연락처, 상품, 기간과 처리 상태를 조합해 주문을 찾습니다.</CardDescription>
+              <CardDescription>주문번호, 회원, 상품, 국가, 결제수단과 상태 조건을 조합해 주문을 찾습니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input
-                  value={filters.query}
-                  onChange={(event) => updateFilter("query", event.target.value)}
-                  placeholder="주문번호, 주문자, 이메일, 전화번호, User ID 검색"
-                  className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                />
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <FilterInput label="주문번호" value={filters.orderId} onChange={(value) => updateFilter("orderId", value)} placeholder="ORD-5028" />
+                <FilterInput label="회원명/이메일/User ID" value={filters.customerQuery} onChange={(value) => updateFilter("customerQuery", value)} placeholder="지윤 김, email, SM-1024" />
                 <FilterSelect label="상품" value={filters.product} onChange={(value) => updateFilter("product", value)} options={productOptions} allLabel="전체 상품" />
+                <FilterSelect label="국가" value={filters.country} onChange={(value) => updateFilter("country", value)} options={countryOptions} allLabel="전체 국가" />
+                <FilterSelect label="결제수단" value={filters.paymentMethod} onChange={(value) => updateFilter("paymentMethod", value)} options={paymentMethods} allLabel="전체 결제수단" />
                 <FilterSelect label="결제상태" value={filters.paymentStatus} onChange={(value) => updateFilter("paymentStatus", value)} options={paymentStatuses} allLabel="전체 결제상태" />
-                <FilterInput label="시작일" type="date" value={filters.startDate} onChange={(value) => updateFilter("startDate", value)} />
-                <FilterInput label="종료일" type="date" value={filters.endDate} onChange={(value) => updateFilter("endDate", value)} />
                 <FilterSelect label="주문상태" value={filters.orderStatus} onChange={(value) => updateFilter("orderStatus", value)} options={orderStatuses} allLabel="전체 주문상태" />
                 <FilterSelect label="배송상태" value={filters.shippingStatus} onChange={(value) => updateFilter("shippingStatus", value)} options={shippingStatuses} allLabel="전체 배송상태" />
-                <FilterSelect label="쿠폰 사용" value={filters.couponUsed} onChange={(value) => updateFilter("couponUsed", value)} options={["true", "false"]} allLabel="전체" formatOption={(value) => (value === "true" ? "사용" : "미사용")} />
-                <FilterSelect label="포인트 사용" value={filters.pointsUsed} onChange={(value) => updateFilter("pointsUsed", value)} options={["true", "false"]} allLabel="전체" formatOption={(value) => (value === "true" ? "사용" : "미사용")} />
+                <FilterSelect label="환불 여부" value={filters.refundStatus} onChange={(value) => updateFilter("refundStatus", value)} options={["has", "none"]} allLabel="전체" formatOption={(value) => (value === "has" ? "환불 있음" : "환불 없음")} />
+                <FilterSelect label="쿠폰 사용 여부" value={filters.couponUsed} onChange={(value) => updateFilter("couponUsed", value)} options={["true", "false"]} allLabel="전체" formatOption={(value) => (value === "true" ? "사용" : "미사용")} />
+                <FilterSelect label="포인트 사용 여부" value={filters.pointsUsed} onChange={(value) => updateFilter("pointsUsed", value)} options={["true", "false"]} allLabel="전체" formatOption={(value) => (value === "true" ? "사용" : "미사용")} />
+                <div className="grid grid-cols-2 gap-3">
+                  <FilterInput label="주문 시작일" type="date" value={filters.startDate} onChange={(value) => updateFilter("startDate", value)} />
+                  <FilterInput label="주문 종료일" type="date" value={filters.endDate} onChange={(value) => updateFilter("endDate", value)} />
+                </div>
               </div>
               <div className="flex flex-wrap justify-end gap-2">
                 <Button type="button" variant="secondary" onClick={() => setFilters((current) => ({ ...current }))}>필터 적용</Button>
@@ -248,49 +265,33 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
           <Card>
             <CardHeader>
               <CardTitle>주문 목록</CardTitle>
-              <CardDescription>{filteredOrders.length.toLocaleString()}건의 주문이 표시됩니다. 주문 행은 주문 상세로, 주문자와 User ID는 유저 상세로 이동합니다.</CardDescription>
+              <CardDescription>{filteredOrders.length.toLocaleString()}건의 주문이 표시됩니다. 행 클릭 시 주문 상세로 이동합니다.</CardDescription>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>주문번호</TableHead>
-                    <TableHead>주문자</TableHead>
+                    <TableHead>회원</TableHead>
+                    <TableHead>User ID</TableHead>
                     <TableHead>상품명</TableHead>
+                    <TableHead>국가</TableHead>
+                    <TableHead>결제수단</TableHead>
                     <TableHead>결제금액</TableHead>
+                    <TableHead>쿠폰 사용액</TableHead>
+                    <TableHead>포인트 사용액</TableHead>
+                    <TableHead>배송비</TableHead>
                     <TableHead>환불금액</TableHead>
                     <TableHead>결제상태</TableHead>
                     <TableHead>주문상태</TableHead>
                     <TableHead>배송상태</TableHead>
                     <TableHead>주문일</TableHead>
                     <TableHead>결제일</TableHead>
-                    <TableHead>User ID</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.map((order) => (
-                    <TableRow key={order.id} className="cursor-pointer" onClick={() => { window.location.href = `/orders/${order.id}`; }}>
-                      <TableCell className="font-mono font-bold">{order.id}</TableCell>
-                      <TableCell>
-                        <Link href={`/members/${order.userId}`} onClick={(event) => event.stopPropagation()} className="inline-flex items-center gap-1 font-bold text-slate-900 hover:text-indigo-700">
-                          {order.member}<ExternalLink className="h-3 w-3" />
-                        </Link>
-                        <p className="text-xs text-muted-foreground">{order.phone}</p>
-                      </TableCell>
-                      <TableCell>{order.product}</TableCell>
-                      <TableCell>{formatCurrency(order.paymentAmount)}</TableCell>
-                      <TableCell>{formatCurrency(order.refundAmount)}</TableCell>
-                      <TableCell><KoreanStatusBadge value={order.paymentStatus} /></TableCell>
-                      <TableCell><KoreanStatusBadge value={order.orderStatus} /></TableCell>
-                      <TableCell><KoreanStatusBadge value={order.shippingStatus} /></TableCell>
-                      <TableCell>{order.date}</TableCell>
-                      <TableCell>{order.paidAt ?? "-"}</TableCell>
-                      <TableCell>
-                        <Link href={`/members/${order.userId}`} onClick={(event) => event.stopPropagation()} className="font-mono font-bold text-indigo-700 hover:text-indigo-900">
-                          {order.userId}
-                        </Link>
-                      </TableCell>
-                    </TableRow>
+                    <OrderTableRow key={order.id} order={order} />
                   ))}
                 </TableBody>
               </Table>
@@ -299,105 +300,139 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
         </>
       )}
 
+      {activeFeature === "refunds" && <RefundManagementPanel refunds={refundRows} />}
       {activeFeature === "manual" && <ManualOrderForm />}
       {activeFeature === "payment-link" && <PaymentLinkPanel />}
-      {activeFeature === "export" && <UtilityPanel title="주문 Export" description="필터 결과를 기준으로 주문 데이터를 엑셀 파일로 내려받습니다." action="Export 파일 생성" icon={Download} />}
-      {activeFeature === "order-upload" && <UploadPanel title="주문 Upload" description="대량 주문 생성 파일을 업로드하고 검수 결과를 확인합니다." />}
-      {activeFeature === "invoice-upload" && <UploadPanel title="송장 Upload" description="배송사와 송장번호를 일괄 반영합니다." />}
+      {activeFeature === "export" && <UtilityPanel title="Export" description="현재 주문 필터 기준으로 주문 데이터를 엑셀 파일로 내려받습니다." action="Export 파일 생성" icon={Download} />}
+      {activeFeature === "order-upload" && <UploadPanel title="주문 업로드" description="대량 주문 생성 파일을 업로드하고 검수 결과를 확인합니다." />}
+      {activeFeature === "invoice-upload" && <UploadPanel title="송장 업로드" description="배송사와 송장번호를 일괄 반영합니다." />}
       {activeFeature === "pdf-logs" && <PdfLogPanel />}
     </div>
   );
 }
 
-function KoreanStatusBadge({ value }: { value: string }) {
-  const variant = value.match(/완료|결제완료|배송완료/)
-    ? "success"
-    : value.match(/환불|취소|실패/)
-      ? "rose"
-      : value.match(/대기|접수|처리|배송중|배송전/)
-        ? "warning"
-        : "slate";
+function OrderTableRow({ order }: { order: AdminOrder }) {
+  const router = useRouter();
 
-  return <Badge variant={variant}>{value}</Badge>;
-}
-
-function SummaryCard({ label, value, detail, onClick }: { label: string; value: string; detail: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="rounded-3xl border border-white/70 bg-white/85 p-5 text-left shadow-panel transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-white">
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className="mt-3 text-2xl font-black tracking-tight text-slate-950">{value}</p>
-      <p className="mt-3 text-sm font-semibold text-slate-600">{detail} · 빠른 필터</p>
-    </button>
+    <TableRow className="cursor-pointer" onClick={() => router.push(`/orders/${order.id}`)}>
+      <TableCell className="whitespace-nowrap font-mono font-bold">{order.id}</TableCell>
+      <TableCell className="min-w-44">
+        <Link href={`/members/${order.userId}`} onClick={(event) => event.stopPropagation()} className="inline-flex items-center gap-1 font-bold text-slate-900 hover:text-indigo-700">
+          {order.member}<ExternalLink className="h-3 w-3" />
+        </Link>
+        <p className="text-xs text-muted-foreground">{order.email}</p>
+      </TableCell>
+      <TableCell>
+        <Link href={`/members/${order.userId}`} onClick={(event) => event.stopPropagation()} className="font-mono font-bold text-indigo-700 hover:text-indigo-900">
+          {order.userId}
+        </Link>
+      </TableCell>
+      <TableCell className="min-w-48"><p className="font-semibold">{order.product}</p><p className="font-mono text-xs text-slate-500">{order.sku}</p></TableCell>
+      <TableCell>{order.country}</TableCell>
+      <TableCell className="whitespace-nowrap">{order.paymentMethod}</TableCell>
+      <MoneyCell value={order.paymentAmount} />
+      <MoneyCell value={order.couponDiscountAmount} mutedWhenZero />
+      <MoneyCell value={order.pointUsedAmount} mutedWhenZero />
+      <MoneyCell value={order.shippingFee} mutedWhenZero />
+      <MoneyCell value={order.refundAmount} tone={order.refundAmount > 0 ? "rose" : "slate"} mutedWhenZero />
+      <TableCell><KoreanStatusBadge value={order.paymentStatus} /></TableCell>
+      <TableCell><KoreanStatusBadge value={order.orderStatus} /></TableCell>
+      <TableCell><KoreanStatusBadge value={order.shippingStatus} /></TableCell>
+      <TableCell className="whitespace-nowrap">{order.date}</TableCell>
+      <TableCell className="whitespace-nowrap">{order.paidAt ?? "-"}</TableCell>
+    </TableRow>
   );
 }
 
-function FilterInput({ label, type = "text", value, onChange }: { label: string; type?: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <label className="space-y-2 text-sm font-semibold text-slate-700">
-      <span>{label}</span>
-      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100" />
-    </label>
-  );
-}
+function RefundManagementPanel({ refunds }: { refunds: RefundRow[] }) {
+  const [status, setStatus] = useState("all");
+  const [query, setQuery] = useState("");
+  const [toast, setToast] = useState("");
 
-function FilterSelect({ label, value, onChange, options, allLabel, formatOption = (option) => option }: { label: string; value: string; onChange: (value: string) => void; options: string[]; allLabel: string; formatOption?: (option: string) => string }) {
-  return (
-    <label className="space-y-2 text-sm font-semibold text-slate-700">
-      <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100">
-        <option value="all">{allLabel}</option>
-        {options.map((option) => <option key={option} value={option}>{formatOption(option)}</option>)}
-      </select>
-    </label>
-  );
-}
+  const filteredRefunds = refunds.filter((refund) => {
+    const normalized = query.trim().toLowerCase();
+    const matchesStatus = status === "all" || refund.status === status;
+    const matchesQuery = !normalized || [refund.id, refund.member, refund.email, refund.userId, refund.product].join(" ").toLowerCase().includes(normalized);
+    return matchesStatus && matchesQuery;
+  });
 
-function TextField({ label, value, onChange, required = false, type = "text", placeholder }: { label: string; value: string | number; onChange: (value: string) => void; required?: boolean; type?: "text" | "email" | "tel" | "number"; placeholder?: string }) {
-  return (
-    <label className="space-y-2 text-sm font-semibold text-slate-700">
-      <span>{label} {required ? <span className="text-rose-500">*</span> : null}</span>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-      />
-    </label>
-  );
-}
+  const requested = refunds.filter((refund) => refund.status === "환불 요청").length;
+  const pending = refunds.filter((refund) => refund.status === "환불 승인 대기").length;
+  const completedTotal = refunds.filter((refund) => refund.status === "환불 완료").reduce((sum, refund) => sum + refund.amount, 0);
 
-function TextAreaField({ label, value, onChange, required = false }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
   return (
-    <label className="space-y-2 text-sm font-semibold text-slate-700">
-      <span>{label} {required ? <span className="text-rose-500">*</span> : null}</span>
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-      />
-    </label>
-  );
-}
-
-function FormSection({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
-  return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-2">{children}</CardContent>
-    </Card>
+    <div className="space-y-5">
+      {toast ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{toast}</div> : null}
+      <section className="grid gap-4 md:grid-cols-3">
+        <MiniMetric label="환불 요청" value={`${requested.toLocaleString()}건`} />
+        <MiniMetric label="승인 대기" value={`${pending.toLocaleString()}건`} />
+        <MiniMetric label="완료 환불금액" value={formatCurrency(completedTotal)} />
+      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>환불 관리</CardTitle>
+          <CardDescription>Orders / Payments 내부에서 환불 요청, 승인 대기, 완료, 거절, 부분/전체 환불 흐름을 관리합니다.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-3 md:grid-cols-3">
+            <FilterInput label="주문/회원/상품 검색" value={query} onChange={setQuery} placeholder="ORD-5027, Monica, 교재" />
+            <FilterSelect label="환불 상태" value={status} onChange={setStatus} options={["환불 요청", "환불 승인 대기", "환불 완료", "환불 거절"]} allLabel="전체 상태" />
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>주문번호</TableHead>
+                  <TableHead>회원</TableHead>
+                  <TableHead>상품명</TableHead>
+                  <TableHead>결제금액</TableHead>
+                  <TableHead>환불 요청 금액</TableHead>
+                  <TableHead>환불 가능 금액</TableHead>
+                  <TableHead>환불 사유</TableHead>
+                  <TableHead>요청일</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead>처리자</TableHead>
+                  <TableHead>액션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRefunds.map((refund) => (
+                  <TableRow key={`${refund.id}-${refund.requestedAt}`}>
+                    <TableCell><Link href={`/orders/${refund.id}?section=refunds`} className="font-mono font-bold text-indigo-700 hover:text-indigo-900">{refund.id}</Link></TableCell>
+                    <TableCell className="min-w-44"><p className="font-bold">{refund.member}</p><p className="text-xs text-slate-500">{refund.email}</p></TableCell>
+                    <TableCell className="min-w-44">{refund.product}</TableCell>
+                    <MoneyCell value={refund.paymentAmount} />
+                    <MoneyCell value={refund.amount} tone="rose" />
+                    <MoneyCell value={refund.availableAmount} />
+                    <TableCell className="min-w-36">{refund.reason}</TableCell>
+                    <TableCell className="whitespace-nowrap">{refund.requestedAt}</TableCell>
+                    <TableCell><KoreanStatusBadge value={refund.status} /></TableCell>
+                    <TableCell>{refund.processor ?? "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" onClick={() => setToast(`${refund.id} 환불 승인 mock 처리되었습니다.`)}>승인</Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => setToast(`${refund.id} 환불 거절 mock 처리되었습니다.`)}>거절</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
 function ManualOrderForm() {
+  const router = useRouter();
   const [form, setForm] = useState<ManualOrderFormState>(defaultManualOrder);
   const [toast, setToast] = useState("");
   const [paymentLink, setPaymentLink] = useState("");
 
-  const productAmount = form.price * form.quantity;
+  const productAmount = form.quantity * form.price;
   const finalAmount = Math.max(productAmount - form.couponAmount - form.pointAmount + form.shippingFee, 0);
   const previewOrderId = `ORD-M-${TODAY.replaceAll("-", "")}-001`;
 
@@ -408,7 +443,7 @@ function ManualOrderForm() {
   };
 
   const createOrder = () => {
-    setToast(`${previewOrderId} 주문이 mock으로 생성되었습니다.`);
+    router.push(`/orders/${previewOrderId}`);
   };
 
   const createPaymentLink = () => {
@@ -433,13 +468,22 @@ function ManualOrderForm() {
     <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
       <div className="space-y-5">
         {toast ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{toast}</div> : null}
-        <FormSection title="고객 정보" description="주문을 생성할 고객의 기본 정보를 입력합니다.">
+        <FormSection title="고객 정보" description="회원 식별과 주문 국가/언어를 함께 입력합니다.">
           <TextField required label="User ID" value={form.userId} onChange={(value) => setForm((current) => ({ ...current, userId: value }))} />
           <TextField required label="이름" value={form.customerName} onChange={(value) => setForm((current) => ({ ...current, customerName: value }))} />
           <TextField required label="이메일 주소" type="email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} />
           <TextField required label="전화번호" type="tel" value={form.customerPhone} onChange={(value) => setForm((current) => ({ ...current, customerPhone: value }))} />
+          <TextField required label="국가" value={form.country} onChange={(value) => setForm((current) => ({ ...current, country: value }))} />
+          <TextField required label="언어" value={form.language} onChange={(value) => setForm((current) => ({ ...current, language: value }))} />
         </FormSection>
         <FormSection title="배송 정보" description="교재 또는 실물 상품 배송에 필요한 정보를 입력합니다.">
+          <label className="space-y-2 text-sm font-semibold text-slate-700">
+            <span>배송 필요 여부</span>
+            <select className="h-11 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={form.shippingRequired} onChange={(event) => setForm((current) => ({ ...current, shippingRequired: event.target.value }))}>
+              <option value="true">배송 필요</option>
+              <option value="false">배송 없음</option>
+            </select>
+          </label>
           <TextField required label="수령인" value={form.recipient} onChange={(value) => setForm((current) => ({ ...current, recipient: value }))} />
           <TextField required label="전화번호" type="tel" value={form.shippingPhone} onChange={(value) => setForm((current) => ({ ...current, shippingPhone: value }))} />
           <TextAreaField required label="배송 주소" value={form.shippingAddress} onChange={(value) => setForm((current) => ({ ...current, shippingAddress: value }))} />
@@ -457,7 +501,9 @@ function ManualOrderForm() {
           <TextField required label="수량" type="number" value={form.quantity} onChange={(value) => setForm((current) => ({ ...current, quantity: toNumber(value) }))} />
           <TextField required label="가격" type="number" value={form.price} onChange={(value) => setForm((current) => ({ ...current, price: toNumber(value) }))} />
         </FormSection>
-        <FormSection title="할인/결제 정보" description="쿠폰, 포인트, 배송료를 반영해 최종 결제금액을 계산합니다.">
+        <FormSection title="할인/결제 정보" description="상품금액 - 쿠폰 할인 - 포인트 사용 + 배송비 = 최종 결제금액입니다.">
+          <TextField required label="주문 경로" value={form.orderChannel} onChange={(value) => setForm((current) => ({ ...current, orderChannel: value }))} />
+          <TextField required label="결제수단" value={form.paymentMethod} onChange={(value) => setForm((current) => ({ ...current, paymentMethod: value }))} />
           <TextField label="쿠폰 코드" value={form.couponCode} onChange={(value) => setForm((current) => ({ ...current, couponCode: value }))} />
           <TextField label="쿠폰 사용 금액" type="number" value={form.couponAmount} onChange={(value) => setForm((current) => ({ ...current, couponAmount: toNumber(value) }))} />
           <TextField label="포인트 사용 금액" type="number" value={form.pointAmount} onChange={(value) => setForm((current) => ({ ...current, pointAmount: toNumber(value) }))} />
@@ -472,15 +518,20 @@ function ManualOrderForm() {
         <Card className="border-indigo-100 bg-indigo-50/70">
           <CardHeader>
             <CardTitle>주문 미리보기</CardTitle>
-            <CardDescription>입력값 기반으로 생성될 주문 정보를 확인합니다.</CardDescription>
+            <CardDescription>주문 생성 시 생성된 주문 상세 화면으로 자동 이동합니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {[
               ["주문번호", previewOrderId],
+              ["생성 후 이동", `/orders/${previewOrderId}`],
               ["주문생성일", TODAY],
               ["주문상태", "결제필요"],
               ["고객명", form.customerName],
               ["User ID", form.userId],
+              ["국가/언어", `${form.country} / ${form.language}`],
+              ["주문 경로", form.orderChannel],
+              ["결제수단", form.paymentMethod],
+              ["배송 필요", form.shippingRequired === "true" ? "예" : "아니오"],
               ["배송 주소", form.shippingAddress],
               ["상품명", form.productName],
               ["SKU", form.sku],
@@ -493,7 +544,7 @@ function ManualOrderForm() {
             ].map(([label, value]) => (
               <div key={label} className="flex gap-4 border-b border-indigo-100 pb-3 last:border-0 last:pb-0">
                 <span className="w-28 shrink-0 font-bold text-slate-500">{label}</span>
-                <span className="font-semibold text-slate-900">{value}</span>
+                <span className="break-all font-semibold text-slate-900">{value}</span>
               </div>
             ))}
           </CardContent>
@@ -512,7 +563,7 @@ function ManualOrderForm() {
         ) : null}
         <Card>
           <CardContent className="space-y-3 p-5">
-            <Button className="w-full" onClick={createOrder}>주문 생성</Button>
+            <Button className="w-full" onClick={createOrder}>주문 생성 후 상세로 이동</Button>
             <Button className="w-full" variant="secondary" onClick={createPaymentLink}>결제 링크 생성</Button>
             <Button className="w-full" variant="outline" onClick={resetManualOrder}><RotateCcw className="h-4 w-4" />초기화</Button>
           </CardContent>
@@ -523,7 +574,7 @@ function ManualOrderForm() {
 }
 
 function PaymentLinkPanel() {
-  return <UtilityPanel title="결제 링크" description="주문자에게 전달할 일회성 결제 링크를 생성하고 만료 시간을 관리합니다." action="결제 링크 생성" icon={CreditCard} />;
+  return <UtilityPanel title="결제 링크 생성" description="주문자에게 전달할 일회성 결제 링크를 생성하고 만료 시간을 관리합니다." action="결제 링크 생성" icon={CreditCard} />;
 }
 
 function UtilityPanel({ title, description, action, icon: Icon }: { title: string; description: string; action: string; icon: typeof CreditCard }) {
@@ -566,14 +617,14 @@ function UploadPanel({ title, description }: { title: string; description: strin
 
 function PdfLogPanel() {
   const logs = [
-    { id: "PDF-1029", file: "ORD-4924 영수증", admin: "admin@studymini.kr", downloadedAt: "2026-05-29 14:22" },
-    { id: "PDF-1028", file: "ORD-4919 청구서", admin: "ops@studymini.kr", downloadedAt: "2026-05-29 11:08" },
+    { id: "PDF-1029", file: "ORD-5028 영수증", admin: "admin@studymini.kr", downloadedAt: "2026-05-29 14:22" },
+    { id: "PDF-1028", file: "ORD-5019 청구서", admin: "ops@studymini.kr", downloadedAt: "2026-05-29 11:08" },
   ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><ReceiptText className="h-5 w-5 text-indigo-600" />PDF 다운로드 로그</CardTitle>
+        <CardTitle className="flex items-center gap-2"><ReceiptText className="h-5 w-5 text-indigo-600" />PDF 로그</CardTitle>
         <CardDescription>주문 관련 PDF 다운로드 이력을 확인합니다.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -590,6 +641,98 @@ function PdfLogPanel() {
       </CardContent>
     </Card>
   );
+}
+
+function KoreanStatusBadge({ value }: { value: string }) {
+  const variant = value.match(/완료|결제완료|배송완료/)
+    ? "success"
+    : value.match(/환불|취소|실패/)
+      ? "rose"
+      : value.match(/대기|접수|처리|배송중|배송전|필요/)
+        ? "warning"
+        : "slate";
+
+  return <Badge variant={variant}>{value}</Badge>;
+}
+
+function SummaryCard({ label, value, detail, onClick, tone = "indigo" }: { label: string; value: string; detail: string; onClick: () => void; tone?: "indigo" | "rose" }) {
+  return (
+    <button type="button" onClick={onClick} className={cn("rounded-3xl border border-white/70 bg-white/85 p-5 text-left shadow-panel transition-all hover:-translate-y-0.5 hover:bg-white", tone === "rose" ? "hover:border-rose-200" : "hover:border-indigo-200")}>
+      <p className="text-sm font-bold text-slate-500">{label}</p>
+      <p className={cn("mt-3 text-2xl font-black tracking-tight", tone === "rose" ? "text-rose-700" : "text-slate-950")}>{value}</p>
+      <p className="mt-3 text-sm font-semibold text-slate-600">{detail} · 빠른 이동</p>
+    </button>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <p className="text-sm font-bold text-slate-500">{label}</p>
+        <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FilterInput({ label, value, onChange, type = "text", placeholder }: { label: string; value: string; onChange: (value: string) => void; type?: string; placeholder?: string }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700">
+      <span>{label}</span>
+      <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3">
+        {type === "text" ? <Search className="h-4 w-4 text-slate-400" /> : null}
+        <input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" />
+      </div>
+    </label>
+  );
+}
+
+function FilterSelect({ label, value, onChange, options, allLabel, formatOption }: { label: string; value: string; onChange: (value: string) => void; options: string[]; allLabel: string; formatOption?: (value: string) => string }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700">
+      <span>{label}</span>
+      <select className="h-11 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="all">{allLabel}</option>
+        {options.map((option) => <option key={option} value={option}>{formatOption ? formatOption(option) : option}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function FormSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 md:grid-cols-2">{children}</CardContent>
+    </Card>
+  );
+}
+
+function TextField({ label, value, onChange, type = "text", required = false }: { label: string; value: string | number; onChange: (value: string) => void; type?: string; required?: boolean }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700">
+      <span>{label} {required ? <span className="text-rose-500">*</span> : null}</span>
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+    </label>
+  );
+}
+
+function TextAreaField({ label, value, onChange, required = false }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
+      <span>{label} {required ? <span className="text-rose-500">*</span> : null}</span>
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+    </label>
+  );
+}
+
+function MoneyCell({ value, tone = "slate", mutedWhenZero = false }: { value: number; tone?: "slate" | "rose"; mutedWhenZero?: boolean }) {
+  const empty = mutedWhenZero && value === 0;
+  return <TableCell className={cn("whitespace-nowrap text-right font-bold", tone === "rose" ? "text-rose-700" : "text-slate-900", empty && "text-slate-400")}>{empty ? "-" : formatCurrency(value)}</TableCell>;
 }
 
 function toNumber(value: string) {

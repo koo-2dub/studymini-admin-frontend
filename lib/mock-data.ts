@@ -329,6 +329,37 @@ export const memberTimeline = [
   "Purchased Pro Annual renewal",
 ];
 
+export type RefundStatus = "환불 요청" | "환불 승인 대기" | "환불 완료" | "환불 거절";
+export type RefundType = "부분 환불" | "전체 환불";
+export type OrderLogType = "order" | "payment" | "shipping" | "refund";
+
+export type OrderRefund = {
+  id: string;
+  requestedAt: string;
+  reason: string;
+  amount: number;
+  availableAmount: number;
+  status: RefundStatus;
+  type: RefundType;
+  processor?: string;
+  processedAt?: string;
+};
+
+export type OrderMemo = {
+  id: string;
+  author: string;
+  createdAt: string;
+  body: string;
+};
+
+export type OrderLog = {
+  id: string;
+  type: OrderLogType;
+  message: string;
+  actor: string;
+  createdAt: string;
+};
+
 export type AdminOrder = {
   id: string;
   member: string;
@@ -347,6 +378,28 @@ export type AdminOrder = {
   shippingStatus: "배송전" | "배송대기" | "배송중" | "배송완료" | "-";
   couponUsed: boolean;
   pointsUsed: boolean;
+  country: string;
+  language: string;
+  paymentMethod: string;
+  sku: string;
+  orderChannel: string;
+  originalAmount: number;
+  couponDiscountAmount: number;
+  pointUsedAmount: number;
+  shippingFee: number;
+  paymentApprovalNumber?: string;
+  pgProvider?: string;
+  recipient: string;
+  shippingPhone: string;
+  shippingAddress: string;
+  shippingMemo?: string;
+  courier?: string;
+  invoiceNumber?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  refunds: OrderRefund[];
+  adminMemos: OrderMemo[];
+  logs: OrderLog[];
 };
 
 export const orders: AdminOrder[] = [
@@ -368,6 +421,34 @@ export const orders: AdminOrder[] = [
     shippingStatus: "배송대기",
     couponUsed: true,
     pointsUsed: true,
+    country: "KR",
+    language: "ko",
+    paymentMethod: "신용카드",
+    sku: "BIZ-KO-12W",
+    orderChannel: "웹 결제",
+    originalAmount: 229000,
+    couponDiscountAmount: 10000,
+    pointUsedAmount: 7000,
+    shippingFee: 3000,
+    paymentApprovalNumber: "AUTH-20260529-5028",
+    pgProvider: "TossPayments",
+    recipient: "김지윤",
+    shippingPhone: "010-4821-1024",
+    shippingAddress: "서울특별시 강남구 테헤란로 123, 8층",
+    shippingMemo: "부재 시 문 앞에 놓아주세요.",
+    courier: "CJ대한통운",
+    invoiceNumber: "-",
+    shippedAt: undefined,
+    deliveredAt: undefined,
+    refunds: [],
+    adminMemos: [
+      { id: "MEMO-5028-1", author: "ops@studymini.kr", createdAt: "2026-05-29 10:05", body: "교재 출고 전 주소 재확인 필요." },
+    ],
+    logs: [
+      { id: "LOG-5028-1", type: "payment", message: "결제 승인 완료", actor: "TossPayments", createdAt: "2026-05-29 09:42" },
+      { id: "LOG-5028-2", type: "order", message: "주문상태가 주문완료로 변경됨", actor: "system", createdAt: "2026-05-29 09:43" },
+      { id: "LOG-5028-3", type: "shipping", message: "배송대기 상태로 전환됨", actor: "ops@studymini.kr", createdAt: "2026-05-29 10:05" },
+    ],
   },
   {
     id: "ORD-5027",
@@ -387,6 +468,32 @@ export const orders: AdminOrder[] = [
     shippingStatus: "-",
     couponUsed: false,
     pointsUsed: false,
+    country: "KR",
+    language: "ko",
+    paymentMethod: "간편결제",
+    sku: "BOOK-ADD-01",
+    orderChannel: "관리자 생성",
+    originalAmount: 35000,
+    couponDiscountAmount: 0,
+    pointUsedAmount: 0,
+    shippingFee: 0,
+    paymentApprovalNumber: "AUTH-20260529-5027",
+    pgProvider: "NaverPay",
+    recipient: "Monica Shin",
+    shippingPhone: "010-7730-1032",
+    shippingAddress: "서울특별시 마포구 월드컵북로 45",
+    shippingMemo: "환불 요청으로 배송 보류",
+    refunds: [
+      { id: "REF-5027-1", requestedAt: "2026-05-29 09:20", reason: "중복 주문", amount: 35000, availableAmount: 35000, status: "환불 요청", type: "전체 환불" },
+    ],
+    adminMemos: [
+      { id: "MEMO-5027-1", author: "support@studymini.kr", createdAt: "2026-05-29 09:24", body: "고객이 같은 교재를 중복 주문했다고 문의함." },
+    ],
+    logs: [
+      { id: "LOG-5027-1", type: "payment", message: "결제 승인 완료", actor: "NaverPay", createdAt: "2026-05-29 08:10" },
+      { id: "LOG-5027-2", type: "refund", message: "전체 환불 요청 접수", actor: "support@studymini.kr", createdAt: "2026-05-29 09:20" },
+      { id: "LOG-5027-3", type: "order", message: "주문상태가 환불요청으로 변경됨", actor: "system", createdAt: "2026-05-29 09:21" },
+    ],
   },
   {
     id: "ORD-5022",
@@ -405,6 +512,26 @@ export const orders: AdminOrder[] = [
     shippingStatus: "배송전",
     couponUsed: false,
     pointsUsed: true,
+    country: "US",
+    language: "en",
+    paymentMethod: "결제링크",
+    sku: "SPA-BASIC-08W",
+    orderChannel: "결제 링크",
+    originalAmount: 149000,
+    couponDiscountAmount: 0,
+    pointUsedAmount: 5000,
+    shippingFee: 5000,
+    pgProvider: "Stripe",
+    recipient: "Oscar Ha",
+    shippingPhone: "010-4422-1031",
+    shippingAddress: "1201 Market St, San Francisco, CA",
+    shippingMemo: "해외 배송 전 결제 확인 필요",
+    refunds: [],
+    adminMemos: [],
+    logs: [
+      { id: "LOG-5022-1", type: "order", message: "결제 링크 주문 생성", actor: "ops@studymini.kr", createdAt: "2026-05-28 16:03" },
+      { id: "LOG-5022-2", type: "payment", message: "결제 대기 중", actor: "system", createdAt: "2026-05-28 16:04" },
+    ],
   },
   {
     id: "ORD-5019",
@@ -424,6 +551,33 @@ export const orders: AdminOrder[] = [
     shippingStatus: "배송완료",
     couponUsed: true,
     pointsUsed: false,
+    country: "KR",
+    language: "ko",
+    paymentMethod: "신용카드",
+    sku: "EN-LISTENING-STARTER",
+    orderChannel: "모바일 웹",
+    originalAmount: 109000,
+    couponDiscountAmount: 10000,
+    pointUsedAmount: 0,
+    shippingFee: 0,
+    paymentApprovalNumber: "AUTH-20260527-5019",
+    pgProvider: "TossPayments",
+    recipient: "이서준",
+    shippingPhone: "010-9912-1022",
+    shippingAddress: "부산광역시 해운대구 센텀중앙로 79",
+    courier: "우체국택배",
+    invoiceNumber: "6868123412301",
+    shippedAt: "2026-05-27 17:20",
+    deliveredAt: "2026-05-28 11:35",
+    refunds: [],
+    adminMemos: [
+      { id: "MEMO-5019-1", author: "ops@studymini.kr", createdAt: "2026-05-27 17:21", body: "당일 출고 완료." },
+    ],
+    logs: [
+      { id: "LOG-5019-1", type: "payment", message: "결제 승인 완료", actor: "TossPayments", createdAt: "2026-05-27 14:33" },
+      { id: "LOG-5019-2", type: "shipping", message: "송장번호 등록", actor: "ops@studymini.kr", createdAt: "2026-05-27 17:20" },
+      { id: "LOG-5019-3", type: "shipping", message: "배송완료", actor: "우체국택배", createdAt: "2026-05-28 11:35" },
+    ],
   },
   {
     id: "ORD-5015",
@@ -442,6 +596,25 @@ export const orders: AdminOrder[] = [
     shippingStatus: "-",
     couponUsed: false,
     pointsUsed: false,
+    country: "JP",
+    language: "ja",
+    paymentMethod: "신용카드",
+    sku: "COACH-1ON1-01",
+    orderChannel: "웹 결제",
+    originalAmount: 100000,
+    couponDiscountAmount: 0,
+    pointUsedAmount: 0,
+    shippingFee: 0,
+    pgProvider: "Stripe",
+    recipient: "박민서",
+    shippingPhone: "010-1200-1023",
+    shippingAddress: "배송 없음",
+    refunds: [],
+    adminMemos: [],
+    logs: [
+      { id: "LOG-5015-1", type: "payment", message: "카드 승인 실패", actor: "Stripe", createdAt: "2026-05-26 12:08" },
+      { id: "LOG-5015-2", type: "order", message: "주문 취소 처리", actor: "system", createdAt: "2026-05-26 12:09" },
+    ],
   },
 ];
 
