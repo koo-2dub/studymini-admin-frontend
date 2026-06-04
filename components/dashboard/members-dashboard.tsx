@@ -74,6 +74,7 @@ export function MembersDashboard({ members }: { members: Member[] }) {
     const total = members.length;
     const todayJoined = members.filter((member) => member.joined === "2026-05-29").length;
     const sevenDayJoined = members.filter((member) => isWithinLastDays(member.joined, 7)).length;
+    const thirtyDayJoined = members.filter((member) => isWithinLastDays(member.joined, 30)).length;
     const statusCounts = countBy(members, (member) => member.status);
     const segmentCounts = countBy(members, (member) => member.segment);
     const marketingAgreed = members.filter((member) => member.marketingConsent).length;
@@ -90,6 +91,7 @@ export function MembersDashboard({ members }: { members: Member[] }) {
       total,
       todayJoined,
       sevenDayJoined,
+      thirtyDayJoined,
       statusCounts,
       segmentCounts,
       marketingRate: total ? Math.round((marketingAgreed / total) * 100) : 0,
@@ -130,7 +132,7 @@ export function MembersDashboard({ members }: { members: Member[] }) {
           <h2 className="text-2xl font-black text-slate-950">전체 유저 현황</h2>
           <p className="text-sm text-muted-foreground">필터와 관계없이 전체 회원 기준으로 집계됩니다.</p>
         </div>
-        <div className="grid gap-4 xl:grid-cols-[1fr_1fr_0.8fr]">
+        <div className="grid gap-4 xl:grid-cols-[1.35fr_0.85fr_0.85fr]">
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <div>
@@ -139,11 +141,13 @@ export function MembersDashboard({ members }: { members: Member[] }) {
               </div>
               <UsersRound className="h-5 w-5 text-indigo-500" />
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
+            <CardContent className="grid grid-cols-2 gap-3 xl:grid-cols-3">
               <SummaryMetric label="전체 유저" value={`${summary.total.toLocaleString()}명`} emphasis />
+              <SummaryMetric label="구매 회원" value={`${(summary.segmentCounts["구매회원"] ?? 0).toLocaleString()}명`} />
+              <SummaryMetric label="휴면 회원" value={`${(summary.statusCounts["휴면"] ?? 0).toLocaleString()}명`} />
               <SummaryMetric label="오늘 가입" value={`${summary.todayJoined.toLocaleString()}명`} />
               <SummaryMetric label="최근 7일 가입" value={`${summary.sevenDayJoined.toLocaleString()}명`} />
-              <SummaryMetric label="마케팅 동의" value={`${summary.marketingAgreed.toLocaleString()}명`} />
+              <SummaryMetric label="최근 30일 가입" value={`${summary.thirtyDayJoined.toLocaleString()}명`} />
             </CardContent>
           </Card>
           <DistributionCard
@@ -177,19 +181,15 @@ export function MembersDashboard({ members }: { members: Member[] }) {
                 <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-indigo-500" />최근 가입 추이</CardTitle>
                 <CardDescription>최근 7일 가입자 수 기준</CardDescription>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-right">
-                <SummaryMetric label="오늘 가입" value={`${summary.todayJoined}명`} />
-                <SummaryMetric label="최근 7일 가입" value={`${summary.sevenDayJoined}명`} />
-              </div>
             </CardHeader>
             <CardContent>
-              <div className="flex h-72 items-end gap-3 rounded-3xl bg-gradient-to-b from-slate-50 to-white p-5">
+              <div className="flex h-36 items-end gap-3 rounded-3xl bg-gradient-to-b from-slate-50 to-white p-4">
                 {summary.dailyJoinCounts.map((item) => {
                   const max = Math.max(...summary.dailyJoinCounts.map((count) => count.value), 1);
                   const height = Math.max((item.value / max) * 100, item.value ? 18 : 5);
                   return (
-                    <div key={item.label} className="flex h-full flex-1 flex-col justify-end gap-3 text-center">
-                      <div className="text-sm font-bold text-slate-700">{item.value}명</div>
+                    <div key={item.label} className="flex h-full flex-1 flex-col justify-end gap-2 text-center">
+                      <div className="text-xs font-bold text-slate-700">{item.value}명</div>
                       <div className="flex flex-1 items-end">
                         <div
                           className="w-full rounded-t-2xl bg-gradient-to-t from-indigo-600 to-sky-400 shadow-sm transition-all"

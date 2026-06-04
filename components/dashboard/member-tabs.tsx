@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpenCheck, Coins, CreditCard, Gift, MessageSquareText, NotebookPen, Sparkles, UsersRound } from "lucide-react";
+import { BookOpenCheck, Coins, CreditCard, Gift, LogIn, MessageSquareText, NotebookPen, Sparkles, UsersRound } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import type { MemberRecord } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { id: "overview", label: "기본 정보", icon: Sparkles },
+  { id: "overview", label: "기본정보", icon: Sparkles },
   { id: "orders", label: "주문 내역", icon: CreditCard },
   { id: "learning", label: "수강/그룹", icon: BookOpenCheck },
   { id: "points", label: "포인트", icon: Coins },
@@ -22,6 +22,9 @@ const tabs = [
 
 export function MemberTabs({ member }: { member: MemberRecord }) {
   const [active, setActive] = useState<(typeof tabs)[number]["id"]>("overview");
+  const recentOrder = member.orders[0];
+  const recentInquiry = member.inquiries[0] ?? member.lessonQuestions[0];
+  const recentPoint = pointHistoryByMember[member.id]?.[0];
 
   return (
     <Card>
@@ -30,7 +33,37 @@ export function MemberTabs({ member }: { member: MemberRecord }) {
         <CardDescription>목록에서 제거한 운영 정보를 탭별로 확인하고 처리합니다.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 grid gap-2 rounded-2xl bg-slate-100 p-2 md:grid-cols-4 xl:grid-cols-8">
+        <div className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <RecentActivityCard
+            icon={CreditCard}
+            label="최근 주문"
+            value={recentOrder ? `${recentOrder.date} · ${recentOrder.product}` : "주문 내역 없음"}
+            target="주문 탭으로 이동"
+            onClick={() => setActive("orders")}
+          />
+          <RecentActivityCard
+            icon={LogIn}
+            label="최근 로그인"
+            value={member.lastLogin}
+            target="기본정보 탭으로 이동"
+            onClick={() => setActive("overview")}
+          />
+          <RecentActivityCard
+            icon={Coins}
+            label="최근 포인트 적립"
+            value={recentPoint ? `${recentPoint.date} · ${formatPointAmount(recentPoint.amount)}` : `${member.points.toLocaleString()}P 보유`}
+            target="포인트 탭으로 이동"
+            onClick={() => setActive("points")}
+          />
+          <RecentActivityCard
+            icon={MessageSquareText}
+            label="최근 문의"
+            value={recentInquiry ?? "문의 내역 없음"}
+            target="문의 탭으로 이동"
+            onClick={() => setActive("inquiries")}
+          />
+        </div>
+        <div className="sticky top-4 z-20 mb-6 grid gap-2 rounded-2xl border border-slate-200 bg-slate-100/95 p-2 shadow-sm backdrop-blur md:grid-cols-4 xl:grid-cols-8">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -84,7 +117,7 @@ export function MemberTabs({ member }: { member: MemberRecord }) {
         )}
         {active === "inquiries" && <Panel title="일반 문의" items={member.inquiries} empty="일반 문의 내역이 없습니다." />}
         {active === "questions" && <Panel title="학습 질문" items={member.lessonQuestions} empty="학습 질문 내역이 없습니다." />}
-        {active === "memos" && <Panel title="관리자 메모" items={member.adminMemos} empty="관리자 메모가 없습니다." />}
+        {active === "memos" && <MemoPanel items={member.adminMemos} />}
       </CardContent>
     </Card>
   );
@@ -114,6 +147,65 @@ const pointHistoryByMember: Record<string, MemberPointHistory[]> = {
     { date: "2026-05-18 08:43", type: "캠페인 지급", amount: 12000, balance: 2130, actor: "csv-import", reason: "복귀 캠페인 대상" },
   ],
 };
+
+
+function RecentActivityCard({
+  icon: Icon,
+  label,
+  value,
+  target,
+  onClick,
+}: {
+  icon: typeof CreditCard;
+  label: string;
+  value: string;
+  target: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group rounded-3xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    >
+      <div className="flex items-start gap-3">
+        <span className="rounded-2xl bg-indigo-50 p-2 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+          <Icon className="h-4 w-4" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-xs font-black uppercase tracking-wider text-slate-400">{label}</span>
+          <span className="mt-1 block truncate text-sm font-black text-slate-900">{value}</span>
+          <span className="mt-2 block text-xs font-bold text-indigo-600">{target}</span>
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function MemoPanel({ items }: { items: string[] }) {
+  const visibleItems = items.filter(Boolean);
+
+  return (
+    <div className="rounded-3xl border bg-gradient-to-br from-white to-indigo-50 p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-black">관리자 메모 ({visibleItems.length})</h3>
+          <p className="mt-1 text-sm font-semibold text-slate-500">최근 메모를 먼저 보여주며 전체 보기로 전체 이력을 확인합니다.</p>
+        </div>
+        <button type="button" className="rounded-2xl border border-indigo-200 bg-white px-4 py-2 text-sm font-black text-indigo-600 shadow-sm hover:bg-indigo-50">
+          전체 보기
+        </button>
+      </div>
+      <div className="mt-4 space-y-3">
+        {(visibleItems.length ? visibleItems.slice(0, 3) : ["관리자 메모가 없습니다."]).map((item) => (
+          <div key={item} className="whitespace-pre-line rounded-2xl bg-white/80 p-4 text-sm font-semibold text-slate-600 shadow-sm">
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function PointPanel({ member }: { member: MemberRecord }) {
   const histories = pointHistoryByMember[member.id] ?? [
