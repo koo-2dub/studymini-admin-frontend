@@ -32,7 +32,7 @@ export default function AccessTrialsPage() {
           </Button>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[980px]">
+          <Table className="min-w-[860px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">체험단명</TableHead>
@@ -40,7 +40,6 @@ export default function AccessTrialsPage() {
                 <TableHead className="whitespace-nowrap">참여 회원</TableHead>
                 <TableHead className="whitespace-nowrap">대상 콘텐츠</TableHead>
                 <TableHead className="whitespace-nowrap">기간</TableHead>
-                <TableHead className="whitespace-nowrap">담당</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -70,9 +69,6 @@ export default function AccessTrialsPage() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <Link href={detailHref} className="block py-1">{trial.startDate} ~ {trial.endDate}</Link>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Link href={detailHref} className="block py-1">{trial.owner}</Link>
                     </TableCell>
                   </TableRow>
                 );

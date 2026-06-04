@@ -39,7 +39,6 @@ export type TrialCampaign = {
   startDate: string;
   endDate: string;
   memberCount: number;
-  owner: string;
   memo: string;
 };
 
@@ -59,7 +58,6 @@ export const trialCampaigns: TrialCampaign[] = [
     startDate: "2026-06-01",
     endDate: "2026-06-30",
     memberCount: 24,
-    owner: "Growth Team",
     memo: "신규 가입자 대상 4주 체험 캠페인",
   },
   {
@@ -70,7 +68,6 @@ export const trialCampaigns: TrialCampaign[] = [
     startDate: "2026-07-01",
     endDate: "2026-07-21",
     memberCount: 12,
-    owner: "B2B Team",
     memo: "기업 제휴 리드 검증용 체험단",
   },
   {
@@ -81,7 +78,6 @@ export const trialCampaigns: TrialCampaign[] = [
     startDate: "2026-05-01",
     endDate: "2026-05-20",
     memberCount: 18,
-    owner: "Content Team",
     memo: "여행 시즌 콘텐츠 반응 확인",
   },
 ];

@@ -36,7 +36,7 @@ export default async function TrialDetailPage({ params }: { params: Promise<{ tr
               <Button asChild variant="outline" size="sm"><Link href="/access/trials">목록으로</Link></Button>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-4">
+          <CardContent className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase text-slate-400">기간</p>
               <p className="mt-2 font-semibold text-slate-800">{trial.startDate} ~ {trial.endDate}</p>
@@ -44,10 +44,6 @@ export default async function TrialDetailPage({ params }: { params: Promise<{ tr
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase text-slate-400">참여 회원</p>
               <p className="mt-2 font-semibold text-slate-800">{trial.memberCount}명</p>
-            </div>
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-bold uppercase text-slate-400">담당</p>
-              <p className="mt-2 font-semibold text-slate-800">{trial.owner}</p>
             </div>
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase text-slate-400">대상 콘텐츠</p>
