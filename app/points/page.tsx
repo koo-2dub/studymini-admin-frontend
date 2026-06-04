@@ -26,6 +26,7 @@ type PointLog = {
   amount: string;
   balance: string;
   reason: string;
+  admin: string;
   date: string;
 };
 
@@ -65,12 +66,12 @@ const csvPreview = [
 ];
 
 const pointLogs: PointLog[] = [
-  { id: "PL-1048", member: "지윤 김", email: "jiyoon.kim@example.com", wallet: "일반 포인트", type: "지급", method: "관리자", amount: "+5,000P", balance: "9,850P", reason: "CS 보상", date: "2026-06-04 10:24" },
-  { id: "PL-1047", member: "민서 박", email: "minseo.park@example.com", wallet: "일반 포인트", type: "지급", method: "CSV", amount: "+3,000P", balance: "3,300P", reason: "이벤트 지급", date: "2026-06-04 09:18" },
-  { id: "PL-1046", member: "Noah Park", email: "noah.park@example.com", wallet: "기간제 포인트", type: "차감", method: "관리자", amount: "-1,000P", balance: "2,300P", reason: "오지급 정정", date: "2026-06-03 17:42" },
-  { id: "PL-1045", member: "Sora Choi", email: "sora.choi@example.com", wallet: "이벤트 포인트", type: "SET", method: "관리자", amount: "0P로 조정", balance: "0P", reason: "테스트 데이터 정리", date: "2026-06-03 14:05" },
-  { id: "PL-1044", member: "Daniel Wu", email: "daniel.wu@example.com", wallet: "일반 포인트", type: "사용", method: "주문", amount: "-2,500P", balance: "7,100P", reason: "주문 사용", date: "2026-06-02 12:31" },
-  { id: "PL-1043", member: "Mina Lee", email: "mina.lee@example.com", wallet: "기간제 포인트", type: "소멸", method: "시스템", amount: "-1,200P", balance: "0P", reason: "유효기간 만료", date: "2026-06-01 00:00" },
+  { id: "PL-1048", member: "지윤 김", email: "jiyoon.kim@example.com", wallet: "일반 포인트", type: "지급", method: "관리자", amount: "+5,000P", balance: "9,850P", reason: "CS 보상", admin: "Admin Kim", date: "2026-06-04 10:24" },
+  { id: "PL-1047", member: "민서 박", email: "minseo.park@example.com", wallet: "일반 포인트", type: "지급", method: "CSV", amount: "+3,000P", balance: "3,300P", reason: "이벤트 지급", admin: "Admin Lee", date: "2026-06-04 09:18" },
+  { id: "PL-1046", member: "Noah Park", email: "noah.park@example.com", wallet: "기간제 포인트", type: "차감", method: "관리자", amount: "-1,000P", balance: "2,300P", reason: "오지급 정정", admin: "Admin Park", date: "2026-06-03 17:42" },
+  { id: "PL-1045", member: "Sora Choi", email: "sora.choi@example.com", wallet: "이벤트 포인트", type: "SET", method: "관리자", amount: "0P로 조정", balance: "0P", reason: "테스트 데이터 정리", admin: "Admin Kim", date: "2026-06-03 14:05" },
+  { id: "PL-1044", member: "Daniel Wu", email: "daniel.wu@example.com", wallet: "일반 포인트", type: "사용", method: "주문", amount: "-2,500P", balance: "7,100P", reason: "주문 사용", admin: "System", date: "2026-06-02 12:31" },
+  { id: "PL-1043", member: "Mina Lee", email: "mina.lee@example.com", wallet: "기간제 포인트", type: "소멸", method: "시스템", amount: "-1,200P", balance: "0P", reason: "유효기간 만료", admin: "System", date: "2026-06-01 00:00" },
 ];
 
 function statusVariant(status: string) {
@@ -118,7 +119,7 @@ export default function PointsPage() {
         eyebrow="Rewards"
         title="포인트 관리"
         description="Mock UI 단계에 맞춰 대시보드, 정책, 기간제한 포인트, 지급/차감, 로그를 한 화면에서 운영 흐름대로 확인합니다."
-        action={<Button variant="secondary">포인트 내역 다운로드</Button>}
+        action={<Button variant="secondary">포인트 로그 다운로드</Button>}
       />
 
       <div className="space-y-6">
@@ -147,6 +148,8 @@ export default function PointsPage() {
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <StatCard label="총 보유 포인트" value="18.4M P" change="전체 회원 잔여 합계" tone="indigo" />
+              <StatCard label="오늘 지급 포인트" value="128K P" change="관리자·CSV 지급" tone="emerald" />
+              <StatCard label="오늘 차감 포인트" value="42K P" change="사용·관리자 차감" tone="amber" />
               <StatCard label="이번 달 지급" value="3.2M P" change="관리자·CSV 포함" tone="emerald" />
               <StatCard label="이번 달 차감" value="820K P" change="사용·관리자 차감" tone="amber" />
               <StatCard label="30일 내 소멸" value="1.1M P" change="대상 342명" tone="rose" />
@@ -219,7 +222,11 @@ export default function PointsPage() {
                   ["포인트 기능", "사용"],
                   ["기본 월렛", "일반 포인트"],
                   ["최소 사용 포인트", "1,000P"],
+                  ["최대 사용 포인트", "주문 금액의 50%"],
+                  ["사용 가능 상품", "전체 강의/패키지"],
                   ["사용 단위", "100P"],
+                  ["관리자 지급 사유 필수 여부", "필수"],
+                  ["관리자 차감 사유 필수 여부", "필수"],
                   ["관리자 사유", "지급/차감/SET 모두 필수"],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
@@ -335,6 +342,17 @@ export default function PointsPage() {
                         </div>
                       </FilterInput>
                       <Button variant="secondary" className="w-full">회원 추가</Button>
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-sm font-black text-slate-900">선택된 회원 목록</p>
+                        <div className="mt-3 space-y-2">
+                          {selectedMembers.map((member) => (
+                            <div key={member.email} className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm">
+                              <span className="font-semibold text-slate-800">{member.member}</span>
+                              <span className="text-xs text-slate-500">{member.current}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -348,6 +366,19 @@ export default function PointsPage() {
                       <input className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue={isSetMode ? "0" : "5000"} />
                     </FilterInput>
                   </div>
+
+                  {isSetMode && (
+                    <div className="grid gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs font-bold text-amber-700">현재 잔액</p>
+                        <p className="mt-1 text-2xl font-black text-slate-950">4,850P</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-amber-700">변경 후 잔액</p>
+                        <p className="mt-1 text-2xl font-black text-slate-950">0P</p>
+                      </div>
+                    </div>
+                  )}
 
                   <FilterInput label="관리자 사유">
                     <select className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="CS 보상">
@@ -432,7 +463,7 @@ export default function PointsPage() {
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <Table>
-                  <TableHeader><TableRow><TableHead>일시</TableHead><TableHead>회원</TableHead><TableHead>월렛</TableHead><TableHead>유형</TableHead><TableHead>방식</TableHead><TableHead>변동</TableHead><TableHead>잔액</TableHead><TableHead>관리자 사유</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>일시</TableHead><TableHead>회원</TableHead><TableHead>월렛</TableHead><TableHead>유형</TableHead><TableHead>방식</TableHead><TableHead>처리 관리자</TableHead><TableHead>변동</TableHead><TableHead>잔액</TableHead><TableHead>관리자 사유</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredLogs.map((log) => (
                       <TableRow key={log.id}>
@@ -441,6 +472,7 @@ export default function PointsPage() {
                         <TableCell>{log.wallet}</TableCell>
                         <TableCell><Badge variant={statusVariant(log.type)}>{log.type}</Badge></TableCell>
                         <TableCell>{log.method}</TableCell>
+                        <TableCell>{log.admin}</TableCell>
                         <TableCell className={cn("font-black", log.amount.startsWith("+") ? "text-emerald-600" : log.amount.startsWith("-") ? "text-rose-600" : "text-slate-700")}>{log.amount}</TableCell>
                         <TableCell>{log.balance}</TableCell>
                         <TableCell>{log.reason}</TableCell>
