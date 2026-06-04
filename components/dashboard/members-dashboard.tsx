@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, TrendingUp } from "lucide-react";
 
@@ -118,40 +119,22 @@ export function MembersDashboard({ members }: { members: Member[] }) {
             <p className="text-sm text-muted-foreground">전체 회원 {summary.total.toLocaleString()}명 · 운영 핵심 KPI만 상단에 표시합니다.</p>
           </div>
         </div>
-        <div className="grid gap-3 xl:grid-cols-[1.7fr_0.8fr]">
+        <div className="grid gap-3 xl:grid-cols-[1.45fr_0.85fr]">
           <Card>
-            <CardContent className="grid grid-cols-2 gap-3 p-4 xl:grid-cols-4">
+            <CardHeader className="px-4 py-3">
+              <CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-indigo-500" />최근 가입 추이</CardTitle>
+              <CardDescription>최근 7일 날짜별 가입 흐름</CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-0">
+              <SignupLineChart data={summary.dailyJoinCounts} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="grid grid-cols-2 gap-3 p-4">
               <SummaryMetric label="오늘 가입" value={`${summary.todayJoined.toLocaleString()}명`} emphasis />
               <SummaryMetric label="최근 7일 가입" value={`${summary.sevenDayJoined.toLocaleString()}명`} emphasis />
               <SummaryMetric label="구매 회원" value={`${summary.purchaseMembers.toLocaleString()}명`} emphasis />
               <SummaryMetric label="휴면 회원" value={`${summary.dormantMembers.toLocaleString()}명`} emphasis />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="px-4 py-3">
-              <CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-indigo-500" />최근 가입 추이</CardTitle>
-              <CardDescription>최근 7일</CardDescription>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 pt-0">
-              <div className="flex h-20 items-end gap-2 rounded-2xl bg-gradient-to-b from-slate-50 to-white p-3">
-                {summary.dailyJoinCounts.map((item) => {
-                  const max = Math.max(...summary.dailyJoinCounts.map((count) => count.value), 1);
-                  const height = Math.max((item.value / max) * 100, item.value ? 18 : 5);
-                  return (
-                    <div key={item.label} className="flex h-full flex-1 flex-col justify-end gap-1 text-center">
-                      <div className="text-[11px] font-bold text-slate-700">{item.value}</div>
-                      <div className="flex flex-1 items-end">
-                        <div
-                          className="w-full rounded-t-xl bg-gradient-to-t from-indigo-600 to-sky-400 shadow-sm transition-all"
-                          style={{ height: `${height}%` }}
-                          aria-label={`${item.label} 가입 ${item.value}명`}
-                        />
-                      </div>
-                      <div className="whitespace-nowrap text-[10px] font-semibold text-muted-foreground">{item.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -220,7 +203,9 @@ export function MembersDashboard({ members }: { members: Member[] }) {
                   }}
                 >
                   <TableCell className="whitespace-nowrap font-bold text-slate-950">{member.name}</TableCell>
-                  <TableCell className="whitespace-nowrap font-mono text-xs font-bold text-indigo-700">{member.id}</TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-xs font-bold text-indigo-700">
+                    <Link href={`/members/${member.id}`} onClick={(event) => event.stopPropagation()} className="hover:underline">{member.id}</Link>
+                  </TableCell>
                   <TableCell className="whitespace-nowrap">{member.email}</TableCell>
                   <TableCell className="whitespace-nowrap"><Badge variant={member.segment === "구매회원" ? "success" : "slate"}>{member.segment}</Badge></TableCell>
                   <TableCell className="whitespace-nowrap"><Badge variant={member.status === "정상" ? "success" : member.status === "휴면" ? "warning" : "rose"}>{member.status}</Badge></TableCell>
@@ -235,6 +220,45 @@ export function MembersDashboard({ members }: { members: Member[] }) {
           </Table>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function SignupLineChart({ data }: { data: { label: string; value: number }[] }) {
+  const width = 640;
+  const height = 128;
+  const paddingX = 28;
+  const paddingTop = 18;
+  const paddingBottom = 30;
+  const max = Math.max(...data.map((item) => item.value), 1);
+  const points = data.map((item, index) => {
+    const x = paddingX + (index * (width - paddingX * 2)) / Math.max(data.length - 1, 1);
+    const y = paddingTop + (1 - item.value / max) * (height - paddingTop - paddingBottom);
+    return { ...item, x, y };
+  });
+  const linePath = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+  const areaPath = `${linePath} L ${points.at(-1)?.x ?? paddingX} ${height - paddingBottom} L ${points[0]?.x ?? paddingX} ${height - paddingBottom} Z`;
+
+  return (
+    <div className="h-32 rounded-2xl bg-gradient-to-b from-slate-50 to-white p-2">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="최근 7일 가입 추이 라인 그래프" className="h-full w-full overflow-visible">
+        <path d={`M ${paddingX} ${height - paddingBottom} H ${width - paddingX}`} className="stroke-slate-200" strokeWidth="1" fill="none" />
+        <path d={areaPath} fill="url(#signupLineFill)" />
+        <path d={linePath} className="stroke-indigo-600" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {points.map((point) => (
+          <g key={point.label}>
+            <circle cx={point.x} cy={point.y} r="4" className="fill-white stroke-indigo-600" strokeWidth="2" />
+            <text x={point.x} y={point.y - 9} textAnchor="middle" className="fill-slate-700 text-[11px] font-bold">{point.value}명</text>
+            <text x={point.x} y={height - 9} textAnchor="middle" className="fill-slate-500 text-[10px] font-semibold">{point.label}</text>
+          </g>
+        ))}
+        <defs>
+          <linearGradient id="signupLineFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+      </svg>
     </div>
   );
 }
