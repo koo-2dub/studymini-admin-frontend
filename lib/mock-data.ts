@@ -318,6 +318,56 @@ export const members: MemberRecord[] = [
   }),
 ];
 
+export type MemberRecentActivity = {
+  label: string;
+  value: string;
+  helper: string;
+};
+
+export type MemberAdminMemoHighlight = {
+  date: string;
+  content: string;
+};
+
+export const memberRecentActivities: Record<string, MemberRecentActivity[]> = {
+  "SM-1024": [
+    { label: "최근 주문", value: "비즈니스 회화 집중반", helper: "2026-05-29 · ₩229,000" },
+    { label: "최근 로그인", value: "2026-05-29", helper: "가입 당일 재방문" },
+    { label: "최근 포인트 적립", value: "+5,000P", helper: "2026-06-04 · CS 보상" },
+    { label: "최근 문의", value: "영수증 발급 요청", helper: "처리 완료" },
+  ],
+  "SM-1023": [
+    { label: "최근 주문", value: "주문 없음", helper: "첫 구매 전환 대상" },
+    { label: "최근 로그인", value: "2026-05-28", helper: "가입 후 1일 내 재방문" },
+    { label: "최근 포인트 적립", value: "+3,000P", helper: "2026-06-04 · 이벤트 지급" },
+    { label: "최근 문의", value: "회원가입 인증 메일 문의", helper: "처리 완료" },
+  ],
+  "SM-1021": [
+    { label: "최근 주문", value: "일본어 문법 완성", helper: "2026-04-19 · ₩179,000" },
+    { label: "최근 로그인", value: "2026-02-13", helper: "90일 이상 미접속" },
+    { label: "최근 포인트 적립", value: "+12,000P", helper: "2026-05-18 · 복귀 캠페인" },
+    { label: "최근 문의", value: "휴면 해제 문의", helper: "처리 중" },
+  ],
+};
+
+export const memberAdminMemoHighlights: Record<string, MemberAdminMemoHighlight[]> = {
+  "SM-1024": [
+    { date: "2026-06-01", content: "환불 문의 이력 확인 후 CS 보상 포인트 지급 예정." },
+    { date: "2026-05-20", content: "배송 재발송 요청 처리 완료." },
+    { date: "2026-05-13", content: "VIP 전환 후보. 다음 갱신일 전 안내 필요." },
+  ],
+  "SM-1023": [
+    { date: "2026-06-02", content: "첫 구매 전환 쿠폰 발송 후보." },
+    { date: "2026-05-28", content: "인증 메일 문의 처리 완료." },
+    { date: "2026-05-27", content: "무료 체험 온보딩 메일 발송 대상." },
+  ],
+  "SM-1021": [
+    { date: "2026-06-01", content: "휴면 회원으로 캠페인 지급 실패." },
+    { date: "2026-05-20", content: "복귀 쿠폰 재발송 검토." },
+    { date: "2026-05-18", content: "90일 이상 미접속. 복귀 캠페인 대상." },
+  ],
+};
+
 export const memberTimeline = [
   "Completed Advanced Algebra checkpoint",
   "Redeemed 1,000 points for coaching voucher",
