@@ -39,8 +39,6 @@ export const navItems: (NavLinkItem | NavGroupItem)[] = [
     children: [
       { title: "체험단 관리", href: "/access/trials" },
       { title: "수강코드 관리", href: "/access/codes" },
-      { title: "수강권 지급 관리", href: "/access/grants" },
-      { title: "권한 이력/만료 관리", href: "/access/history" },
     ],
   },
   { title: "General inquiries", href: "/inquiries", icon: HelpCircle },
