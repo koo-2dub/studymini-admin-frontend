@@ -74,7 +74,7 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
           <CardHeader className="gap-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
             <div className="space-y-2">
               <CardTitle>{campaign.name}</CardTitle>
-              <CardDescription>{campaign.period} · {campaign.expirationRule}</CardDescription>
+              <CardDescription>{campaign.code} · {campaign.period} · {campaign.expirationRule}</CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant={statusVariant(campaign.status)}>{campaign.status}</Badge>
@@ -101,12 +101,13 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
             </CardHeader>
             <CardContent className="grid gap-3">
               {infoRow("캠페인명", campaign.name)}
+              {infoRow("캠페인 코드", <span className="font-mono">{campaign.code}</span>)}
               {infoRow("월렛", campaign.wallet)}
-              {infoRow("지급 시작일", campaign.startDate)}
-              {infoRow("지급 종료일", campaign.endDate)}
+              {infoRow("지급 기간", `${campaign.startDate} ~ ${campaign.endDate}`)}
+              {infoRow("사용 가능 기간", `${campaign.usageStartDate} ~ ${campaign.usageEndDate}`)}
               {infoRow("만료 기준", campaign.expirationRule)}
-              {infoRow("담당 정책", campaign.policy)}
               {infoRow("생성일", campaign.createdAt)}
+              {infoRow("관리자 메모", campaign.adminMemo)}
             </CardContent>
           </Card>
 
@@ -127,8 +128,8 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
         <Card>
           <CardHeader className="gap-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
             <div>
-              <CardTitle>만료 예정 회원 목록</CardTitle>
-              <CardDescription>회원별 현재 보유 포인트, 만료 예정 포인트, 알림 발송 여부를 확인합니다.</CardDescription>
+              <CardTitle>참여/지급 회원 목록</CardTitle>
+              <CardDescription>회원별 지급·사용·잔여 포인트와 만료 예정 정보를 확인합니다.</CardDescription>
             </div>
             <ExportButton
               filename={`${campaign.id}-expiring-members.csv`}
@@ -137,7 +138,9 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
                 이름: member.name,
                 이메일: member.email,
                 UserID: member.userId,
-                현재보유포인트: member.currentPoints,
+                지급포인트: member.issuedPoints,
+                사용포인트: member.usedPoints,
+                잔여포인트: member.remainingPoints,
                 만료예정포인트: member.expiringPoints,
                 만료예정일: member.expiresAt,
                 최근사용일: member.lastUsedAt,
@@ -147,18 +150,19 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
-              <TableHeader><TableRow><TableHead>이름</TableHead><TableHead>이메일</TableHead><TableHead>User ID</TableHead><TableHead>현재 보유 포인트</TableHead><TableHead>만료 예정 포인트</TableHead><TableHead>만료 예정일</TableHead><TableHead>최근 사용일</TableHead><TableHead>알림 발송 여부</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead className="whitespace-nowrap">이름</TableHead><TableHead className="whitespace-nowrap">이메일</TableHead><TableHead className="whitespace-nowrap">User ID</TableHead><TableHead className="whitespace-nowrap">지급 포인트</TableHead><TableHead className="whitespace-nowrap">사용 포인트</TableHead><TableHead className="whitespace-nowrap">잔여 포인트</TableHead><TableHead className="whitespace-nowrap">만료 예정 포인트</TableHead><TableHead className="whitespace-nowrap">만료 예정일</TableHead><TableHead className="whitespace-nowrap">알림 발송 여부</TableHead></TableRow></TableHeader>
               <TableBody>
                 {expiringMembers.map((member) => (
                   <TableRow key={`${member.userId}-${member.expiresAt}`}>
-                    <TableCell className="font-semibold">{member.name}</TableCell>
-                    <TableCell>{member.email}</TableCell>
-                    <TableCell><Link href={`/members/${member.userId}`} className="font-mono text-xs font-bold text-primary underline-offset-4 hover:underline">{member.userId}</Link></TableCell>
-                    <TableCell>{formatPoints(member.currentPoints)}</TableCell>
-                    <TableCell className="font-black text-rose-600">{formatPoints(member.expiringPoints)}</TableCell>
-                    <TableCell>{member.expiresAt}</TableCell>
-                    <TableCell>{member.lastUsedAt}</TableCell>
-                    <TableCell><Badge variant={statusVariant(member.notificationSent ? "발송 완료" : "미발송")}>{member.notificationSent ? "발송 완료" : "미발송"}</Badge></TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold">{member.name}</TableCell>
+                    <TableCell className="whitespace-nowrap">{member.email}</TableCell>
+                    <TableCell className="whitespace-nowrap"><Link href={`/members/${member.userId}`} className="font-mono text-xs font-bold text-primary underline-offset-4 hover:underline">{member.userId}</Link></TableCell>
+                    <TableCell className="whitespace-nowrap">{formatPoints(member.issuedPoints)}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatPoints(member.usedPoints)}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatPoints(member.remainingPoints)}</TableCell>
+                    <TableCell className="whitespace-nowrap font-black text-rose-600">{formatPoints(member.expiringPoints)}</TableCell>
+                    <TableCell className="whitespace-nowrap">{member.expiresAt}</TableCell>
+                    <TableCell className="whitespace-nowrap"><Badge variant={statusVariant(member.notificationSent ? "발송 완료" : "미발송")}>{member.notificationSent ? "발송 완료" : "미발송"}</Badge></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -175,8 +179,14 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
             <CardContent className="grid gap-3">
               <ExportButton
                 filename={`${campaign.id}-expiring-members.csv`}
-                label="만료 예정 회원 엑셀 다운로드"
-                rows={expiringMembers.map((member) => ({ 이름: member.name, 이메일: member.email, UserID: member.userId, 만료예정포인트: member.expiringPoints, 만료예정일: member.expiresAt }))}
+                label="만료 예정 회원 다운로드"
+                rows={expiringMembers.map((member) => ({ 이름: member.name, 이메일: member.email, UserID: member.userId, 잔여포인트: member.remainingPoints, 만료예정포인트: member.expiringPoints, 만료예정일: member.expiresAt }))}
+                className="w-full"
+              />
+              <ExportButton
+                filename={`${campaign.id}-issued-members.csv`}
+                label="지급 회원 다운로드"
+                rows={expiringMembers.map((member) => ({ 이름: member.name, 이메일: member.email, UserID: member.userId, 지급포인트: member.issuedPoints, 사용포인트: member.usedPoints, 잔여포인트: member.remainingPoints }))}
                 className="w-full"
               />
               <Button className="w-full" variant="secondary"><Bell className="mr-2 h-4 w-4" />알림 발송</Button>
@@ -205,7 +215,7 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>이름</TableHead><TableHead>이메일</TableHead><TableHead>User ID</TableHead><TableHead>소멸 포인트</TableHead><TableHead>소멸 일시</TableHead><TableHead>사유</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="whitespace-nowrap">이름</TableHead><TableHead className="whitespace-nowrap">이메일</TableHead><TableHead className="whitespace-nowrap">User ID</TableHead><TableHead className="whitespace-nowrap">소멸 포인트</TableHead><TableHead className="whitespace-nowrap">소멸 일시</TableHead><TableHead className="whitespace-nowrap">사유</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {expiredMembers.length ? expiredMembers.map((member) => (
                     <TableRow key={`${member.userId}-${member.expiredAt}`}>

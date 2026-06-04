@@ -203,7 +203,17 @@ export default function PointsPage() {
         )}
 
         {activeTab === "policy" && (
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>포인트 정책</CardTitle>
+                  <CardDescription>운영 정책을 확인하고 수정 화면으로 이동합니다.</CardDescription>
+                </div>
+                <Button onClick={() => router.push("/points/policy/edit")} type="button">정책 수정</Button>
+              </CardHeader>
+            </Card>
+            <div className="grid gap-6 xl:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5 text-primary" />기본 정책</CardTitle>
@@ -251,6 +261,7 @@ export default function PointsPage() {
                 <Button className="w-full">소멸 정책 저장</Button>
               </CardContent>
             </Card>
+            </div>
           </div>
         )}
 
@@ -268,6 +279,7 @@ export default function PointsPage() {
                   rows={campaigns.map((campaign) => ({
                     캠페인ID: campaign.id,
                     캠페인명: campaign.name,
+                    캠페인코드: campaign.code,
                     상태: campaign.status,
                     월렛: campaign.wallet,
                     지급시작일: campaign.startDate,
@@ -278,12 +290,12 @@ export default function PointsPage() {
                     만료일: campaign.expires,
                   }))}
                 />
-                <Button>캠페인 생성</Button>
+                <Button onClick={() => router.push("/points/campaigns/create")} type="button">캠페인 생성</Button>
               </div>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>캠페인명</TableHead><TableHead>상태</TableHead><TableHead>월렛</TableHead><TableHead>지급 기간</TableHead><TableHead>지급 대상</TableHead><TableHead>지급 완료</TableHead><TableHead>지급 총액</TableHead><TableHead>만료일</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="whitespace-nowrap">캠페인명</TableHead><TableHead className="whitespace-nowrap">상태</TableHead><TableHead className="whitespace-nowrap">월렛</TableHead><TableHead className="whitespace-nowrap">지급 기간</TableHead><TableHead className="whitespace-nowrap">지급 대상</TableHead><TableHead className="whitespace-nowrap">지급 완료</TableHead><TableHead className="whitespace-nowrap">지급 총액</TableHead><TableHead className="whitespace-nowrap">만료일</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {campaigns.map((campaign) => (
                     <TableRow
@@ -291,14 +303,14 @@ export default function PointsPage() {
                       className="cursor-pointer transition-colors hover:bg-indigo-50/70"
                       onClick={() => router.push(`/points/campaigns/${campaign.id}`)}
                     >
-                      <TableCell className="font-semibold text-primary">{campaign.name}</TableCell>
-                      <TableCell><Badge variant={statusVariant(campaign.status)}>{campaign.status}</Badge></TableCell>
-                      <TableCell>{campaign.wallet}</TableCell>
-                      <TableCell>{campaign.period}</TableCell>
-                      <TableCell>{formatNumber(campaign.targetCount)}명</TableCell>
-                      <TableCell>{formatNumber(campaign.issuedCount)}명</TableCell>
-                      <TableCell>{formatPoints(campaign.amount)}</TableCell>
-                      <TableCell>{campaign.expires}</TableCell>
+                      <TableCell className="whitespace-nowrap font-semibold text-primary">{campaign.name}<p className="font-mono text-xs font-normal text-slate-500">{campaign.code}</p></TableCell>
+                      <TableCell className="whitespace-nowrap"><Badge variant={statusVariant(campaign.status)}>{campaign.status}</Badge></TableCell>
+                      <TableCell className="whitespace-nowrap">{campaign.wallet}</TableCell>
+                      <TableCell className="whitespace-nowrap">{campaign.period}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatNumber(campaign.targetCount)}명</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatNumber(campaign.issuedCount)}명</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatPoints(campaign.amount)}</TableCell>
+                      <TableCell className="whitespace-nowrap">{campaign.expires}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -383,14 +395,18 @@ export default function PointsPage() {
                   </div>
 
                   {isSetMode && (
-                    <div className="grid gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 sm:grid-cols-2">
+                    <div className="grid gap-3 rounded-2xl border border-amber-100 bg-amber-50 p-4 sm:grid-cols-3">
                       <div>
                         <p className="text-xs font-bold text-amber-700">현재 잔액</p>
                         <p className="mt-1 text-2xl font-black text-slate-950">4,850P</p>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-amber-700">변경 후 잔액</p>
+                        <p className="text-xs font-bold text-amber-700">SET 후 잔액</p>
                         <p className="mt-1 text-2xl font-black text-slate-950">0P</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-amber-700">변경 포인트</p>
+                        <p className="mt-1 text-2xl font-black text-rose-600">-4,850P</p>
                       </div>
                     </div>
                   )}
