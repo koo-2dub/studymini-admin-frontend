@@ -25,7 +25,7 @@ type PointLog = {
   email: string;
   wallet: Exclude<WalletFilter, "전체">;
   type: Exclude<PointLogType, "전체">;
-  method: "관리자" | "CSV" | "주문" | "시스템";
+  method: "관리자" | "CSV" | "주문" | "시스템" | "배치";
   amount: string;
   balance: string;
   reason: string;
@@ -57,12 +57,12 @@ const csvPreview = [
 ];
 
 const pointLogs: PointLog[] = [
-  { id: "PL-1048", member: "지윤 김", email: "jiyoon.kim@example.com", wallet: "일반 포인트", type: "지급", method: "관리자", amount: "+5,000P", balance: "9,850P", reason: "CS 보상", admin: "Admin Kim", date: "2026-06-04 10:24" },
-  { id: "PL-1047", member: "민서 박", email: "minseo.park@example.com", wallet: "일반 포인트", type: "지급", method: "CSV", amount: "+3,000P", balance: "3,300P", reason: "이벤트 지급", admin: "Admin Lee", date: "2026-06-04 09:18" },
-  { id: "PL-1046", member: "Noah Park", email: "noah.park@example.com", wallet: "기간제 포인트", type: "차감", method: "관리자", amount: "-1,000P", balance: "2,300P", reason: "오지급 정정", admin: "Admin Park", date: "2026-06-03 17:42" },
-  { id: "PL-1045", member: "Sora Choi", email: "sora.choi@example.com", wallet: "이벤트 포인트", type: "SET", method: "관리자", amount: "0P로 조정", balance: "0P", reason: "테스트 데이터 정리", admin: "Admin Kim", date: "2026-06-03 14:05" },
-  { id: "PL-1044", member: "Daniel Wu", email: "daniel.wu@example.com", wallet: "일반 포인트", type: "사용", method: "주문", amount: "-2,500P", balance: "7,100P", reason: "주문 사용", admin: "System", date: "2026-06-02 12:31" },
-  { id: "PL-1043", member: "Mina Lee", email: "mina.lee@example.com", wallet: "기간제 포인트", type: "소멸", method: "시스템", amount: "-1,200P", balance: "0P", reason: "유효기간 만료", admin: "System", date: "2026-06-01 00:00" },
+  { id: "PL-1048", member: "지윤 김", email: "jiyoon.kim@example.com", wallet: "일반 포인트", type: "지급", method: "관리자", amount: "+5,000P", balance: "9,850P", reason: "CS 보상", admin: "관리자 김민수", date: "2026-06-04 10:24" },
+  { id: "PL-1047", member: "민서 박", email: "minseo.park@example.com", wallet: "일반 포인트", type: "지급", method: "CSV", amount: "+3,000P", balance: "3,300P", reason: "이벤트 지급", admin: "csv-import", date: "2026-06-04 09:18" },
+  { id: "PL-1046", member: "Noah Park", email: "noah.park@example.com", wallet: "기간제 포인트", type: "차감", method: "관리자", amount: "-1,000P", balance: "2,300P", reason: "오지급 정정", admin: "관리자 박서연", date: "2026-06-03 17:42" },
+  { id: "PL-1045", member: "Sora Choi", email: "sora.choi@example.com", wallet: "이벤트 포인트", type: "SET", method: "관리자", amount: "0P로 조정", balance: "0P", reason: "테스트 데이터 정리", admin: "관리자 김민수", date: "2026-06-03 14:05" },
+  { id: "PL-1044", member: "Daniel Wu", email: "daniel.wu@example.com", wallet: "일반 포인트", type: "사용", method: "주문", amount: "-2,500P", balance: "7,100P", reason: "주문 사용", admin: "주문 시스템", date: "2026-06-02 12:31" },
+  { id: "PL-1043", member: "Mina Lee", email: "mina.lee@example.com", wallet: "기간제 포인트", type: "소멸", method: "배치", amount: "-1,200P", balance: "0P", reason: "유효기간 만료", admin: "batch", date: "2026-06-01 00:00" },
 ];
 
 function statusVariant(status: string) {
@@ -286,6 +286,7 @@ export default function PointsPage() {
                     지급종료일: campaign.endDate,
                     지급대상수: campaign.targetCount,
                     지급완료수: campaign.issuedCount,
+                    지급실패수: campaign.failedCount,
                     총지급포인트: campaign.amount,
                     만료일: campaign.expires,
                   }))}
@@ -295,7 +296,7 @@ export default function PointsPage() {
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead className="whitespace-nowrap">캠페인명</TableHead><TableHead className="whitespace-nowrap">상태</TableHead><TableHead className="whitespace-nowrap">월렛</TableHead><TableHead className="whitespace-nowrap">지급 기간</TableHead><TableHead className="whitespace-nowrap">지급 대상</TableHead><TableHead className="whitespace-nowrap">지급 완료</TableHead><TableHead className="whitespace-nowrap">지급 총액</TableHead><TableHead className="whitespace-nowrap">만료일</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="whitespace-nowrap">캠페인명</TableHead><TableHead className="whitespace-nowrap">상태</TableHead><TableHead className="whitespace-nowrap">대상자</TableHead><TableHead className="whitespace-nowrap">완료</TableHead><TableHead className="whitespace-nowrap">실패</TableHead><TableHead className="whitespace-nowrap">총 지급 포인트</TableHead><TableHead className="whitespace-nowrap">월렛</TableHead><TableHead className="whitespace-nowrap">지급 기간</TableHead><TableHead className="whitespace-nowrap">만료일</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {campaigns.map((campaign) => (
                     <TableRow
@@ -305,11 +306,12 @@ export default function PointsPage() {
                     >
                       <TableCell className="whitespace-nowrap font-semibold text-primary">{campaign.name}<p className="font-mono text-xs font-normal text-slate-500">{campaign.code}</p></TableCell>
                       <TableCell className="whitespace-nowrap"><Badge variant={statusVariant(campaign.status)}>{campaign.status}</Badge></TableCell>
+                      <TableCell className="whitespace-nowrap">{formatNumber(campaign.targetCount)}명</TableCell>
+                      <TableCell className="whitespace-nowrap font-semibold text-emerald-700">{formatNumber(campaign.issuedCount)}명</TableCell>
+                      <TableCell className="whitespace-nowrap font-semibold text-rose-600">{formatNumber(campaign.failedCount)}명</TableCell>
+                      <TableCell className="whitespace-nowrap font-black">{formatPoints(campaign.amount)}</TableCell>
                       <TableCell className="whitespace-nowrap">{campaign.wallet}</TableCell>
                       <TableCell className="whitespace-nowrap">{campaign.period}</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatNumber(campaign.targetCount)}명</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatNumber(campaign.issuedCount)}명</TableCell>
-                      <TableCell className="whitespace-nowrap">{formatPoints(campaign.amount)}</TableCell>
                       <TableCell className="whitespace-nowrap">{campaign.expires}</TableCell>
                     </TableRow>
                   ))}
@@ -494,7 +496,7 @@ export default function PointsPage() {
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <Table>
-                  <TableHeader><TableRow><TableHead>일시</TableHead><TableHead>회원</TableHead><TableHead>월렛</TableHead><TableHead>유형</TableHead><TableHead>방식</TableHead><TableHead>처리 관리자</TableHead><TableHead>변동</TableHead><TableHead>잔액</TableHead><TableHead>관리자 사유</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>일시</TableHead><TableHead>회원</TableHead><TableHead>월렛</TableHead><TableHead>유형</TableHead><TableHead>처리 방식</TableHead><TableHead>처리자</TableHead><TableHead>변동</TableHead><TableHead>잔액</TableHead><TableHead>사유</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredLogs.map((log) => (
                       <TableRow key={log.id}>

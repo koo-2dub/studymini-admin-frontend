@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { BookOpenCheck, Coins, CreditCard, Gift, MessageSquareText, NotebookPen, Sparkles, UsersRound } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { MemberRecord } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +74,7 @@ export function MemberTabs({ member }: { member: MemberRecord }) {
             empty="수강 또는 그룹 이력이 없습니다."
           />
         )}
-        {active === "points" && <Panel title="포인트" items={[`보유 포인트: ${member.points.toLocaleString()}P`]} />}
+        {active === "points" && <PointPanel member={member} />}
         {active === "coupons" && (
           <Panel
             title="쿠폰/바우처"
@@ -86,6 +88,74 @@ export function MemberTabs({ member }: { member: MemberRecord }) {
       </CardContent>
     </Card>
   );
+}
+
+type MemberPointHistory = {
+  date: string;
+  type: string;
+  amount: number;
+  balance: number;
+  actor: string;
+  reason: string;
+};
+
+const pointHistoryByMember: Record<string, MemberPointHistory[]> = {
+  "SM-1024": [
+    { date: "2026-06-04 10:24", type: "관리자 지급", amount: 5000, balance: 9850, actor: "관리자 김민수", reason: "CS 보상" },
+    { date: "2026-06-01 09:00", type: "캠페인 지급", amount: 15000, balance: 4850, actor: "csv-import", reason: "6월 복귀 회원 리워드" },
+    { date: "2026-05-29 14:11", type: "주문 사용", amount: -2000, balance: 4850, actor: "주문 시스템", reason: "비즈니스 회화 집중반 주문 사용" },
+  ],
+  "SM-1023": [
+    { date: "2026-06-04 09:18", type: "CSV 지급", amount: 3000, balance: 3300, actor: "csv-import", reason: "이벤트 지급" },
+    { date: "2026-05-27 10:02", type: "신규 가입", amount: 300, balance: 300, actor: "system", reason: "회원가입 기본 적립" },
+  ],
+  "SM-1021": [
+    { date: "2026-06-01 09:05", type: "지급 실패", amount: 0, balance: 2130, actor: "batch", reason: "휴면 회원" },
+    { date: "2026-05-18 08:43", type: "캠페인 지급", amount: 12000, balance: 2130, actor: "csv-import", reason: "복귀 캠페인 대상" },
+  ],
+};
+
+function PointPanel({ member }: { member: MemberRecord }) {
+  const histories = pointHistoryByMember[member.id] ?? [
+    { date: "2026-06-01 10:00", type: "관리자 지급", amount: member.points, balance: member.points, actor: "관리자", reason: "운영 조정" },
+  ];
+  const expiringPoints = histories.filter((history) => history.type.includes("캠페인") && history.amount > 0).reduce((sum, history) => sum + Math.round(history.amount * 0.6), 0);
+  const recentEarnedAt = histories.find((history) => history.amount > 0)?.date ?? "-";
+  const recentUsedAt = histories.find((history) => history.amount < 0)?.date ?? "-";
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Info label="현재 보유 포인트" value={`${member.points.toLocaleString()}P`} />
+        <Info label="소멸 예정 포인트" value={`${expiringPoints.toLocaleString()}P`} />
+        <Info label="최근 적립일" value={recentEarnedAt} />
+        <Info label="최근 사용일" value={recentUsedAt} />
+      </div>
+      <div className="overflow-x-auto rounded-3xl border bg-white">
+        <Table>
+          <TableHeader><TableRow><TableHead className="whitespace-nowrap">일시</TableHead><TableHead className="whitespace-nowrap">유형</TableHead><TableHead className="whitespace-nowrap">변경 포인트</TableHead><TableHead className="whitespace-nowrap">잔액</TableHead><TableHead className="whitespace-nowrap">처리자</TableHead><TableHead className="whitespace-nowrap">사유</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {histories.map((history) => (
+              <TableRow key={`${history.date}-${history.type}`}>
+                <TableCell className="whitespace-nowrap">{history.date}</TableCell>
+                <TableCell className="whitespace-nowrap"><Badge variant={history.amount < 0 ? "rose" : history.amount > 0 ? "success" : "warning"}>{history.type}</Badge></TableCell>
+                <TableCell className={cn("whitespace-nowrap font-black", history.amount > 0 ? "text-emerald-600" : history.amount < 0 ? "text-rose-600" : "text-slate-600")}>{formatPointAmount(history.amount)}</TableCell>
+                <TableCell className="whitespace-nowrap">{history.balance.toLocaleString()}P</TableCell>
+                <TableCell className="whitespace-nowrap font-semibold">{history.actor}</TableCell>
+                <TableCell className="min-w-48">{history.reason}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function formatPointAmount(value: number) {
+  if (value > 0) return `+${value.toLocaleString()}P`;
+  if (value < 0) return `-${Math.abs(value).toLocaleString()}P`;
+  return "0P";
 }
 
 function Info({ label, value }: { label: string; value: string }) {
