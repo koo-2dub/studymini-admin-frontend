@@ -35,7 +35,7 @@ export default function AccessTrialsPage() {
       <PageHeader
         eyebrow="Access management"
         title="체험단 관리"
-        description="수강코드 없이 관리자가 직접 회원을 추가하고 기간 기반 체험 권한을 운영하는 mock UI입니다."
+        description="수강코드 없이 관리자가 직접 회원을 추가하고 기간 기반 체험 권한을 운영합니다."
         action={
           <Link
             href="/access/trials/new"
@@ -48,7 +48,7 @@ export default function AccessTrialsPage() {
       />
 
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="전체 체험단" value={String(trialCampaigns.length)} change="Mock 캠페인" tone="indigo" />
+        <StatCard label="전체 체험단" value={String(trialCampaigns.length)} change="운영 캠페인" tone="indigo" />
         <StatCard label="진행중" value={String(activeCount)} change="권한 활성 대상" tone="emerald" />
         <StatCard label="시작 예정" value={String(upcomingCount)} change="시작일 대기" tone="amber" />
         <StatCard label="누적 참여자" value={`${totalParticipants}명`} change={`${failedCount}건 만료 확인 필요`} tone="rose" />
@@ -60,7 +60,7 @@ export default function AccessTrialsPage() {
             <Search className="h-5 w-5 text-indigo-500" />
             <CardTitle>검색 / 필터</CardTitle>
           </div>
-          <CardDescription>현재는 기능 연결 전이며, 입력 컨트롤은 화면 구조 확인용 placeholder입니다.</CardDescription>
+          <CardDescription>현재는 기능 연결 전이며, 입력 컨트롤은 화면 구조 확인용입니다.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 lg:grid-cols-[minmax(220px,1.4fr)_repeat(4,minmax(140px,1fr))]">
@@ -96,8 +96,8 @@ export default function AccessTrialsPage() {
             </label>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" disabled>검색 placeholder</Button>
-            <Button size="sm" variant="outline" disabled>초기화 placeholder</Button>
+            <Button size="sm" disabled>검색</Button>
+            <Button size="sm" variant="outline" disabled>초기화</Button>
             <Button size="sm" variant="outline" disabled><CalendarClock className="h-3.5 w-3.5" /> 종료 임박</Button>
           </div>
         </CardContent>
@@ -111,8 +111,8 @@ export default function AccessTrialsPage() {
               <CardDescription>체험단명, 상태, 참여 회원 수, 대상 콘텐츠와 권한 처리 상태를 한 번에 확인합니다.</CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" disabled><UserPlus className="h-3.5 w-3.5" /> 회원 검색 placeholder</Button>
-              <Button variant="outline" size="sm" disabled><FileUp className="h-3.5 w-3.5" /> CSV 업로드 placeholder</Button>
+              <Button variant="outline" size="sm" disabled><UserPlus className="h-3.5 w-3.5" /> 회원 검색</Button>
+              <Button variant="outline" size="sm" disabled><FileUp className="h-3.5 w-3.5" /> CSV 업로드</Button>
             </div>
           </div>
         </CardHeader>
@@ -127,16 +127,16 @@ export default function AccessTrialsPage() {
                 <TableHead>기간</TableHead>
                 <TableHead>담당자</TableHead>
                 <TableHead>권한 상태</TableHead>
-                <TableHead>관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {trialCampaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
+                <TableRow key={campaign.id} className="group relative cursor-pointer hover:bg-indigo-50/50">
                   <TableCell>
-                    <Link href={`/access/trials/${campaign.id}`} className="font-bold text-slate-950 hover:text-primary">
-                      {campaign.name}
+                    <Link href={`/access/trials/${campaign.id}`} className="absolute inset-0 z-10" aria-label={`${campaign.name} 상세 화면으로 이동`}>
+                      <span className="sr-only">{campaign.name} 상세 화면으로 이동</span>
                     </Link>
+                    <p className="font-bold text-slate-950 group-hover:text-primary">{campaign.name}</p>
                     <p className="mt-1 text-xs text-slate-500">{campaign.note}</p>
                   </TableCell>
                   <TableCell><Badge variant={statusVariant[campaign.status]}>{campaign.status}</Badge></TableCell>
@@ -158,9 +158,6 @@ export default function AccessTrialsPage() {
                       {campaign.permissionStatus === "만료 실패" && <AlertCircle className="mr-1 h-3 w-3" />}
                       {campaign.permissionStatus}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/access/trials/${campaign.id}`} className="text-sm font-bold text-primary hover:underline">상세</Link>
                   </TableCell>
                 </TableRow>
               ))}

@@ -36,7 +36,7 @@ export default function TrialCreateMockPage() {
       <PageHeader
         eyebrow="Access management"
         title="체험단 생성"
-        description="기본 정보, 기간, 대상 코스/패키지, 회원 추가 placeholder를 배치한 mock 생성 화면입니다."
+        description="기본 정보, 기간, 대상 코스/패키지, 회원 추가 영역을 배치한 체험단 생성 화면입니다."
         action={
           <Link
             href="/access/trials"
@@ -105,14 +105,14 @@ export default function TrialCreateMockPage() {
                   <FieldLabel>권한 부여 시점</FieldLabel>
                   <FormSelect defaultValue="시작일 자동 부여">
                     <option>시작일 자동 부여</option>
-                    <option>즉시 부여 placeholder</option>
+                    <option>즉시 부여</option>
                   </FormSelect>
                 </label>
                 <label>
                   <FieldLabel>종료 후 처리</FieldLabel>
                   <FormSelect defaultValue="자동 만료">
                     <option>자동 만료</option>
-                    <option>수동 확인 placeholder</option>
+                    <option>수동 확인</option>
                   </FormSelect>
                 </label>
               </div>
@@ -125,11 +125,11 @@ export default function TrialCreateMockPage() {
           <Card>
             <CardHeader>
               <CardTitle>대상 코스 / 패키지</CardTitle>
-              <CardDescription>콘텐츠 검색과 선택 목록을 보여주는 mock 영역입니다.</CardDescription>
+              <CardDescription>콘텐츠 검색과 선택 목록을 확인합니다.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-4 flex flex-wrap gap-2">
-                <Button variant="outline" disabled><Search className="h-4 w-4" /> 콘텐츠 검색 placeholder</Button>
+                <Button variant="outline" disabled><Search className="h-4 w-4" /> 콘텐츠 검색</Button>
                 <Button variant="outline" disabled>코스 + 패키지 선택</Button>
               </div>
               <div className="overflow-x-auto rounded-2xl border border-slate-100">
@@ -162,13 +162,13 @@ export default function TrialCreateMockPage() {
           <Card>
             <CardHeader>
               <CardTitle>참여 회원</CardTitle>
-              <CardDescription>회원 검색과 CSV 업로드는 동작하지 않는 placeholder로만 구성합니다.</CardDescription>
+              <CardDescription>회원 검색과 CSV 업로드는 실제 기능 연결 전 화면 요소만 구성합니다.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-4 flex flex-wrap gap-2">
-                <Button variant="outline" disabled><UserPlus className="h-4 w-4" /> 회원 검색 placeholder</Button>
-                <Button variant="outline" disabled><FileUp className="h-4 w-4" /> CSV 업로드 placeholder</Button>
-                <Button variant="outline" disabled>CSV 템플릿 다운로드 placeholder</Button>
+                <Button variant="outline" disabled><UserPlus className="h-4 w-4" /> 회원 검색</Button>
+                <Button variant="outline" disabled><FileUp className="h-4 w-4" /> CSV 업로드</Button>
+                <Button variant="outline" disabled>CSV 템플릿 다운로드</Button>
               </div>
               <div className="overflow-x-auto rounded-2xl border border-slate-100">
                 <Table>
@@ -205,15 +205,15 @@ export default function TrialCreateMockPage() {
                 <ShieldCheck className="h-5 w-5 text-emerald-500" />
                 <CardTitle>생성 요약</CardTitle>
               </div>
-              <CardDescription>저장 동작은 연결하지 않은 preview 카드입니다.</CardDescription>
+              <CardDescription>저장 전 설정 내용을 확인하는 요약 카드입니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div className="flex justify-between"><span className="text-slate-500">상태</span><Badge variant="warning">예정</Badge></div>
               <div className="flex justify-between"><span className="text-slate-500">대상 콘텐츠</span><strong>2개</strong></div>
               <div className="flex justify-between"><span className="text-slate-500">참여 회원</span><strong>2명</strong></div>
               <div className="flex justify-between"><span className="text-slate-500">만료 정책</span><strong>자동 만료</strong></div>
-              <Button className="w-full" disabled>체험단 생성 placeholder</Button>
-              <Button className="w-full" variant="outline" disabled>임시저장 placeholder</Button>
+              <Button className="w-full" disabled>체험단 생성</Button>
+              <Button className="w-full" variant="outline" disabled>임시저장</Button>
             </CardContent>
           </Card>
         </aside>

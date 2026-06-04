@@ -54,7 +54,7 @@ export default async function TrialDetailMockPage({ params }: TrialDetailPagePro
       <PageHeader
         eyebrow="Access management"
         title={campaign.name}
-        description="기본 정보, 참여 회원, 대상 콘텐츠, 권한 상태, 로그를 한 화면에 배치한 mock 상세 화면입니다."
+        description="기본 정보, 참여 회원, 대상 콘텐츠, 권한 상태, 로그를 한 화면에서 확인합니다."
         action={
           <Link
             href="/access/trials"
@@ -67,19 +67,19 @@ export default async function TrialDetailMockPage({ params }: TrialDetailPagePro
       />
 
       <section className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <StatCard label="상태" value={campaign.status} change="Mock 상태" tone="indigo" />
+        <StatCard label="상태" value={campaign.status} change="운영 상태" tone="indigo" />
         <StatCard label="참여 회원" value={`${campaign.participantCount}명`} change={`${campaign.activeParticipantCount}명 활성`} tone="emerald" />
         <StatCard label="대상 콘텐츠" value={`${trialTargetContents.length}개`} change={campaign.contentType} tone="indigo" />
         <StatCard label="체험 기간" value="D-26" change={`${campaign.endsAt} 종료`} tone="amber" />
-        <StatCard label="권한 처리" value={campaign.permissionStatus} change="placeholder" tone={failedCount > 0 ? "rose" : "emerald"} />
+        <StatCard label="권한 처리" value={campaign.permissionStatus} change="운영 상태" tone={failedCount > 0 ? "rose" : "emerald"} />
       </section>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        <Button variant="outline" disabled><UserPlus className="h-4 w-4" /> 회원 검색 placeholder</Button>
-        <Button variant="outline" disabled><FileUp className="h-4 w-4" /> CSV 업로드 placeholder</Button>
-        <Button variant="outline" disabled><CalendarClock className="h-4 w-4" /> 선택 회원 연장 placeholder</Button>
-        <Button variant="outline" disabled><RefreshCw className="h-4 w-4" /> 만료 재처리 placeholder</Button>
-        <Button variant="outline" disabled><FileDown className="h-4 w-4" /> 결과 다운로드 placeholder</Button>
+        <Button variant="outline" disabled><UserPlus className="h-4 w-4" /> 회원 검색</Button>
+        <Button variant="outline" disabled><FileUp className="h-4 w-4" /> CSV 업로드</Button>
+        <Button variant="outline" disabled><CalendarClock className="h-4 w-4" /> 선택 회원 연장</Button>
+        <Button variant="outline" disabled><RefreshCw className="h-4 w-4" /> 만료 재처리</Button>
+        <Button variant="outline" disabled><FileDown className="h-4 w-4" /> 결과 다운로드</Button>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -108,7 +108,7 @@ export default async function TrialDetailMockPage({ params }: TrialDetailPagePro
           <Card>
             <CardHeader>
               <CardTitle>참여 회원 목록</CardTitle>
-              <CardDescription>회원 추가, CSV 업로드, 권한 지급 액션은 비활성 placeholder입니다.</CardDescription>
+              <CardDescription>회원 추가, CSV 업로드, 권한 지급 액션은 실제 기능 연결 전 화면 요소만 구성합니다.</CardDescription>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
@@ -230,7 +230,7 @@ export default async function TrialDetailMockPage({ params }: TrialDetailPagePro
               <div className="flex justify-between"><span className="text-slate-500">수동 연장</span><strong>{extendedCount}명</strong></div>
               <div className="flex justify-between"><span className="text-slate-500">처리 실패</span><strong className="text-rose-600">{failedCount}명</strong></div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-600">
-                자동 만료, 일부 회원 연장, 실패 건 재처리는 실제 API 연결 전 placeholder 버튼으로만 제공합니다.
+                자동 만료, 일부 회원 연장, 실패 건 재처리는 실제 API 연결 전 화면 요소로 제공합니다.
               </div>
             </CardContent>
           </Card>
