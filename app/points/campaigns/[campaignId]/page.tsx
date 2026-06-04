@@ -16,6 +16,7 @@ import {
   getCampaignById,
   getCampaignExpiredMembers,
   getCampaignExpiringMembers,
+  getCampaignFailedMembers,
   getExpirationSnapshot,
 } from "../../data";
 
@@ -57,6 +58,7 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
 
   const expiringMembers = getCampaignExpiringMembers(campaign.id);
   const expiredMembers = getCampaignExpiredMembers(campaign.id);
+  const failedMembers = getCampaignFailedMembers(campaign.id);
   const snapshot = getExpirationSnapshot(campaign.id);
   const rate = expirationRate(campaign);
 
@@ -85,6 +87,7 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
             {summaryCard("캠페인 상태", campaign.status, campaign.wallet)}
             {summaryCard("지급 대상 수", `${formatNumber(campaign.targetCount)}명`, "캠페인 타겟")}
             {summaryCard("지급 완료 수", `${formatNumber(campaign.issuedCount)}명`, `${Math.round((campaign.issuedCount / Math.max(campaign.targetCount, 1)) * 100)}% 지급 완료`)}
+            {summaryCard("지급 실패 수", `${formatNumber(campaign.failedCount)}명`, "운영 우선 확인")}
             {summaryCard("총 지급 포인트", formatPoints(campaign.amount), "누적 지급")}
             {summaryCard("사용 포인트", formatPoints(campaign.usedPoints), "회원 사용 완료")}
             {summaryCard("잔여 포인트", formatPoints(campaign.remainingPoints), "현재 미사용 잔액")}
@@ -165,6 +168,46 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
                     <TableCell className="whitespace-nowrap"><Badge variant={statusVariant(member.notificationSent ? "발송 완료" : "미발송")}>{member.notificationSent ? "발송 완료" : "미발송"}</Badge></TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="gap-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
+            <div>
+              <CardTitle>지급 실패 회원 목록</CardTitle>
+              <CardDescription>운영자가 성공 건보다 먼저 확인해야 하는 지급 실패 사유와 처리 일시입니다.</CardDescription>
+            </div>
+            <ExportButton
+              filename={`${campaign.id}-failed-members.csv`}
+              label="지급 실패 회원 엑셀 다운로드"
+              rows={failedMembers.map((member) => ({
+                이름: member.name,
+                이메일: member.email,
+                UserID: member.userId,
+                실패사유: member.reason,
+                처리일시: member.processedAt,
+              }))}
+            />
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow><TableHead className="whitespace-nowrap">회원명</TableHead><TableHead className="whitespace-nowrap">이메일</TableHead><TableHead className="whitespace-nowrap">User ID</TableHead><TableHead className="whitespace-nowrap">실패 사유</TableHead><TableHead className="whitespace-nowrap">처리일시</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {failedMembers.length ? failedMembers.map((member) => (
+                  <TableRow key={`${member.userId}-${member.processedAt}`}>
+                    <TableCell className="whitespace-nowrap font-semibold">{member.name}</TableCell>
+                    <TableCell className="whitespace-nowrap">{member.email}</TableCell>
+                    <TableCell className="whitespace-nowrap"><Link href={`/members/${member.userId}`} className="font-mono text-xs font-bold text-primary underline-offset-4 hover:underline">{member.userId}</Link></TableCell>
+                    <TableCell className="whitespace-nowrap"><Badge variant="rose">{member.reason}</Badge></TableCell>
+                    <TableCell className="whitespace-nowrap">{member.processedAt}</TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-10 text-center text-sm text-slate-500">지급 실패 회원이 없습니다.</TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>

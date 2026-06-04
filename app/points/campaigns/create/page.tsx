@@ -32,7 +32,9 @@ const previewTargets = [
 ];
 
 export default function PointCampaignCreatePage() {
+  const expectedTargetCount = previewTargets.length;
   const expectedTotal = previewTargets.reduce((sum, target) => sum + target.points, 0);
+  const expectedExpiringTotal = expectedTotal;
 
   return (
     <>
@@ -112,6 +114,24 @@ export default function PointCampaignCreatePage() {
               </div>
             </div>
 
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+                <p className="text-xs font-bold text-indigo-700">예상 지급 대상</p>
+                <p className="mt-2 text-2xl font-black text-slate-950">{expectedTargetCount}명</p>
+                <p className="mt-1 text-xs font-semibold text-indigo-700">선택/업로드 즉시 반영</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                <p className="text-xs font-bold text-emerald-700">예상 지급 포인트</p>
+                <p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedTotal)}</p>
+                <p className="mt-1 text-xs font-semibold text-emerald-700">대상별 지급 포인트 합계</p>
+              </div>
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4">
+                <p className="text-xs font-bold text-rose-700">예상 소멸 예정 포인트</p>
+                <p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedExpiringTotal)}</p>
+                <p className="mt-1 text-xs font-semibold text-rose-700">기간제 만료 대상 예상치</p>
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader><TableRow><TableHead className="whitespace-nowrap">이름</TableHead><TableHead className="whitespace-nowrap">이메일</TableHead><TableHead className="whitespace-nowrap">User ID</TableHead><TableHead className="whitespace-nowrap">지급 포인트</TableHead><TableHead className="whitespace-nowrap">상태</TableHead></TableRow></TableHeader>
@@ -139,8 +159,9 @@ export default function PointCampaignCreatePage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">캠페인 설정 요약</p><p className="mt-2 font-black text-slate-950">기간제 포인트 · 예정 · 사용 종료일 만료</p></div>
-              <div className="rounded-2xl bg-indigo-50 p-4"><p className="text-xs font-bold text-indigo-700">예상 지급 대상 수</p><p className="mt-2 text-2xl font-black text-slate-950">{previewTargets.length}명</p></div>
+              <div className="rounded-2xl bg-indigo-50 p-4"><p className="text-xs font-bold text-indigo-700">예상 지급 대상 수</p><p className="mt-2 text-2xl font-black text-slate-950">{expectedTargetCount}명</p></div>
               <div className="rounded-2xl bg-emerald-50 p-4"><p className="text-xs font-bold text-emerald-700">예상 총 지급 포인트</p><p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedTotal)}</p></div>
+              <div className="rounded-2xl bg-rose-50 p-4"><p className="text-xs font-bold text-rose-700">예상 소멸 예정 포인트</p><p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedExpiringTotal)}</p></div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
               <Button asChild variant="secondary"><Link href="/points">취소</Link></Button>

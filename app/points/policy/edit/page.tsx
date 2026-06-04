@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Settings } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Settings } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,14 @@ const reviewRows = [
   ["최대 사용 가능 비율", "주문 금액의 50%", "주문 금액의 60%"],
   ["소멸 안내일", "D-7, D-1", "D-30, D-7, D-1"],
   ["알림 발송 최소 포인트", "1,000P", "500P"],
+];
+
+const operationalWarnings = [
+  "신규회원 지급 포인트 감소",
+  "최대 사용 가능 비율 감소",
+  "소멸 정책 활성화",
+  "소멸 주기 변경",
+  "알림 발송 정책 변경",
 ];
 
 export default function PointPolicyEditPage() {
@@ -83,6 +91,19 @@ export default function PointPolicyEditPage() {
             <CardDescription>실제 저장 없이 변경 전/후 비교를 보여주는 Mock 검토 영역입니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+              <div className="flex items-center gap-2 font-black">
+                <AlertTriangle className="h-5 w-5" />
+                ⚠️ 주의
+              </div>
+              <p className="mt-2 text-sm font-semibold text-amber-800">운영 영향도가 큰 변경은 저장 전 담당자가 한 번 더 검토해야 합니다.</p>
+              <ul className="mt-3 grid gap-2 text-sm font-semibold md:grid-cols-2">
+                {operationalWarnings.map((warning) => (
+                  <li key={warning} className="rounded-xl bg-white/70 px-3 py-2">{warning}</li>
+                ))}
+              </ul>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm">
                 <thead><tr className="border-b text-left text-slate-500"><th className="whitespace-nowrap py-3">항목</th><th className="whitespace-nowrap py-3">변경 전</th><th className="whitespace-nowrap py-3">변경 후</th></tr></thead>

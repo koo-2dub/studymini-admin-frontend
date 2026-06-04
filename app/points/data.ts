@@ -23,6 +23,7 @@ export type PointCampaign = {
   usageEndDate: string;
   targetCount: number;
   issuedCount: number;
+  failedCount: number;
   amount: number;
   usedPoints: number;
   remainingPoints: number;
@@ -58,6 +59,14 @@ export type ExpiredCampaignMember = {
   reason: string;
 };
 
+export type FailedCampaignMember = {
+  name: string;
+  email: string;
+  userId: string;
+  reason: string;
+  processedAt: string;
+};
+
 export type ExpirationSnapshot = {
   expired: number;
   within7Days: number;
@@ -86,6 +95,7 @@ export const campaigns: PointCampaign[] = [
     usageEndDate: "2026-06-30",
     targetCount: 920,
     issuedCount: 842,
+    failedCount: 78,
     amount: 4210000,
     usedPoints: 1268000,
     remainingPoints: 2942000,
@@ -111,6 +121,7 @@ export const campaigns: PointCampaign[] = [
     usageEndDate: "2026-07-31",
     targetCount: 480,
     issuedCount: 0,
+    failedCount: 0,
     amount: 0,
     usedPoints: 0,
     remainingPoints: 0,
@@ -136,6 +147,7 @@ export const campaigns: PointCampaign[] = [
     usageEndDate: "2026-06-15",
     targetCount: 316,
     issuedCount: 316,
+    failedCount: 12,
     amount: 948000,
     usedPoints: 382000,
     remainingPoints: 394000,
@@ -174,6 +186,19 @@ export const campaignExpiredMembers: Record<string, ExpiredCampaignMember[]> = {
   ],
 };
 
+export const campaignFailedMembers: Record<string, FailedCampaignMember[]> = {
+  "return-june-2026": [
+    { name: "하린 최", email: "harin.choi@example.com", userId: "SM-1021", reason: "휴면 회원", processedAt: "2026-06-01 09:05" },
+    { name: "Mina Lee", email: "mina.lee@example.com", userId: "SM-1019", reason: "중복 지급", processedAt: "2026-06-01 09:06" },
+    { name: "Chris Han", email: "chris.han@example.com", userId: "SM-1017", reason: "월렛 없음", processedAt: "2026-06-01 09:08" },
+  ],
+  "summer-earlybird-2026": [],
+  "review-thanks-2026-05": [
+    { name: "Yuna Seo", email: "yuna.seo@example.com", userId: "SM-1016", reason: "탈퇴 회원", processedAt: "2026-05-01 10:12" },
+    { name: "Ian Moon", email: "ian.moon@example.com", userId: "SM-1015", reason: "지급 한도 초과", processedAt: "2026-05-01 10:15" },
+  ],
+};
+
 export const expirationSnapshots: Record<string, ExpirationSnapshot> = {
   "return-june-2026": { expired: 0, within7Days: 284000, within30Days: 1104000, within60Days: 2942000 },
   "summer-earlybird-2026": { expired: 0, within7Days: 0, within30Days: 0, within60Days: 0 },
@@ -190,6 +215,10 @@ export function getCampaignExpiringMembers(campaignId: string) {
 
 export function getCampaignExpiredMembers(campaignId: string) {
   return campaignExpiredMembers[campaignId] ?? [];
+}
+
+export function getCampaignFailedMembers(campaignId: string) {
+  return campaignFailedMembers[campaignId] ?? [];
 }
 
 export function getExpirationSnapshot(campaignId: string) {
