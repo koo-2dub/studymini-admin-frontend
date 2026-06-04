@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, Download, TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -45,6 +45,16 @@ type DailySale = {
   change: string;
 };
 
+type CouponPerformance = {
+  name: string;
+  useCount: number;
+  discountAmount: number;
+  appliedRevenue: number;
+  netRevenue: number;
+  change: number;
+  efficiency: "고효율" | "할인 과다" | "사용 증가" | "저비용";
+};
+
 const metricConfig: Record<MetricKey, MetricConfig> = {
   순매출: { current: "netRevenue", compare: "compareNetRevenue", unit: "currency", positiveDirection: "up" },
   "총 결제금액": { current: "grossPayment", compare: "compareGrossPayment", unit: "currency", positiveDirection: "up" },
@@ -77,6 +87,19 @@ const countrySeeds = [
   { country: "미국", share: 14.8, change: 22.4 },
   { country: "일본", share: 7.7, change: -4.1 },
   { country: "캐나다", share: 4.6, change: 8.9 },
+];
+
+const couponSeeds: CouponPerformance[] = [
+  { name: "6월 신규가입 20%", useCount: 428, discountAmount: 2140000, appliedRevenue: 18900000, netRevenue: 16760000, change: 24.1, efficiency: "고효율" },
+  { name: "스페인어 패키지 할인", useCount: 312, discountAmount: 1870000, appliedRevenue: 16400000, netRevenue: 14530000, change: 18.7, efficiency: "고효율" },
+  { name: "재구매 감사 쿠폰", useCount: 206, discountAmount: 920000, appliedRevenue: 9800000, netRevenue: 8880000, change: 8.2, efficiency: "사용 증가" },
+  { name: "주말 특가 30%", useCount: 184, discountAmount: 2560000, appliedRevenue: 7100000, netRevenue: 4540000, change: -6.4, efficiency: "할인 과다" },
+  { name: "무료배송 쿠폰", useCount: 121, discountAmount: 363000, appliedRevenue: 4200000, netRevenue: 3837000, change: 3.1, efficiency: "저비용" },
+  { name: "프랑스어 입문 응원", useCount: 98, discountAmount: 690000, appliedRevenue: 3880000, netRevenue: 3190000, change: 5.4, efficiency: "사용 증가" },
+  { name: "장바구니 복귀 쿠폰", useCount: 82, discountAmount: 740000, appliedRevenue: 3120000, netRevenue: 2380000, change: -2.8, efficiency: "할인 과다" },
+  { name: "첫 구매 10%", useCount: 76, discountAmount: 410000, appliedRevenue: 2860000, netRevenue: 2450000, change: 7.6, efficiency: "고효율" },
+  { name: "월말 앵콜 쿠폰", useCount: 62, discountAmount: 520000, appliedRevenue: 2100000, netRevenue: 1580000, change: -1.5, efficiency: "할인 과다" },
+  { name: "친구추천 보상 쿠폰", useCount: 51, discountAmount: 280000, appliedRevenue: 1740000, netRevenue: 1460000, change: 4.2, efficiency: "저비용" },
 ];
 
 function addDate(date: Date, offset: { days?: number; months?: number; years?: number }, direction: 1 | -1 = 1) {
@@ -129,6 +152,15 @@ function formatCompactCurrency(value: number) {
 
 function formatMetricValue(value: number, unit: "currency" | "count") {
   return unit === "count" ? `${Math.round(value).toLocaleString("ko-KR")}건` : formatCurrency(value);
+}
+
+function formatEfficiencyValue(value: number) {
+  return `₩${value.toFixed(2)}`;
+}
+
+function formatEfficiencyChange(current: number, previous: number) {
+  const diff = current - previous;
+  return { positive: diff >= 0, label: `${diff >= 0 ? "▲" : "▼"}${Math.abs(diff).toFixed(2)}` };
 }
 
 function formatAxisValue(value: number, unit: "currency" | "count") {
@@ -229,6 +261,13 @@ function makeDailyRows(points: TrendPoint[], isHourly: boolean): DailySale[] {
       change: getChange(point.netRevenue, point.compareNetRevenue).label,
     };
   });
+}
+
+function getCouponBadgeVariant(efficiency: CouponPerformance["efficiency"]): "default" | "success" | "warning" | "slate" {
+  if (efficiency === "고효율") return "success";
+  if (efficiency === "할인 과다") return "warning";
+  if (efficiency === "저비용") return "slate";
+  return "default";
 }
 
 export default function AnalyticsPage() {
@@ -339,6 +378,59 @@ export default function AnalyticsPage() {
   const compareRefundRate = (totals.compareRefundAmount / totals.compareGrossPayment) * 100;
   const refundRateChange = getChange(currentRefundRate, compareRefundRate, "down");
   const couponTotal = Math.round(totals.grossPayment * 0.08);
+  const compareCouponTotal = Math.round(totals.compareGrossPayment * 0.085);
+  const couponAppliedRevenue = Math.round(totals.grossPayment * 0.42);
+  const compareCouponAppliedRevenue = Math.round(totals.compareGrossPayment * 0.4);
+  const couponAppliedNetRevenue = Math.max(0, couponAppliedRevenue - couponTotal - Math.round(totals.refundAmount * 0.32));
+  const compareCouponAppliedNetRevenue = Math.max(0, compareCouponAppliedRevenue - compareCouponTotal - Math.round(totals.compareRefundAmount * 0.32));
+  const couponUseCount = Math.round(totals.orderCount * 0.38);
+  const compareCouponUseCount = Math.round(totals.compareOrderCount * 0.35);
+  const couponEfficiency = couponTotal === 0 ? 0 : couponAppliedNetRevenue / couponTotal;
+  const compareCouponEfficiency = compareCouponTotal === 0 ? 0 : compareCouponAppliedNetRevenue / compareCouponTotal;
+  const couponUseChange = getChange(couponUseCount, compareCouponUseCount);
+  const couponDiscountChange = getChange(couponTotal, compareCouponTotal, "down");
+  const couponAppliedRevenueChange = getChange(couponAppliedRevenue, compareCouponAppliedRevenue);
+  const couponAppliedNetChange = getChange(couponAppliedNetRevenue, compareCouponAppliedNetRevenue);
+  const couponEfficiencyChange = formatEfficiencyChange(couponEfficiency, compareCouponEfficiency);
+  const couponKpis = [
+    { label: "총 쿠폰 사용 건수", value: `${couponUseCount.toLocaleString("ko-KR")}건`, change: couponUseChange.label, positive: couponUseChange.positive, trend: couponUseChange.trend, compareLabel: selectedComparison },
+    { label: "총 할인 금액", value: formatCurrency(couponTotal), change: couponDiscountChange.label, positive: couponDiscountChange.positive, trend: couponDiscountChange.trend, compareLabel: selectedComparison },
+    { label: "쿠폰 적용 주문 매출", value: formatCurrency(couponAppliedRevenue), change: couponAppliedRevenueChange.label, positive: couponAppliedRevenueChange.positive, trend: couponAppliedRevenueChange.trend, compareLabel: selectedComparison },
+    { label: "쿠폰 적용 순매출", value: formatCurrency(couponAppliedNetRevenue), change: couponAppliedNetChange.label, positive: couponAppliedNetChange.positive, trend: couponAppliedNetChange.trend, compareLabel: selectedComparison },
+    { label: "할인 1원당 순매출", value: formatEfficiencyValue(couponEfficiency), change: couponEfficiencyChange.label, positive: couponEfficiencyChange.positive, trend: couponEfficiencyChange.positive ? "up" : "down", compareLabel: selectedComparison },
+  ] satisfies Kpi[];
+  const couponTop10 = couponSeeds.map((item) => {
+    const scale = Math.max(0.22, couponAppliedNetRevenue / 56560000);
+    const comparisonBoost = selectedComparison === "전년 대비" ? 3 : selectedComparison === "전주 대비" ? 1.2 : 0;
+    return {
+      ...item,
+      useCount: Math.max(1, Math.round(item.useCount * scale)),
+      discountAmount: Math.round(item.discountAmount * scale),
+      appliedRevenue: Math.round(item.appliedRevenue * scale),
+      netRevenue: Math.round(item.netRevenue * scale),
+      change: item.change + comparisonBoost,
+    };
+  });
+  const couponChartMax = Math.max(...couponTop10.flatMap((item) => [item.netRevenue, item.discountAmount]));
+  const inefficientCoupon = couponTop10.find((item) => item.efficiency === "할인 과다") ?? couponTop10[0];
+  const couponTrendRows = trend.points.slice(0, trend.isHourly ? 12 : 14).map((point, index) => {
+    const discountAmount = Math.round(point.grossPayment * (0.066 + (index % 4) * 0.006));
+    return {
+      label: point.label,
+      useCount: Math.max(1, Math.round(point.orderCount * (0.31 + (index % 5) * 0.025))),
+      discountAmount,
+      netRevenue: Math.max(0, Math.round(point.grossPayment * 0.42 - discountAmount - point.refundAmount * 0.28)),
+    };
+  });
+  const couponTrendMaxUse = Math.max(...couponTrendRows.map((item) => item.useCount));
+  const couponTrendMaxDiscount = Math.max(...couponTrendRows.map((item) => item.discountAmount));
+  const couponDiscountLine = couponTrendRows
+    .map((item, index) => {
+      const x = ((index + 0.5) / couponTrendRows.length) * 100;
+      const y = 92 - (item.discountAmount / couponTrendMaxDiscount) * 78;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
   const shippingTotal = totals.orderCount * 900;
   const tableNetTotal = totals.grossPayment - totals.refundAmount - couponTotal;
 
@@ -564,6 +656,156 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </section>
+
+      <Card className="mt-6">
+        <CardHeader className="gap-4 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+          <div>
+            <CardTitle>쿠폰 성과 분석</CardTitle>
+            <CardDescription>{scopeLabel} 쿠폰 사용량, 할인비용, 매출 기여도와 효율을 확인합니다.</CardDescription>
+          </div>
+          <Button variant="outline" size="sm"><Download className="h-4 w-4" /> 쿠폰 CSV</Button>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {couponKpis.map((kpi) => (
+              <div key={kpi.label} className="rounded-3xl border border-slate-100 bg-slate-50/70 p-4">
+                <p className="text-sm font-bold text-slate-500">{kpi.label}</p>
+                <p className="mt-3 text-2xl font-black text-slate-950">{kpi.value}</p>
+                <p className={kpi.positive ? "mt-3 flex items-center gap-1 text-sm font-black text-emerald-600" : "mt-3 flex items-center gap-1 text-sm font-black text-rose-600"}>
+                  {kpi.trend === "up" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                  {kpi.change} <span className="font-semibold text-slate-500">{kpi.compareLabel}</span>
+                </p>
+              </div>
+            ))}
+          </section>
+
+          <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+            <Card className="border-slate-200 shadow-none">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <CardTitle>쿠폰별 성과 TOP10</CardTitle>
+                    <CardDescription>{selectedPeriod} 기준 · 쿠폰 적용 순매출이 높은 순서입니다.</CardDescription>
+                  </div>
+                  <Badge variant="success">효율 중심</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>쿠폰명</TableHead>
+                      <TableHead className="text-right">사용 건수</TableHead>
+                      <TableHead className="text-right">할인 금액</TableHead>
+                      <TableHead className="text-right">쿠폰 적용 매출</TableHead>
+                      <TableHead className="text-right">순매출</TableHead>
+                      <TableHead className="text-right">전기간 대비 증감률</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {couponTop10.map((item, index) => (
+                      <TableRow key={item.name}>
+                        <TableCell className="min-w-[220px] font-bold text-slate-900">
+                          <span className="mr-3 text-slate-400">{index + 1}</span>{item.name}
+                          <Badge className="ml-2" variant={getCouponBadgeVariant(item.efficiency)}>{item.efficiency}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">{item.useCount.toLocaleString("ko-KR")}건</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.discountAmount)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.appliedRevenue)}</TableCell>
+                        <TableCell className="text-right font-black">{formatCurrency(item.netRevenue)}</TableCell>
+                        <TableCell className={item.change >= 0 ? "text-right font-black text-emerald-600" : "text-right font-black text-rose-600"}>{item.change >= 0 ? "▲" : "▼"} {Math.abs(item.change).toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 shadow-none">
+              <CardHeader>
+                <CardTitle>순매출 vs 할인금액</CardTitle>
+                <CardDescription>막대 길이로 쿠폰별 매출 기여와 할인 비용을 비교합니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {couponTop10.slice(0, 5).map((item) => (
+                  <div key={item.name} className="space-y-2">
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-bold text-slate-800">{item.name}</span>
+                      <span className="font-black text-slate-950">{formatCompactCurrency(item.netRevenue)}</span>
+                    </div>
+                    <div className="grid gap-1 text-xs font-bold text-slate-500">
+                      <div className="flex items-center gap-2">
+                        <span className="w-10">순매출</span>
+                        <div className="h-2 flex-1 rounded-full bg-slate-100"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${Math.max(8, (item.netRevenue / couponChartMax) * 100)}%` }} /></div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-10">할인</span>
+                        <div className="h-2 flex-1 rounded-full bg-slate-100"><div className="h-full rounded-full bg-amber-400" style={{ width: `${Math.max(8, (item.discountAmount / couponChartMax) * 100)}%` }} /></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+            <Card className="border-slate-200 shadow-none">
+              <CardHeader>
+                <CardTitle>{trend.isHourly ? "시간대별" : "기간별"} 쿠폰 사용 추이</CardTitle>
+                <CardDescription>막대는 쿠폰 사용 건수, 선은 총 할인 금액입니다.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative flex h-56 items-end gap-2 rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-amber-50 p-4">
+                  <svg className="pointer-events-none absolute inset-4 z-20 h-[calc(100%-2rem)] w-[calc(100%-2rem)] overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points={couponDiscountLine} fill="none" stroke="rgb(251 191 36)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {couponTrendRows.map((item) => (
+                    <div key={item.label} className="relative z-10 flex h-full flex-1 flex-col justify-end gap-2">
+                      <div className="flex flex-1 items-end justify-center">
+                        <div className="w-full rounded-t-xl bg-indigo-500" style={{ height: `${Math.max(8, (item.useCount / couponTrendMaxUse) * 100)}%` }} />
+                      </div>
+                      <span className="truncate text-center text-[11px] font-bold text-slate-500">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-4 text-xs font-bold text-slate-600">
+                  <span className="flex items-center gap-2"><span className="h-2 w-5 rounded-full bg-indigo-500" />쿠폰 사용 건수</span>
+                  <span className="flex items-center gap-2"><span className="h-2 w-5 rounded-full bg-amber-400" />총 할인 금액</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-amber-200 bg-amber-50/60 shadow-none">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-900"><AlertTriangle className="h-5 w-5" /> 점검 필요 쿠폰</CardTitle>
+                <CardDescription className="text-amber-800">할인비용 대비 순매출 효율이 낮은 쿠폰을 자동으로 표시합니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm text-amber-950">
+                <div className="rounded-2xl bg-white/80 p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-lg font-black">{inefficientCoupon.name}</p>
+                    <Badge variant="warning">{inefficientCoupon.efficiency}</Badge>
+                  </div>
+                  <p className="mt-3 leading-6">
+                    할인 금액은 {formatCurrency(inefficientCoupon.discountAmount)}로 높지만 쿠폰 적용 순매출은 {formatCurrency(inefficientCoupon.netRevenue)}입니다. 할인 조건 또는 적용 상품 재검토가 필요합니다.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <p className="text-xs font-bold text-amber-700">할인 1원당 순매출</p>
+                    <p className="mt-2 text-2xl font-black">{formatEfficiencyValue(couponEfficiency)}</p>
+                  </div>
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <p className="text-xs font-bold text-amber-700">비교 기준</p>
+                    <p className="mt-2 text-2xl font-black">{couponEfficiencyChange.label}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </CardContent>
+      </Card>
 
       <Card className="mt-6">
         <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
