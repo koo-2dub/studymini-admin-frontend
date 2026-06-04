@@ -171,7 +171,7 @@ export default async function CouponDetailPage({ params }: { params: Promise<{ c
                     <TableCell className="whitespace-nowrap font-semibold text-slate-900">{member.name}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm text-slate-600">{member.email}</TableCell>
                     <TableCell className="whitespace-nowrap"><Link href={`/members/${member.userId}`} className="font-mono text-sm font-bold text-primary underline-offset-4 hover:underline">{member.userId}</Link></TableCell>
-                    <TableCell className="whitespace-nowrap font-mono text-xs text-slate-500">{member.orderNo}</TableCell>
+                    <TableCell className="whitespace-nowrap"><Link href={`/orders/${member.orderNo}`} className="font-mono text-xs font-bold text-primary underline-offset-4 hover:underline">{member.orderNo}</Link></TableCell>
                     <TableCell className="whitespace-nowrap text-right font-semibold text-primary">{formatCurrency(member.discountAmount)}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm text-slate-600">{member.usedAt}</TableCell>
                   </TableRow>

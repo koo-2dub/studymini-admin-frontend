@@ -125,11 +125,11 @@ export default function CouponsPage() {
                   <TableHead className="whitespace-nowrap">발급 방식</TableHead>
                   <TableHead className="whitespace-nowrap">할인 정보</TableHead>
                   <TableHead className="whitespace-nowrap">적용 대상</TableHead>
-                  <TableHead className="whitespace-nowrap">사용 기간</TableHead>
                   <TableHead className="whitespace-nowrap text-right">발급 수</TableHead>
                   <TableHead className="whitespace-nowrap text-right">사용 수</TableHead>
                   <TableHead className="whitespace-nowrap">사용률</TableHead>
                   <TableHead className="whitespace-nowrap text-right">전체 사용 한도</TableHead>
+                  <TableHead className="whitespace-nowrap">사용 기간</TableHead>
                   <TableHead className="whitespace-nowrap">생성일</TableHead>
                 </TableRow>
               </TableHeader>
@@ -152,7 +152,6 @@ export default function CouponsPage() {
                       <TableCell className="whitespace-nowrap font-semibold text-slate-700"><Link href={detailHref} className="block py-1">{coupon.issueType}</Link></TableCell>
                       <TableCell className="whitespace-nowrap font-semibold text-primary"><Link href={detailHref} className="block py-1">{discountLabel(coupon)}</Link></TableCell>
                       <TableCell className="min-w-[220px] whitespace-nowrap text-sm text-slate-600"><Link href={detailHref} className="block py-1">{targetLabel(coupon)}</Link></TableCell>
-                      <TableCell className="whitespace-nowrap text-sm text-slate-600"><Link href={detailHref} className="block py-1">{coupon.startDate} ~ {coupon.endDate}</Link></TableCell>
                       <TableCell className="whitespace-nowrap text-right font-semibold"><Link href={detailHref} className="block py-1">{formatNumber(coupon.issuedCount)}</Link></TableCell>
                       <TableCell className="whitespace-nowrap text-right font-semibold text-primary"><Link href={detailHref} className="block py-1">{formatNumber(coupon.usedCount)}</Link></TableCell>
                       <TableCell className="whitespace-nowrap">
@@ -166,6 +165,7 @@ export default function CouponsPage() {
                       <TableCell className="whitespace-nowrap text-right font-semibold text-slate-700">
                         <Link href={detailHref} className="block py-1">{coupon.totalUsageLimit ? formatNumber(coupon.totalUsageLimit) : "무제한"}</Link>
                       </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-slate-600"><Link href={detailHref} className="block py-1">{coupon.startDate} ~ {coupon.endDate}</Link></TableCell>
                       <TableCell className="whitespace-nowrap text-sm text-slate-600"><Link href={detailHref} className="block py-1">{coupon.createdAt}</Link></TableCell>
                     </TableRow>
                   );

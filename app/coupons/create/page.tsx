@@ -107,20 +107,25 @@ export default function CreateCouponPage() {
                 </button>
               ))}
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <label className="space-y-1 text-sm font-semibold text-slate-700">
-                할인 금액
-                <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="10000" disabled={discountType !== "정액 할인"} />
-              </label>
-              <label className="space-y-1 text-sm font-semibold text-slate-700">
-                할인율
-                <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="15" disabled={discountType !== "정률 할인"} />
-              </label>
-              <label className="space-y-1 text-sm font-semibold text-slate-700">
-                최대 할인 금액
-                <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="20000" disabled={discountType !== "정률 할인"} />
-              </label>
-            </div>
+            {discountType === "정액 할인" ? (
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="space-y-1 text-sm font-semibold text-slate-700">
+                  할인 금액
+                  <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="10000" />
+                </label>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="space-y-1 text-sm font-semibold text-slate-700">
+                  할인율
+                  <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="15" />
+                </label>
+                <label className="space-y-1 text-sm font-semibold text-slate-700">
+                  최대 할인 금액
+                  <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="20000" />
+                </label>
+              </div>
+            )}
           </CardContent>
         </Card>
 
