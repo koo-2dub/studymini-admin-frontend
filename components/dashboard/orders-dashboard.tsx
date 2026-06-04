@@ -7,7 +7,6 @@ import {
   Copy,
   CreditCard,
   Download,
-  ExternalLink,
   FileText,
   ListChecks,
   PackageCheck,
@@ -173,6 +172,20 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
     });
   }, [filters, orders]);
 
+
+  const filteredOrderStats = useMemo(() => {
+    const refundedOrders = filteredOrders.filter((order) => order.refundAmount > 0 || order.refunds.some((refund) => refund.status === "환불 완료"));
+
+    return {
+      total: filteredOrders.length,
+      paid: filteredOrders.filter((order) => order.paymentStatus === "결제완료").length,
+      pending: filteredOrders.filter((order) => order.paymentStatus === "결제대기").length,
+      canceled: filteredOrders.filter((order) => order.orderStatus === "취소").length,
+      refundRequested: filteredOrders.filter((order) => order.paymentStatus === "환불요청" || order.refunds.some((refund) => refund.status === "환불 요청" || refund.status === "환불 승인 대기")).length,
+      refunded: refundedOrders.length,
+    };
+  }, [filteredOrders]);
+
   const todayOrders = orders.filter((order) => order.date === TODAY);
   const todayPaidOrders = orders.filter((order) => order.date === TODAY && order.paymentStatus === "결제완료");
   const pendingPayments = orders.filter((order) => order.paymentStatus === "결제대기");
@@ -192,13 +205,22 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <SummaryCard label="오늘 주문" value={`${todayOrders.length.toLocaleString()}건`} detail={`주문일 ${TODAY}`} onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY })} />
-        <SummaryCard label="오늘 매출" value={formatCurrency(todayRevenue)} detail="오늘 결제완료 합계" onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY, paymentStatus: "결제완료" })} />
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-black text-slate-950">핵심 KPI</h2>
+          <p className="text-sm font-semibold text-slate-500">운영자가 먼저 확인해야 하는 주문량, 매출, 환불 규모입니다.</p>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <SummaryCard label="오늘 주문" value={`${todayOrders.length.toLocaleString()}건`} detail={`주문일 ${TODAY}`} onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY })} size="primary" />
+          <SummaryCard label="오늘 매출" value={formatCurrency(todayRevenue)} detail="오늘 결제완료 합계" onClick={() => applyQuickFilter({ startDate: TODAY, endDate: TODAY, paymentStatus: "결제완료" })} size="primary" />
+          <SummaryCard label="총 환불 금액" value={formatCurrency(refundTotal)} detail="환불 이력 주문" onClick={() => applyQuickFilter({ refundStatus: "has" })} tone="rose" size="primary" />
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
         <SummaryCard label="결제 대기" value={`${pendingPayments.length.toLocaleString()}건`} detail="결제상태 결제대기" onClick={() => applyQuickFilter({ paymentStatus: "결제대기" })} />
         <SummaryCard label="배송 대기" value={`${waitingShipping.length.toLocaleString()}건`} detail="배송상태 배송대기" onClick={() => applyQuickFilter({ shippingStatus: "배송대기" })} />
         <SummaryCard label="환불 요청" value={`${refundRequests.length.toLocaleString()}건`} detail="환불 관리로 이동" onClick={() => applyQuickFilter({}, "refunds")} tone="rose" />
-        <SummaryCard label="총 환불 금액" value={formatCurrency(refundTotal)} detail="환불 이력 주문" onClick={() => applyQuickFilter({ refundStatus: "has" })} tone="rose" />
       </section>
 
       <section className="space-y-3">
@@ -267,25 +289,30 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
               <CardTitle>주문 목록</CardTitle>
               <CardDescription>{filteredOrders.length.toLocaleString()}건의 주문이 표시됩니다. 행 클릭 시 주문 상세로 이동합니다.</CardDescription>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <ListStat label="총 주문건수" value={`${filteredOrderStats.total.toLocaleString()}건`} />
+                <ListStat label="결제완료" value={`${filteredOrderStats.paid.toLocaleString()}건`} />
+                <ListStat label="결제대기" value={`${filteredOrderStats.pending.toLocaleString()}건`} />
+                <ListStat label="취소" value={`${filteredOrderStats.canceled.toLocaleString()}건`} />
+                <ListStat label="환불요청" value={`${filteredOrderStats.refundRequested.toLocaleString()}건`} tone="rose" />
+                <ListStat label="환불완료" value={`${filteredOrderStats.refunded.toLocaleString()}건`} tone="rose" />
+              </div>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[1480px] [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
                 <TableHeader>
                   <TableRow>
                     <TableHead>주문번호</TableHead>
+                    <TableHead>주문일</TableHead>
                     <TableHead>회원</TableHead>
                     <TableHead>User ID</TableHead>
                     <TableHead>상품명</TableHead>
-                    <TableHead>국가</TableHead>
-                    <TableHead>결제수단</TableHead>
                     <TableHead>결제금액</TableHead>
-                    <TableHead>쿠폰 사용액</TableHead>
-                    <TableHead>포인트 사용액</TableHead>
-                    <TableHead>배송비</TableHead>
                     <TableHead>환불금액</TableHead>
                     <TableHead>결제상태</TableHead>
-                    <TableHead>주문상태</TableHead>
                     <TableHead>배송상태</TableHead>
-                    <TableHead>주문일</TableHead>
+                    <TableHead>주문상태</TableHead>
+                    <TableHead>결제수단</TableHead>
                     <TableHead>결제일</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -295,6 +322,7 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </>
@@ -316,31 +344,25 @@ function OrderTableRow({ order }: { order: AdminOrder }) {
 
   return (
     <TableRow className="cursor-pointer" onClick={() => router.push(`/orders/${order.id}`)}>
-      <TableCell className="whitespace-nowrap font-mono font-bold">{order.id}</TableCell>
-      <TableCell className="min-w-44">
-        <Link href={`/members/${order.userId}`} onClick={(event) => event.stopPropagation()} className="inline-flex items-center gap-1 font-bold text-slate-900 hover:text-indigo-700">
-          {order.member}<ExternalLink className="h-3 w-3" />
-        </Link>
-        <p className="text-xs text-muted-foreground">{order.email}</p>
+      <TableCell className="font-mono font-bold">{order.id}</TableCell>
+      <TableCell>{order.date}</TableCell>
+      <TableCell className="min-w-56 max-w-64">
+        <p className="truncate font-bold text-slate-900">{order.member}</p>
+        <p className="truncate text-xs text-muted-foreground">{order.email}</p>
       </TableCell>
       <TableCell>
         <Link href={`/members/${order.userId}`} onClick={(event) => event.stopPropagation()} className="font-mono font-bold text-indigo-700 hover:text-indigo-900">
           {order.userId}
         </Link>
       </TableCell>
-      <TableCell className="min-w-48"><p className="font-semibold">{order.product}</p><p className="font-mono text-xs text-slate-500">{order.sku}</p></TableCell>
-      <TableCell>{order.country}</TableCell>
-      <TableCell className="whitespace-nowrap">{order.paymentMethod}</TableCell>
+      <TableCell className="min-w-64 max-w-72"><p className="truncate font-semibold">{order.product}</p><p className="truncate font-mono text-xs text-slate-500">{order.sku}</p></TableCell>
       <MoneyCell value={order.paymentAmount} />
-      <MoneyCell value={order.couponDiscountAmount} mutedWhenZero />
-      <MoneyCell value={order.pointUsedAmount} mutedWhenZero />
-      <MoneyCell value={order.shippingFee} mutedWhenZero />
       <MoneyCell value={order.refundAmount} tone={order.refundAmount > 0 ? "rose" : "slate"} mutedWhenZero />
       <TableCell><KoreanStatusBadge value={order.paymentStatus} /></TableCell>
-      <TableCell><KoreanStatusBadge value={order.orderStatus} /></TableCell>
       <TableCell><KoreanStatusBadge value={order.shippingStatus} /></TableCell>
-      <TableCell className="whitespace-nowrap">{order.date}</TableCell>
-      <TableCell className="whitespace-nowrap">{order.paidAt ?? "-"}</TableCell>
+      <TableCell><KoreanStatusBadge value={order.orderStatus} /></TableCell>
+      <TableCell>{order.paymentMethod}</TableCell>
+      <TableCell>{order.paidAt ?? "-"}</TableCell>
     </TableRow>
   );
 }
@@ -359,15 +381,15 @@ function RefundManagementPanel({ refunds }: { refunds: RefundRow[] }) {
 
   const requested = refunds.filter((refund) => refund.status === "환불 요청").length;
   const pending = refunds.filter((refund) => refund.status === "환불 승인 대기").length;
-  const completedTotal = refunds.filter((refund) => refund.status === "환불 완료").reduce((sum, refund) => sum + refund.amount, 0);
+  const totalRefundAmount = refunds.reduce((sum, refund) => sum + refund.amount, 0);
 
   return (
     <div className="space-y-5">
       {toast ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{toast}</div> : null}
       <section className="grid gap-4 md:grid-cols-3">
-        <MiniMetric label="환불 요청" value={`${requested.toLocaleString()}건`} />
+        <MiniMetric label="환불 요청" value={`${requested.toLocaleString()}건`} tone="rose" />
         <MiniMetric label="승인 대기" value={`${pending.toLocaleString()}건`} />
-        <MiniMetric label="완료 환불금액" value={formatCurrency(completedTotal)} />
+        <MiniMetric label="총 환불금액" value={formatCurrency(totalRefundAmount)} tone="rose" />
       </section>
       <Card>
         <CardHeader>
@@ -380,18 +402,17 @@ function RefundManagementPanel({ refunds }: { refunds: RefundRow[] }) {
             <FilterSelect label="환불 상태" value={status} onChange={setStatus} options={["환불 요청", "환불 승인 대기", "환불 완료", "환불 거절"]} allLabel="전체 상태" />
           </div>
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[1320px] [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>주문번호</TableHead>
                   <TableHead>회원</TableHead>
-                  <TableHead>상품명</TableHead>
-                  <TableHead>결제금액</TableHead>
-                  <TableHead>환불 요청 금액</TableHead>
-                  <TableHead>환불 가능 금액</TableHead>
-                  <TableHead>환불 사유</TableHead>
+                  <TableHead>환불금액</TableHead>
+                  <TableHead>환불사유</TableHead>
+                  <TableHead>환불상태</TableHead>
                   <TableHead>요청일</TableHead>
-                  <TableHead>상태</TableHead>
+                  <TableHead>상품명</TableHead>
+                  <TableHead>환불 가능 금액</TableHead>
                   <TableHead>처리자</TableHead>
                   <TableHead>액션</TableHead>
                 </TableRow>
@@ -400,19 +421,24 @@ function RefundManagementPanel({ refunds }: { refunds: RefundRow[] }) {
                 {filteredRefunds.map((refund) => (
                   <TableRow key={`${refund.id}-${refund.requestedAt}`}>
                     <TableCell><Link href={`/orders/${refund.id}?section=refunds`} className="font-mono font-bold text-indigo-700 hover:text-indigo-900">{refund.id}</Link></TableCell>
-                    <TableCell className="min-w-44"><p className="font-bold">{refund.member}</p><p className="text-xs text-slate-500">{refund.email}</p></TableCell>
-                    <TableCell className="min-w-44">{refund.product}</TableCell>
-                    <MoneyCell value={refund.paymentAmount} />
+                    <TableCell className="min-w-56 max-w-64"><p className="truncate font-bold">{refund.member}</p><p className="truncate text-xs text-slate-500">{refund.email}</p></TableCell>
                     <MoneyCell value={refund.amount} tone="rose" />
-                    <MoneyCell value={refund.availableAmount} />
-                    <TableCell className="min-w-36">{refund.reason}</TableCell>
-                    <TableCell className="whitespace-nowrap">{refund.requestedAt}</TableCell>
+                    <TableCell className="min-w-56 max-w-72"><p className="truncate font-semibold">{refund.reason}</p></TableCell>
                     <TableCell><KoreanStatusBadge value={refund.status} /></TableCell>
+                    <TableCell>{refund.requestedAt}</TableCell>
+                    <TableCell className="min-w-56 max-w-72"><p className="truncate">{refund.product}</p></TableCell>
+                    <MoneyCell value={refund.availableAmount} />
                     <TableCell>{refund.processor ?? "-"}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button type="button" size="sm" onClick={() => setToast(`${refund.id} 환불 승인 mock 처리되었습니다.`)}>승인</Button>
-                        <Button type="button" size="sm" variant="outline" onClick={() => setToast(`${refund.id} 환불 거절 mock 처리되었습니다.`)}>거절</Button>
+                        {refund.status === "환불 요청" || refund.status === "환불 승인 대기" ? (
+                          <>
+                            <Button type="button" size="sm" onClick={() => setToast(`${refund.id} 환불 승인 mock 처리되었습니다.`)}>승인</Button>
+                            <Button type="button" size="sm" variant="outline" onClick={() => setToast(`${refund.id} 환불 거절 mock 처리되었습니다.`)}>거절</Button>
+                          </>
+                        ) : (
+                          <Button type="button" size="sm" variant="outline" onClick={() => setToast(`${refund.id} 상세 확인 mock 처리되었습니다.`)}>상세</Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -655,24 +681,35 @@ function KoreanStatusBadge({ value }: { value: string }) {
   return <Badge variant={variant}>{value}</Badge>;
 }
 
-function SummaryCard({ label, value, detail, onClick, tone = "indigo" }: { label: string; value: string; detail: string; onClick: () => void; tone?: "indigo" | "rose" }) {
+function SummaryCard({ label, value, detail, onClick, tone = "indigo", size = "status" }: { label: string; value: string; detail: string; onClick: () => void; tone?: "indigo" | "rose"; size?: "primary" | "status" }) {
+  const primary = size === "primary";
+
   return (
-    <button type="button" onClick={onClick} className={cn("rounded-3xl border border-white/70 bg-white/85 p-5 text-left shadow-panel transition-all hover:-translate-y-0.5 hover:bg-white", tone === "rose" ? "hover:border-rose-200" : "hover:border-indigo-200")}>
-      <p className="text-sm font-bold text-slate-500">{label}</p>
-      <p className={cn("mt-3 text-2xl font-black tracking-tight", tone === "rose" ? "text-rose-700" : "text-slate-950")}>{value}</p>
-      <p className="mt-3 text-sm font-semibold text-slate-600">{detail} · 빠른 이동</p>
+    <button type="button" onClick={onClick} className={cn("rounded-3xl border border-white/70 bg-white/85 text-left shadow-panel transition-all hover:-translate-y-0.5 hover:bg-white", primary ? "p-7" : "p-5", tone === "rose" ? "hover:border-rose-200" : "hover:border-indigo-200")}>
+      <p className={cn("font-bold text-slate-500", primary ? "text-base" : "text-sm")}>{label}</p>
+      <p className={cn("mt-3 font-black tracking-tight", primary ? "text-4xl xl:text-5xl" : "text-2xl", tone === "rose" ? "text-rose-700" : "text-slate-950")}>{value}</p>
+      <p className={cn("mt-3 font-semibold text-slate-600", primary ? "text-base" : "text-sm")}>{detail} · 빠른 이동</p>
     </button>
   );
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
+function MiniMetric({ label, value, tone = "slate" }: { label: string; value: string; tone?: "slate" | "rose" }) {
   return (
     <Card>
       <CardContent className="p-5">
         <p className="text-sm font-bold text-slate-500">{label}</p>
-        <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
+        <p className={cn("mt-2 text-2xl font-black", tone === "rose" ? "text-rose-700" : "text-slate-950")}>{value}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function ListStat({ label, value, tone = "slate" }: { label: string; value: string; tone?: "slate" | "rose" }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+      <span className="text-xs font-bold text-slate-500">{label}</span>
+      <span className={cn("ml-2 text-sm font-black", tone === "rose" ? "text-rose-700" : "text-slate-900")}>{value}</span>
+    </div>
   );
 }
 

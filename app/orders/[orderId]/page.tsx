@@ -21,6 +21,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
   }
 
   const finalPaidAmount = Math.max(order.paymentAmount - order.refundAmount, 0);
+  const refundable = order.paymentStatus === "결제완료" || order.paymentStatus === "환불요청";
 
   return (
     <div className="space-y-8">
@@ -37,7 +38,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline"><FileText className="h-4 w-4" />영수증 조회</Button>
-          <Button type="button"><RefreshCcw className="h-4 w-4" />환불 처리</Button>
+          <Button type="button" disabled={!refundable}><RefreshCcw className="h-4 w-4" />환불 처리</Button>
         </div>
       </div>
 
@@ -123,7 +124,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
             </CardHeader>
             <CardContent className="overflow-x-auto">
               {order.refunds.length > 0 ? (
-                <Table>
+                <Table className="min-w-[980px] [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
                   <TableHeader>
                     <TableRow><TableHead>환불 요청일</TableHead><TableHead>환불 사유</TableHead><TableHead>환불 금액</TableHead><TableHead>유형</TableHead><TableHead>상태</TableHead><TableHead>처리자</TableHead><TableHead>처리일</TableHead></TableRow>
                   </TableHeader>
@@ -131,7 +132,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                     {order.refunds.map((refund) => (
                       <TableRow key={refund.id}>
                         <TableCell className="whitespace-nowrap">{refund.requestedAt}</TableCell>
-                        <TableCell>{refund.reason}</TableCell>
+                        <TableCell className="max-w-72"><p className="truncate">{refund.reason}</p></TableCell>
                         <TableCell className="whitespace-nowrap text-right font-bold text-rose-700">{formatCurrency(refund.amount)}</TableCell>
                         <TableCell>{refund.type}</TableCell>
                         <TableCell><KoreanStatusBadge value={refund.status} /></TableCell>
