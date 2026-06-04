@@ -12,7 +12,6 @@ import {
   Megaphone,
   ReceiptText,
   UsersRound,
-  WalletCards,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -44,7 +43,6 @@ export const navItems: (NavLinkItem | NavGroupItem)[] = [
   { title: "General inquiries", href: "/inquiries", icon: HelpCircle },
   { title: "Lesson questions", href: "/lesson-questions", icon: BookOpenCheck },
   { title: "Coupons", href: "/coupons", icon: BadgePercent },
-  { title: "Vouchers", href: "/vouchers", icon: WalletCards },
   { title: "Points", href: "/points", icon: Coins },
   { title: "Popup management", href: "/popups", icon: Megaphone },
   { title: "Sales analytics", href: "/analytics", icon: CircleDollarSign },
@@ -459,12 +457,6 @@ export const coupons = [
   { code: "SPRING26", discount: "25%", used: 421, expires: "2026-06-30", status: "Live" },
   { code: "TEAMUP", discount: "$150", used: 66, expires: "2026-07-15", status: "Live" },
   { code: "WINBACK", discount: "40%", used: 18, expires: "2026-05-31", status: "Ending" },
-];
-
-export const vouchers = [
-  { code: "VCH-9082", owner: "Avery Kim", value: "1:1 coaching", status: "Issued" },
-  { code: "VCH-9083", owner: "Noah Park", value: "Mock exam", status: "Redeemed" },
-  { code: "VCH-9084", owner: "Mina Lee", value: "Team workshop", status: "Scheduled" },
 ];
 
 export const pointsLedger = [
