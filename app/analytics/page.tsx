@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, Download, TrendingDown, TrendingUp } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Download, ExternalLink, X, TrendingDown, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -55,6 +56,24 @@ type CouponPerformance = {
   netRevenue: number;
   change: number;
   efficiency: "고효율" | "할인 과다" | "사용 증가" | "저비용";
+};
+
+type DailyDetailProduct = { product: string; language: string; quantity: number; revenue: number; refundCount: number; change: number };
+type DailyDetailCountry = { country: string; revenue: number; orderCount: number; change: number };
+type DailyDetailCoupon = { name: string; useCount: number; discountAmount: number; netRevenue: number; efficiency: number; efficiencyChange: number };
+type DailyDetailOrder = { id: string; member: string; product: string; paymentAmount: number; paymentStatus: "결제완료" | "환불요청" | "결제대기"; shippingStatus: "배송전" | "배송대기" | "배송중" | "배송완료" | "-"; paidAt: string };
+type DailySalesDetail = {
+  date: string;
+  queryDate: string;
+  displayDate: string;
+  summary: { label: string; tone: "emerald" | "blue" | "amber" | "rose" }[];
+  kpis: { label: string; value: string; helper: string; tone?: "rose" | "emerald" | "blue" }[];
+  products: DailyDetailProduct[];
+  countries: DailyDetailCountry[];
+  coupons: DailyDetailCoupon[];
+  refunds: { refundCount: number; refundAmount: number; products: { product: string; count: number; amount: number }[] };
+  recentOrders: DailyDetailOrder[];
+  totalOrderCount: number;
 };
 
 const metricConfig: Record<MetricKey, MetricConfig> = {
@@ -280,11 +299,110 @@ function getCouponBadgeVariant(efficiency: CouponPerformance["efficiency"]): "de
   return "default";
 }
 
+function formatQueryDate(value: string) {
+  const [datePart] = value.split(" ");
+  return datePart.replaceAll(".", "-");
+}
+
+function formatSignedPercent(value: number) {
+  return `${value >= 0 ? "▲" : "▼"} ${Math.abs(value).toFixed(1)}%`;
+}
+
+function buildDailySalesDetail(point: TrendPoint, index: number, comparison: ComparisonOption, period: PeriodOption): DailySalesDetail {
+  const couponAmount = Math.round(point.grossPayment * (0.07 + (index % 4) * 0.008));
+  const newBuyerCount = Math.max(1, Math.round(point.orderCount * (0.62 + (index % 4) * 0.025)));
+  const repeatBuyerCount = Math.max(0, point.orderCount - newBuyerCount);
+  const newBuyerRatio = point.orderCount === 0 ? 0 : (newBuyerCount / point.orderCount) * 100;
+  const netChange = getChange(point.netRevenue, point.compareNetRevenue);
+  const grossChange = getChange(point.grossPayment, point.compareGrossPayment);
+  const refundChange = getChange(point.refundAmount, point.compareRefundAmount, "down");
+  const queryDate = formatQueryDate(point.date);
+  const dateSeed = index + (comparison === "전년 대비" ? 4 : comparison === "전주 대비" ? 2 : 0);
+
+  const products = productSeeds.slice(0, 7).map((item, productIndex) => {
+    const weight = Math.max(0.18, 1 - productIndex * 0.105 + ((index + productIndex) % 3) * 0.03);
+    const revenue = Math.max(70000, Math.round(point.netRevenue * weight * (0.27 / (productIndex + 1.25))));
+    const quantity = Math.max(1, Math.round((point.orderCount * weight) / (productIndex + 2.5)));
+    const refundCount = item.product === "독일어 마스터" && point.refundAmount > 0 ? Math.max(1, Math.min(3, Math.round(point.refundAmount / 130000))) : productIndex === 0 && index % 5 === 0 ? 1 : 0;
+    return { product: item.product, language: item.language, quantity, revenue, refundCount, change: item.change + dateSeed * 0.8 };
+  });
+
+  const countries = countrySeeds.slice(0, 5).map((item, countryIndex) => {
+    const changeBoost = item.country === "미국" ? 45 + index * 2.5 : dateSeed * 0.9;
+    const revenue = Math.round((point.netRevenue * item.share) / 100);
+    const orderCount = Math.max(1, Math.round((point.orderCount * item.share) / 100));
+    return { country: item.country, revenue, orderCount, change: item.change + changeBoost };
+  });
+
+  const coupons = couponSeeds.slice(0, 5).map((item, couponIndex) => {
+    const useCount = Math.max(1, Math.round(point.orderCount * (0.18 - couponIndex * 0.018 + ((index + couponIndex) % 2) * 0.01)));
+    const discountAmount = Math.round(couponAmount * (0.34 - couponIndex * 0.045));
+    const netRevenue = Math.max(0, Math.round(discountAmount * (item.efficiency === "할인 과다" ? 1.8 : 3.6 + couponIndex * 0.35)));
+    const efficiency = discountAmount === 0 ? 0 : netRevenue / discountAmount;
+    const efficiencyChange = item.efficiency === "할인 과다" ? -0.42 - index * 0.01 : 0.16 + couponIndex * 0.04;
+    return { name: item.name, useCount, discountAmount, netRevenue, efficiency, efficiencyChange };
+  });
+
+  const refundProducts = products
+    .filter((item) => item.refundCount > 0)
+    .map((item) => ({ product: item.product, count: item.refundCount, amount: Math.round(point.refundAmount * (item.product === "독일어 마스터" ? 0.72 : 0.28)) }));
+  const refundCount = refundProducts.reduce((sum, item) => sum + item.count, 0) || Math.max(1, Math.round(point.refundAmount / 210000));
+  const normalizedRefundProducts = refundProducts.length > 0 ? refundProducts : [{ product: products[0].product, count: refundCount, amount: point.refundAmount }];
+
+  const orderProducts = products.slice(0, 5);
+  const recentOrders = Array.from({ length: Math.min(10, Math.max(3, point.orderCount)) }, (_, orderIndex) => {
+    const product = orderProducts[orderIndex % orderProducts.length];
+    const paymentStatus: DailyDetailOrder["paymentStatus"] = orderIndex === 1 && point.refundAmount > 0 ? "환불요청" : orderIndex === 8 ? "결제대기" : "결제완료";
+    const shippingStatus: DailyDetailOrder["shippingStatus"] = paymentStatus === "결제대기" ? "배송전" : orderIndex % 4 === 0 ? "배송대기" : orderIndex % 4 === 1 ? "배송중" : "배송완료";
+    return {
+      id: `ORD-${queryDate.replaceAll("-", "")}-${String(orderIndex + 1).padStart(2, "0")}`,
+      member: ["지윤 김", "서준 이", "하린 최", "Oscar Ha", "Monica Shin", "도윤 정"][orderIndex % 6],
+      product: product.product,
+      paymentAmount: Math.max(29000, Math.round(product.revenue / Math.max(1, product.quantity))),
+      paymentStatus,
+      shippingStatus,
+      paidAt: `${queryDate} ${String(18 - orderIndex).padStart(2, "0")}:${String((orderIndex * 7) % 60).padStart(2, "0")}`,
+    };
+  });
+
+  const topCountry = countries.reduce((best, item) => (item.change > best.change ? item : best), countries[0]);
+  const topRefundProduct = normalizedRefundProducts[0];
+  const summary = [
+    { label: `순매출 ${netChange.label}`, tone: netChange.trend === "up" ? "emerald" : "rose" },
+    { label: `${topCountry.country} 매출 ${formatSignedPercent(topCountry.change)}`, tone: topCountry.change >= 0 ? "amber" : "rose" },
+    { label: `신규 구매 비중 ${newBuyerRatio.toFixed(0)}%`, tone: "blue" },
+    { label: `${topRefundProduct.product} 환불 ${topRefundProduct.count}건`, tone: "rose" },
+  ] satisfies DailySalesDetail["summary"];
+
+  return {
+    date: point.date,
+    queryDate,
+    displayDate: point.date,
+    summary,
+    kpis: [
+      { label: "주문수", value: `${point.orderCount.toLocaleString("ko-KR")}건`, helper: `${comparison} ${getChange(point.orderCount, point.compareOrderCount).label}`, tone: "blue" },
+      { label: "순매출", value: formatCurrency(point.netRevenue), helper: `${comparison} ${netChange.label}`, tone: "emerald" },
+      { label: "총 결제금액", value: formatCurrency(point.grossPayment), helper: `${comparison} ${grossChange.label}` },
+      { label: "환불금액", value: formatCurrency(point.refundAmount), helper: `${comparison} ${refundChange.label}`, tone: "rose" },
+      { label: "신규 구매자 수", value: `${newBuyerCount.toLocaleString("ko-KR")}명`, helper: `신규 구매 비중 ${newBuyerRatio.toFixed(0)}%`, tone: "blue" },
+      { label: "재구매자 수", value: `${repeatBuyerCount.toLocaleString("ko-KR")}명`, helper: `${period} 선택 기간 기준` },
+    ],
+    products,
+    countries,
+    coupons,
+    refunds: { refundCount, refundAmount: point.refundAmount, products: normalizedRefundProducts },
+    recentOrders,
+    totalOrderCount: point.orderCount,
+  };
+}
+
 export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("최근 30일");
   const [selectedComparison, setSelectedComparison] = useState<ComparisonOption>("전월 대비");
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>("순매출");
   const [productSort, setProductSort] = useState<ProductSortOption>("매출순");
+  const [drawerProductSort, setDrawerProductSort] = useState<ProductSortOption>("매출순");
+  const [selectedDailyIndex, setSelectedDailyIndex] = useState<number | null>(null);
   const [showAllCountries, setShowAllCountries] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [draftStart, setDraftStart] = useState("2026-05-20");
@@ -387,6 +505,14 @@ export default function AnalyticsPage() {
   }, [selectedComparison, showAllCountries, totals.netRevenue]);
 
   const dailySales = useMemo(() => makeDailyRows(trend.points, trend.isHourly), [trend.points, trend.isHourly]);
+  const selectedPoint = selectedDailyIndex === null ? null : trend.points[selectedDailyIndex] ?? null;
+  const selectedDailyDetail = selectedPoint ? buildDailySalesDetail(selectedPoint, selectedDailyIndex ?? 0, selectedComparison, selectedPeriod) : null;
+  const drawerProducts = selectedDailyDetail
+    ? [...selectedDailyDetail.products].sort((a, b) => (drawerProductSort === "판매량순" ? b.quantity - a.quantity : b.revenue - a.revenue))
+    : [];
+  const canMovePreviousDate = selectedDailyIndex !== null && selectedDailyIndex > 0;
+  const canMoveNextDate = selectedDailyIndex !== null && selectedDailyIndex < dailySales.length - 1;
+  const ordersHref = selectedDailyDetail ? `/orders?startDate=${selectedDailyDetail.queryDate}&endDate=${selectedDailyDetail.queryDate}` : "/orders";
   const hoveredPoint = hoveredIndex === null ? null : trend.points[hoveredIndex];
   const hoveredCurrent = hoveredPoint ? Number(hoveredPoint[activeMetric.current]) : 0;
   const hoveredCompare = hoveredPoint ? Number(hoveredPoint[activeMetric.compare]) : 0;
@@ -460,6 +586,20 @@ export default function AnalyticsPage() {
     setCustomStart(draftStart);
     setCustomEnd(draftEnd);
     setSelectedPeriod("사용자 지정");
+  };
+
+  const openDailyDetail = (index: number) => {
+    setSelectedDailyIndex(index);
+    setDrawerProductSort("매출순");
+  };
+
+  const moveSelectedDate = (direction: "previous" | "next") => {
+    setSelectedDailyIndex((current) => {
+      if (current === null) return current;
+      const nextIndex = direction === "previous" ? current - 1 : current + 1;
+      if (nextIndex < 0 || nextIndex >= dailySales.length) return current;
+      return nextIndex;
+    });
   };
 
   return (
@@ -862,8 +1002,21 @@ export default function AnalyticsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dailySales.map((item) => (
-                <TableRow key={item.date}>
+              {dailySales.map((item, index) => (
+                <TableRow
+                  key={item.date}
+                  className={selectedDailyIndex === index ? "cursor-pointer bg-indigo-50/80 hover:bg-indigo-50" : "cursor-pointer"}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${item.date} 매출 상세 분석 열기`}
+                  onClick={() => openDailyDetail(index)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openDailyDetail(index);
+                    }
+                  }}
+                >
                   <TableCell className="font-bold">{item.date}</TableCell>
                   <TableCell className="text-right">{item.orders}건</TableCell>
                   <TableCell className="text-right">{item.gross}</TableCell>
@@ -890,6 +1043,203 @@ export default function AnalyticsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {selectedDailyDetail ? (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/35 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="daily-sales-detail-title">
+          <button className="absolute inset-0 cursor-default" type="button" aria-label="매출 상세 Drawer 닫기" onClick={() => setSelectedDailyIndex(null)} />
+          <aside className="relative flex h-full w-full max-w-3xl flex-col overflow-hidden bg-slate-50 shadow-2xl ring-1 ring-slate-200 sm:rounded-l-3xl">
+            <div className="border-b border-slate-200 bg-white/95 p-5 backdrop-blur">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.25em] text-indigo-600">일별 매출 상세 분석</p>
+                  <h2 id="daily-sales-detail-title" className="mt-1 text-2xl font-black text-slate-950">{selectedDailyDetail.displayDate} 매출 상세</h2>
+                  <p className="mt-1 text-sm font-semibold text-slate-500">{selectedPeriod} 기준 · {selectedComparison}</p>
+                </div>
+                <Button variant="outline" size="sm" type="button" onClick={() => setSelectedDailyIndex(null)} aria-label="Drawer 닫기">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-5 flex items-center justify-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                <Button variant="outline" size="sm" type="button" disabled={!canMovePreviousDate} onClick={() => moveSelectedDate("previous")}>
+                  <ChevronLeft className="h-4 w-4" /> 이전 날짜
+                </Button>
+                <div className="min-w-40 text-center">
+                  <p className="text-lg font-black text-slate-950">{selectedDailyDetail.displayDate}</p>
+                  <p className="text-xs font-bold text-slate-500">선택 날짜</p>
+                </div>
+                <Button variant="outline" size="sm" type="button" disabled={!canMoveNextDate} onClick={() => moveSelectedDate("next")}>
+                  다음 날짜 <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <section className="rounded-3xl border border-indigo-100 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-950">이상 징후 요약</h3>
+                    <p className="mt-1 text-sm font-semibold text-slate-500">실제 원인 추정 없이 선택 날짜의 변화 항목만 요약합니다.</p>
+                  </div>
+                  <Badge variant="slate">{selectedComparison}</Badge>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {selectedDailyDetail.summary.map((item) => (
+                    <div key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                      <p className={item.tone === "emerald" ? "text-sm font-black text-emerald-700" : item.tone === "rose" ? "text-sm font-black text-rose-700" : item.tone === "amber" ? "text-sm font-black text-amber-700" : "text-sm font-black text-indigo-700"}>{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {selectedDailyDetail.kpis.map((item) => (
+                  <div key={item.label} className="rounded-3xl border border-white bg-white p-4 shadow-sm">
+                    <p className="text-xs font-black text-slate-500">{item.label}</p>
+                    <p className={item.tone === "rose" ? "mt-2 text-2xl font-black text-rose-600" : item.tone === "emerald" ? "mt-2 text-2xl font-black text-emerald-600" : item.tone === "blue" ? "mt-2 text-2xl font-black text-indigo-600" : "mt-2 text-2xl font-black text-slate-950"}>{item.value}</p>
+                    <p className="mt-1 text-xs font-bold text-slate-500">{item.helper}</p>
+                  </div>
+                ))}
+              </section>
+
+              <section className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-950">상품 분석</h3>
+                    <p className="text-sm font-semibold text-slate-500">선택 날짜의 상품별 매출과 판매량을 토글로 확인합니다.</p>
+                  </div>
+                  <div className="flex rounded-2xl bg-slate-100 p-1">
+                    {productSortOptions.map((option) => (
+                      <button key={option} type="button" className={drawerProductSort === option ? "rounded-xl bg-white px-3 py-2 text-sm font-black text-indigo-700 shadow-sm" : "px-3 py-2 text-sm font-bold text-slate-500"} onClick={() => setDrawerProductSort(option)}>
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {drawerProducts.slice(0, 5).map((item, index) => (
+                    <div key={item.product} className="grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-black text-indigo-700">{index + 1}</span>
+                      <div>
+                        <p className="font-black text-slate-950">{item.product}</p>
+                        <p className="text-xs font-bold text-slate-500">{item.language} · {formatSignedPercent(item.change)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-slate-950">{drawerProductSort === "매출순" ? formatCurrency(item.revenue) : `${item.quantity.toLocaleString("ko-KR")}건`}</p>
+                        <p className="text-xs font-bold text-slate-500">{drawerProductSort === "매출순" ? `${item.quantity.toLocaleString("ko-KR")}건` : formatCurrency(item.revenue)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="grid gap-5 xl:grid-cols-2">
+                <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-950">국가 분석</h3>
+                  <div className="mt-4 space-y-3">
+                    {selectedDailyDetail.countries.map((item) => (
+                      <div key={item.country} className="rounded-2xl bg-slate-50 p-3">
+                        <div className="flex items-center justify-between gap-3 text-sm">
+                          <span className="font-black text-slate-800">{item.country}</span>
+                          <span className="font-black text-slate-950">{formatCurrency(item.revenue)} · {item.orderCount}건</span>
+                        </div>
+                        <p className={item.change >= 0 ? "mt-1 text-xs font-bold text-emerald-600" : "mt-1 text-xs font-bold text-rose-600"}>{formatSignedPercent(item.change)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-950">환불 분석</h3>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-rose-50 p-4">
+                      <p className="text-xs font-black text-rose-600">환불 건수</p>
+                      <p className="mt-2 text-2xl font-black text-rose-700">{selectedDailyDetail.refunds.refundCount}건</p>
+                    </div>
+                    <div className="rounded-2xl bg-rose-50 p-4">
+                      <p className="text-xs font-black text-rose-600">환불 금액</p>
+                      <p className="mt-2 text-2xl font-black text-rose-700">{formatCurrency(selectedDailyDetail.refunds.refundAmount)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {selectedDailyDetail.refunds.products.map((item) => (
+                      <div key={item.product} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3 text-sm">
+                        <span className="font-bold text-slate-800">{item.product}</span>
+                        <span className="font-black text-slate-950">{item.count}건 · {formatCurrency(item.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+                <h3 className="text-lg font-black text-slate-950">쿠폰 분석</h3>
+                <div className="mt-4 overflow-x-auto">
+                  <Table className="min-w-[640px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>쿠폰명</TableHead>
+                        <TableHead className="text-right">사용수</TableHead>
+                        <TableHead className="text-right">할인 금액</TableHead>
+                        <TableHead className="text-right">쿠폰별 순매출</TableHead>
+                        <TableHead className="text-right">효율</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedDailyDetail.coupons.map((item) => (
+                        <TableRow key={item.name}>
+                          <TableCell className="font-bold">{item.name}</TableCell>
+                          <TableCell className="text-right">{item.useCount}건</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.discountAmount)}</TableCell>
+                          <TableCell className="text-right font-black">{formatCurrency(item.netRevenue)}</TableCell>
+                          <TableCell className="text-right"><Badge variant={item.efficiencyChange >= 0 ? "success" : "warning"}>{item.efficiency.toFixed(1)}x {item.efficiencyChange >= 0 ? "▲" : "▼"}</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-950">주문 목록</h3>
+                    <p className="text-sm font-semibold text-slate-500">최근 주문 10건만 표시합니다. 전체 {selectedDailyDetail.totalOrderCount.toLocaleString("ko-KR")}건</p>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link href={ordersHref}>전체 주문 보기 <ExternalLink className="h-4 w-4" /></Link>
+                  </Button>
+                </div>
+                <div className="mt-4 overflow-x-auto">
+                  <Table className="min-w-[720px]">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>주문번호</TableHead>
+                        <TableHead>주문자</TableHead>
+                        <TableHead>상품</TableHead>
+                        <TableHead className="text-right">결제금액</TableHead>
+                        <TableHead>결제상태</TableHead>
+                        <TableHead>배송상태</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedDailyDetail.recentOrders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell><Link href={`/orders/${order.id}`} className="font-mono font-black text-indigo-700 hover:text-indigo-900">{order.id}</Link></TableCell>
+                          <TableCell className="font-bold">{order.member}</TableCell>
+                          <TableCell className="max-w-56 truncate">{order.product}</TableCell>
+                          <TableCell className="text-right font-black">{formatCurrency(order.paymentAmount)}</TableCell>
+                          <TableCell><Badge variant={order.paymentStatus === "환불요청" ? "rose" : order.paymentStatus === "결제대기" ? "warning" : "success"}>{order.paymentStatus}</Badge></TableCell>
+                          <TableCell><Badge variant="slate">{order.shippingStatus}</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
+      ) : null}
     </>
   );
 }

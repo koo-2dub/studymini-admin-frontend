@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Copy,
@@ -132,8 +132,14 @@ const features: { key: FeatureKey; label: string; description: string; icon: typ
 ];
 
 export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
+  const searchParams = useSearchParams();
+  const initialFilters = useMemo(() => ({
+    ...emptyFilters,
+    startDate: searchParams.get("startDate") ?? "",
+    endDate: searchParams.get("endDate") ?? "",
+  }), [searchParams]);
   const [activeFeature, setActiveFeature] = useState<FeatureKey>("list");
-  const [filters, setFilters] = useState(emptyFilters);
+  const [filters, setFilters] = useState(initialFilters);
 
   const productOptions = useMemo(() => Array.from(new Set(orders.map((order) => order.product))), [orders]);
   const countryOptions = useMemo(() => Array.from(new Set(orders.map((order) => order.country))), [orders]);
