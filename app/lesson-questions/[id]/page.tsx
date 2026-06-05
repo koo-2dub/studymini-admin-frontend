@@ -4,10 +4,14 @@ import { ArrowLeft, ExternalLink, Save, Trash2, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
+import { UserInfoCard } from "@/app/_components/user-info-card";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { members } from "@/lib/mock-data";
 
 import { lessonQuestions } from "../data";
 
@@ -20,7 +24,7 @@ const badgeVariant = (value: string): BadgeProps["variant"] => {
   return "slate";
 };
 
-function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
+function InfoItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4">
       <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
@@ -29,7 +33,7 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <Card>
       <CardHeader>
@@ -82,6 +86,8 @@ export default function LessonQuestionDetailPage() {
     );
   }
 
+  const member = members.find((item) => item.id === question.memberId);
+
   const addLog = (action: string, note: string) => {
     setLogs((previous) => [{ action, actor: currentAdminName, at: nowLabel, note }, ...previous]);
   };
@@ -89,19 +95,19 @@ export default function LessonQuestionDetailPage() {
   const approve = () => {
     setVisibilityStatus("승인됨");
     addLog("승인 처리", "승인 대기 질문을 공개 승인했습니다. (mock)");
-    setToast("학습 문의가 승인되었습니다. 이제 답변 작성이 가능합니다. (mock)");
+    setToast("학습 질문이 승인되었습니다. 이제 답변 작성이 가능합니다. (mock)");
   };
 
   const moveToTrash = () => {
     setVisibilityStatus("휴지통");
-    addLog("휴지통 이동", "학습 문의를 휴지통으로 이동했습니다. (mock)");
-    setToast("학습 문의를 휴지통으로 이동했습니다. (mock)");
+    addLog("휴지통 이동", "학습 질문을 휴지통으로 이동했습니다. (mock)");
+    setToast("학습 질문을 휴지통으로 이동했습니다. (mock)");
   };
 
   const restore = () => {
     setVisibilityStatus("승인됨");
-    addLog("복구", "휴지통에서 일반 학습 문의 목록으로 복구했습니다. (mock)");
-    setToast("학습 문의를 복구했습니다. (mock)");
+    addLog("복구", "휴지통에서 일반 학습 질문 목록으로 복구했습니다. (mock)");
+    setToast("학습 질문을 복구했습니다. (mock)");
   };
 
   const permanentlyDelete = () => {
@@ -123,15 +129,15 @@ export default function LessonQuestionDetailPage() {
     <div className="space-y-6">
       <Link href="/lesson-questions" className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:underline">
         <ArrowLeft className="h-4 w-4" />
-        학습 문의 목록으로
+        학습 질문 목록으로
       </Link>
 
       <section className="rounded-[2rem] border border-white/70 bg-slate-950 p-8 text-white shadow-glow">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-indigo-200"># 학습 문의 상세</p>
-            <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">{question.questionPreview}</h1>
-            <p className="mt-4 max-w-3xl text-slate-300">승인, 공개, 답변, 휴지통 처리를 상세 화면에서 진행합니다.</p>
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-indigo-200"># 학습 질문</p>
+            <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">학습 질문 상세</h1>
+            <p className="mt-4 max-w-3xl text-slate-300">질문자 정보, 질문 내용, 답변 및 처리 이력을 상세 화면에서 확인합니다.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>
@@ -144,20 +150,25 @@ export default function LessonQuestionDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <Section title="질문 정보" description="학습 문의의 작성자와 강의 정보를 확인합니다.">
-            <div className="grid gap-4 md:grid-cols-3">
-              <InfoItem label="유저" value={`${question.userName} (${question.memberId})`} />
-              <InfoItem label="공개상태" value={<Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>} />
-              <InfoItem label="답변상태" value={<Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>} />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <InfoItem label="이메일" value={question.email} />
-              <InfoItem label="문의일" value={question.askedAt} />
-            </div>
-          </Section>
+          <UserInfoCard
+            title="질문자 정보"
+            description="학습 질문을 등록한 회원의 기본 정보와 회원 상세 링크입니다."
+            user={{
+              name: question.userName,
+              memberId: question.memberId,
+              email: question.email,
+              phone: member?.phone ?? "-",
+              memberStatus: member?.status ?? "-",
+              lastLogin: member?.lastLogin ?? "-",
+            }}
+          />
 
-          <Section title="강의 및 질문" description="학습 문의가 등록된 강의와 질문 본문입니다.">
+          <Section title="질문 내용" description="학습 질문 제목, 강의 정보, 질문 본문입니다.">
             <div className="rounded-2xl border border-slate-100 bg-white p-5">
+              <p className="text-sm font-bold text-slate-500">질문 제목</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{question.questionPreview}</p>
+            </div>
+            <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-5">
               <p className="text-sm font-bold text-slate-500">강의 정보</p>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-lg font-black text-slate-950">{question.courseLevel} / {question.lessonDay} - {question.lectureTitle}</p>
