@@ -12,11 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const periodOptions = ["오늘", "최근 7일", "최근 30일", "이번 달", "사용자 지정"] as const;
 const comparisonOptions = ["전일 대비", "전주 대비", "전월 대비", "전년 대비"] as const;
 const metricOptions = ["순매출", "총 결제금액", "총 환불금액", "주문건수"] as const;
+const productSortOptions = ["매출순", "판매량순"] as const;
 const baseDate = new Date("2026-06-04T00:00:00");
 
 type PeriodOption = (typeof periodOptions)[number];
 type ComparisonOption = (typeof comparisonOptions)[number];
 type MetricKey = (typeof metricOptions)[number];
+type ProductSortOption = (typeof productSortOptions)[number];
 type TrendPoint = {
   date: string;
   label: string;
@@ -87,6 +89,14 @@ const countrySeeds = [
   { country: "미국", share: 14.8, change: 22.4 },
   { country: "일본", share: 7.7, change: -4.1 },
   { country: "캐나다", share: 4.6, change: 8.9 },
+  { country: "기타", share: 4.0, change: 3.6 },
+];
+
+const expandedCountrySeeds = [
+  { country: "독일", share: 1.4, change: 6.8 },
+  { country: "프랑스", share: 1.1, change: 5.2 },
+  { country: "베트남", share: 0.9, change: 9.4 },
+  { country: "호주", share: 0.6, change: -1.8 },
 ];
 
 const couponSeeds: CouponPerformance[] = [
@@ -154,8 +164,8 @@ function formatMetricValue(value: number, unit: "currency" | "count") {
   return unit === "count" ? `${Math.round(value).toLocaleString("ko-KR")}건` : formatCurrency(value);
 }
 
-function formatEfficiencyValue(value: number) {
-  return `₩${value.toFixed(2)}`;
+function formatEfficiencyValue(value: number, digits = 2) {
+  return `₩${value.toFixed(digits)}`;
 }
 
 function formatEfficiencyChange(current: number, previous: number) {
@@ -274,6 +284,8 @@ export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodOption>("최근 30일");
   const [selectedComparison, setSelectedComparison] = useState<ComparisonOption>("전월 대비");
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>("순매출");
+  const [productSort, setProductSort] = useState<ProductSortOption>("매출순");
+  const [showAllCountries, setShowAllCountries] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [draftStart, setDraftStart] = useState("2026-05-20");
   const [draftEnd, setDraftEnd] = useState("2026-06-04");
@@ -349,20 +361,30 @@ export default function AnalyticsPage() {
 
   const productTop10 = useMemo(() => {
     const scale = Math.max(0.18, totals.netRevenue / 35000000);
-    return productSeeds.map((item) => ({
-      ...item,
-      quantity: Math.max(1, Math.round(item.quantity * scale)),
-      netRevenue: formatCurrency(item.revenue * scale),
-      change: `${item.change >= 0 ? "+" : ""}${(item.change + (selectedComparison === "전년 대비" ? 3 : 0)).toFixed(1)}%`,
-    }));
-  }, [selectedComparison, totals.netRevenue]);
+    return productSeeds
+      .map((item) => {
+        const quantity = Math.max(1, Math.round(item.quantity * scale));
+        const revenueValue = Math.round(item.revenue * scale);
+        return {
+          ...item,
+          quantity,
+          revenueValue,
+          netRevenue: formatCurrency(revenueValue),
+          change: `${item.change >= 0 ? "+" : ""}${(item.change + (selectedComparison === "전년 대비" ? 3 : 0)).toFixed(1)}%`,
+        };
+      })
+      .sort((a, b) => (productSort === "판매량순" ? b.quantity - a.quantity : b.revenueValue - a.revenueValue));
+  }, [productSort, selectedComparison, totals.netRevenue]);
 
-  const countryRevenue = useMemo(() => countrySeeds.map((item) => ({
-    ...item,
-    revenue: formatCompactCurrency((totals.netRevenue * item.share) / 100),
-    shareLabel: `${item.share}%`,
-    change: `${item.change >= 0 ? "+" : ""}${(item.change + (selectedComparison === "전주 대비" ? 1.2 : 0)).toFixed(1)}%`,
-  })), [selectedComparison, totals.netRevenue]);
+  const countryRevenue = useMemo(() => {
+    const visibleSeeds = showAllCountries ? [...countrySeeds.filter((item) => item.country !== "기타"), ...expandedCountrySeeds] : countrySeeds;
+    return visibleSeeds.map((item) => ({
+      ...item,
+      revenue: formatCompactCurrency((totals.netRevenue * item.share) / 100),
+      shareLabel: `${item.share}%`,
+      change: `${item.change >= 0 ? "+" : ""}${(item.change + (selectedComparison === "전주 대비" ? 1.2 : 0)).toFixed(1)}%`,
+    }));
+  }, [selectedComparison, showAllCountries, totals.netRevenue]);
 
   const dailySales = useMemo(() => makeDailyRows(trend.points, trend.isHourly), [trend.points, trend.isHourly]);
   const hoveredPoint = hoveredIndex === null ? null : trend.points[hoveredIndex];
@@ -393,11 +415,11 @@ export default function AnalyticsPage() {
   const couponAppliedNetChange = getChange(couponAppliedNetRevenue, compareCouponAppliedNetRevenue);
   const couponEfficiencyChange = formatEfficiencyChange(couponEfficiency, compareCouponEfficiency);
   const couponKpis = [
-    { label: "총 쿠폰 사용 건수", value: `${couponUseCount.toLocaleString("ko-KR")}건`, change: couponUseChange.label, positive: couponUseChange.positive, trend: couponUseChange.trend, compareLabel: selectedComparison },
-    { label: "총 할인 금액", value: formatCurrency(couponTotal), change: couponDiscountChange.label, positive: couponDiscountChange.positive, trend: couponDiscountChange.trend, compareLabel: selectedComparison },
-    { label: "쿠폰 적용 주문 매출", value: formatCurrency(couponAppliedRevenue), change: couponAppliedRevenueChange.label, positive: couponAppliedRevenueChange.positive, trend: couponAppliedRevenueChange.trend, compareLabel: selectedComparison },
     { label: "쿠폰 적용 순매출", value: formatCurrency(couponAppliedNetRevenue), change: couponAppliedNetChange.label, positive: couponAppliedNetChange.positive, trend: couponAppliedNetChange.trend, compareLabel: selectedComparison },
+    { label: "쿠폰 적용 주문 매출", value: formatCurrency(couponAppliedRevenue), change: couponAppliedRevenueChange.label, positive: couponAppliedRevenueChange.positive, trend: couponAppliedRevenueChange.trend, compareLabel: selectedComparison },
+    { label: "총 할인 금액", value: formatCurrency(couponTotal), change: couponDiscountChange.label, positive: couponDiscountChange.positive, trend: couponDiscountChange.trend, compareLabel: selectedComparison },
     { label: "할인 1원당 순매출", value: formatEfficiencyValue(couponEfficiency), change: couponEfficiencyChange.label, positive: couponEfficiencyChange.positive, trend: couponEfficiencyChange.positive ? "up" : "down", compareLabel: selectedComparison },
+    { label: "총 쿠폰 사용 건수", value: `${couponUseCount.toLocaleString("ko-KR")}건`, change: couponUseChange.label, positive: couponUseChange.positive, trend: couponUseChange.trend, compareLabel: selectedComparison },
   ] satisfies Kpi[];
   const couponTop10 = couponSeeds.map((item) => {
     const scale = Math.max(0.22, couponAppliedNetRevenue / 56560000);
@@ -561,11 +583,12 @@ export default function AnalyticsPage() {
           <Card key={kpi.label}>
             <CardContent className="pt-6">
               <p className="text-sm font-bold text-slate-500">{kpi.label}</p>
-              <p className="mt-3 text-2xl font-black text-slate-950">{kpi.value}</p>
-              <p className={kpi.positive ? "mt-3 flex items-center gap-1 text-sm font-black text-emerald-600" : "mt-3 flex items-center gap-1 text-sm font-black text-rose-600"}>
-                {kpi.trend === "up" ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                {kpi.change} <span className="font-semibold text-slate-500">{kpi.compareLabel}</span>
+              <p className={kpi.positive ? "mt-3 flex items-center gap-1 text-3xl font-black text-emerald-600" : "mt-3 flex items-center gap-1 text-3xl font-black text-rose-600"}>
+                {kpi.trend === "up" ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
+                {kpi.change}
               </p>
+              <p className="mt-2 text-xl font-black text-slate-950">{kpi.value}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-500">{kpi.compareLabel}</p>
             </CardContent>
           </Card>
         ))}
@@ -574,12 +597,16 @@ export default function AnalyticsPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[1.55fr_1fr]">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>상품별 매출 TOP10</CardTitle>
-                <CardDescription>{scopeLabel} · {selectedPeriod} 기준으로 상품별 순매출을 비교합니다.</CardDescription>
+                <CardDescription>{scopeLabel} · {productSort} 기준으로 상품별 성과를 비교합니다.</CardDescription>
               </div>
-              <Badge variant="success">중요</Badge>
+              <div className="flex rounded-2xl border bg-white p-1">
+                {productSortOptions.map((option) => (
+                  <Button key={option} variant={productSort === option ? "secondary" : "ghost"} size="sm" onClick={() => setProductSort(option)}>{option}</Button>
+                ))}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -610,8 +637,13 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>국가별 매출</CardTitle>
-            <CardDescription>{scopeLabel} · {selectedComparison} 국가별 매출 증감률입니다.</CardDescription>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <CardTitle>국가별 매출</CardTitle>
+                <CardDescription>{scopeLabel} · {selectedComparison} 국가별 매출 증감률입니다.</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowAllCountries((current) => !current)}>{showAllCountries ? "접기" : "전체보기"}</Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {countryRevenue.map((item) => (
@@ -699,6 +731,7 @@ export default function AnalyticsPage() {
                       <TableHead className="text-right">할인 금액</TableHead>
                       <TableHead className="text-right">쿠폰 적용 매출</TableHead>
                       <TableHead className="text-right">순매출</TableHead>
+                      <TableHead className="text-right">효율</TableHead>
                       <TableHead className="text-right">전기간 대비 증감률</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -713,6 +746,7 @@ export default function AnalyticsPage() {
                         <TableCell className="text-right">{formatCurrency(item.discountAmount)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(item.appliedRevenue)}</TableCell>
                         <TableCell className="text-right font-black">{formatCurrency(item.netRevenue)}</TableCell>
+                        <TableCell className="text-right font-black text-indigo-600">{formatEfficiencyValue(item.discountAmount === 0 ? 0 : item.netRevenue / item.discountAmount, 1)}</TableCell>
                         <TableCell className={item.change >= 0 ? "text-right font-black text-emerald-600" : "text-right font-black text-rose-600"}>{item.change >= 0 ? "▲" : "▼"} {Math.abs(item.change).toFixed(1)}%</TableCell>
                       </TableRow>
                     ))}
