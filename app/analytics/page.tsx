@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { orders as adminOrders, type AdminOrder } from "@/lib/mock-data";
 
 const periodOptions = ["오늘", "최근 7일", "최근 30일", "이번 달", "사용자 지정"] as const;
 const comparisonOptions = ["전일 대비", "전주 대비", "전월 대비", "전년 대비"] as const;
@@ -38,6 +39,7 @@ type Kpi = { label: string; value: string; change: string; trend: "up" | "down";
 
 type DailySale = {
   date: string;
+  pointIndex: number;
   orders: number;
   gross: string;
   refund: string;
@@ -61,7 +63,7 @@ type CouponPerformance = {
 type DailyDetailProduct = { product: string; language: string; quantity: number; revenue: number; refundCount: number; change: number };
 type DailyDetailCountry = { country: string; revenue: number; orderCount: number; change: number };
 type DailyDetailCoupon = { name: string; useCount: number; discountAmount: number; netRevenue: number; efficiency: number; efficiencyChange: number };
-type DailyDetailOrder = { id: string; member: string; product: string; paymentAmount: number; paymentStatus: "결제완료" | "환불요청" | "결제대기"; shippingStatus: "배송전" | "배송대기" | "배송중" | "배송완료" | "-"; paidAt: string };
+type DailyDetailOrder = Pick<AdminOrder, "id" | "member" | "product" | "paymentAmount" | "paymentStatus" | "shippingStatus" | "date" | "paidAt">;
 type DailySalesDetail = {
   date: string;
   queryDate: string;
@@ -274,12 +276,16 @@ function getChange(current: number, previous: number, positiveDirection: "up" | 
 }
 
 function makeDailyRows(points: TrendPoint[], isHourly: boolean): DailySale[] {
-  return points.slice(0, isHourly ? 8 : 10).map((point) => {
+  const visibleCount = isHourly ? 8 : 10;
+  const startIndex = Math.max(0, points.length - visibleCount);
+
+  return points.slice(startIndex).map((point, index) => {
     const coupon = Math.round(point.grossPayment * 0.08);
     const shipping = Math.round(point.orderCount * 900);
     const total = point.netRevenue + shipping;
     return {
       date: point.date,
+      pointIndex: startIndex + index,
       orders: point.orderCount,
       gross: formatCurrency(point.grossPayment),
       refund: formatCurrency(point.refundAmount),
@@ -308,7 +314,7 @@ function formatSignedPercent(value: number) {
   return `${value >= 0 ? "▲" : "▼"} ${Math.abs(value).toFixed(1)}%`;
 }
 
-function buildDailySalesDetail(point: TrendPoint, index: number, comparison: ComparisonOption, period: PeriodOption): DailySalesDetail {
+function buildDailySalesDetail(point: TrendPoint, index: number, comparison: ComparisonOption, period: PeriodOption, matchedOrders: AdminOrder[]): DailySalesDetail {
   const couponAmount = Math.round(point.grossPayment * (0.07 + (index % 4) * 0.008));
   const newBuyerCount = Math.max(1, Math.round(point.orderCount * (0.62 + (index % 4) * 0.025)));
   const repeatBuyerCount = Math.max(0, point.orderCount - newBuyerCount);
@@ -349,21 +355,20 @@ function buildDailySalesDetail(point: TrendPoint, index: number, comparison: Com
   const refundCount = refundProducts.reduce((sum, item) => sum + item.count, 0) || Math.max(1, Math.round(point.refundAmount / 210000));
   const normalizedRefundProducts = refundProducts.length > 0 ? refundProducts : [{ product: products[0].product, count: refundCount, amount: point.refundAmount }];
 
-  const orderProducts = products.slice(0, 5);
-  const recentOrders = Array.from({ length: Math.min(10, Math.max(3, point.orderCount)) }, (_, orderIndex) => {
-    const product = orderProducts[orderIndex % orderProducts.length];
-    const paymentStatus: DailyDetailOrder["paymentStatus"] = orderIndex === 1 && point.refundAmount > 0 ? "환불요청" : orderIndex === 8 ? "결제대기" : "결제완료";
-    const shippingStatus: DailyDetailOrder["shippingStatus"] = paymentStatus === "결제대기" ? "배송전" : orderIndex % 4 === 0 ? "배송대기" : orderIndex % 4 === 1 ? "배송중" : "배송완료";
-    return {
-      id: `ORD-${queryDate.replaceAll("-", "")}-${String(orderIndex + 1).padStart(2, "0")}`,
-      member: ["지윤 김", "서준 이", "하린 최", "Oscar Ha", "Monica Shin", "도윤 정"][orderIndex % 6],
-      product: product.product,
-      paymentAmount: Math.max(29000, Math.round(product.revenue / Math.max(1, product.quantity))),
-      paymentStatus,
-      shippingStatus,
-      paidAt: `${queryDate} ${String(18 - orderIndex).padStart(2, "0")}:${String((orderIndex * 7) % 60).padStart(2, "0")}`,
-    };
-  });
+  const recentOrders = matchedOrders
+    .slice()
+    .sort((a, b) => (b.paidAt ?? b.date).localeCompare(a.paidAt ?? a.date))
+    .slice(0, 10)
+    .map((order) => ({
+      id: order.id,
+      member: order.member,
+      product: order.product,
+      paymentAmount: order.paymentAmount,
+      paymentStatus: order.paymentStatus,
+      shippingStatus: order.shippingStatus,
+      date: order.date,
+      paidAt: order.paidAt,
+    }));
 
   const topCountry = countries.reduce((best, item) => (item.change > best.change ? item : best), countries[0]);
   const topRefundProduct = normalizedRefundProducts[0];
@@ -392,7 +397,7 @@ function buildDailySalesDetail(point: TrendPoint, index: number, comparison: Com
     coupons,
     refunds: { refundCount, refundAmount: point.refundAmount, products: normalizedRefundProducts },
     recentOrders,
-    totalOrderCount: point.orderCount,
+    totalOrderCount: matchedOrders.length,
   };
 }
 
@@ -505,8 +510,11 @@ export default function AnalyticsPage() {
   }, [selectedComparison, showAllCountries, totals.netRevenue]);
 
   const dailySales = useMemo(() => makeDailyRows(trend.points, trend.isHourly), [trend.points, trend.isHourly]);
-  const selectedPoint = selectedDailyIndex === null ? null : trend.points[selectedDailyIndex] ?? null;
-  const selectedDailyDetail = selectedPoint ? buildDailySalesDetail(selectedPoint, selectedDailyIndex ?? 0, selectedComparison, selectedPeriod) : null;
+  const selectedDailySale = selectedDailyIndex === null ? null : dailySales[selectedDailyIndex] ?? null;
+  const selectedPoint = selectedDailySale ? trend.points[selectedDailySale.pointIndex] ?? null : null;
+  const selectedQueryDate = selectedDailySale ? formatQueryDate(selectedDailySale.date) : "";
+  const selectedDateOrders = useMemo(() => adminOrders.filter((order) => order.date === selectedQueryDate), [selectedQueryDate]);
+  const selectedDailyDetail = selectedPoint ? buildDailySalesDetail(selectedPoint, selectedDailySale?.pointIndex ?? 0, selectedComparison, selectedPeriod, selectedDateOrders) : null;
   const drawerProducts = selectedDailyDetail
     ? [...selectedDailyDetail.products].sort((a, b) => (drawerProductSort === "판매량순" ? b.quantity - a.quantity : b.revenue - a.revenue))
     : [];
@@ -1222,7 +1230,7 @@ export default function AnalyticsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedDailyDetail.recentOrders.map((order) => (
+                      {selectedDailyDetail.recentOrders.length > 0 ? selectedDailyDetail.recentOrders.map((order) => (
                         <TableRow key={order.id}>
                           <TableCell><Link href={`/orders/${order.id}`} className="font-mono font-black text-indigo-700 hover:text-indigo-900">{order.id}</Link></TableCell>
                           <TableCell className="font-bold">{order.member}</TableCell>
@@ -1231,7 +1239,11 @@ export default function AnalyticsPage() {
                           <TableCell><Badge variant={order.paymentStatus === "환불요청" ? "rose" : order.paymentStatus === "결제대기" ? "warning" : "success"}>{order.paymentStatus}</Badge></TableCell>
                           <TableCell><Badge variant="slate">{order.shippingStatus}</Badge></TableCell>
                         </TableRow>
-                      ))}
+                      )) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center font-bold text-slate-500">선택 날짜와 일치하는 mock 주문이 없습니다. 전체 주문 보기에서 적용된 날짜 필터를 확인할 수 있습니다.</TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>

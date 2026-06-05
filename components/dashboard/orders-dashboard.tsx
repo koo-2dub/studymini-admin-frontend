@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Copy,
   CreditCard,
@@ -140,6 +140,13 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   }), [searchParams]);
   const [activeFeature, setActiveFeature] = useState<FeatureKey>("list");
   const [filters, setFilters] = useState(initialFilters);
+
+  useEffect(() => {
+    const startDate = searchParams.get("startDate") ?? "";
+    const endDate = searchParams.get("endDate") ?? "";
+    if (!startDate && !endDate) return;
+    setFilters((current) => ({ ...current, startDate, endDate }));
+  }, [searchParams]);
 
   const productOptions = useMemo(() => Array.from(new Set(orders.map((order) => order.product))), [orders]);
   const countryOptions = useMemo(() => Array.from(new Set(orders.map((order) => order.country))), [orders]);
