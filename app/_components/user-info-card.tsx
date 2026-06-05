@@ -33,32 +33,39 @@ export function UserInfoCard({ title, description, user }: { title: string; desc
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription className="mt-2">{description}</CardDescription>
+          </div>
+          <Link
+            href={`/members/${user.memberId}`}
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-indigo-200 bg-white px-4 text-sm font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50"
+          >
+            회원 상세 보기
+          </Link>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <UserInfoItem label="이름/닉네임" value={<span className="whitespace-nowrap">{user.name}</span>} />
           <UserInfoItem
             label="User ID"
             value={
-              <Link href={`/members/${user.memberId}`} className="font-mono text-indigo-600 hover:underline">
-                {user.memberId}
-              </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link href={`/members/${user.memberId}`} className="font-mono text-indigo-600 hover:underline">
+                  {user.memberId}
+                </Link>
+                <Link href={`/members/${user.memberId}`} className="text-xs font-bold text-indigo-500 hover:underline">
+                  회원 상세 보기
+                </Link>
+              </div>
             }
           />
           <UserInfoItem label="이메일" value={<span className="break-all">{user.email}</span>} />
           <UserInfoItem label="전화번호" value={<span className="whitespace-nowrap">{user.phone}</span>} />
           <UserInfoItem label="회원 상태" value={<Badge variant={memberStatusVariant(user.memberStatus)}>{user.memberStatus}</Badge>} />
           <UserInfoItem label="최근 로그인" value={<span className="whitespace-nowrap">{user.lastLogin}</span>} />
-        </div>
-        <div className="flex justify-end">
-          <Link
-            href={`/members/${user.memberId}`}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-indigo-200 bg-white px-4 text-sm font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50"
-          >
-            회원 상세 보기
-          </Link>
         </div>
       </CardContent>
     </Card>

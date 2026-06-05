@@ -170,7 +170,7 @@ export function InquiriesDashboard() {
                 <TableRow
                   key={inquiry.id}
                   tabIndex={0}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-indigo-50/60 focus-visible:bg-indigo-50 focus-visible:outline-none"
                   onClick={() => openDetail(inquiry)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {

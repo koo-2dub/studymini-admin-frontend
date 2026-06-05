@@ -186,14 +186,20 @@ function LessonQuestionTable({ questions, onRowClick }: { questions: LessonQuest
           </TableHeader>
           <TableBody>
             {questions.map((question) => (
-              <TableRow key={question.id} className="cursor-pointer" onClick={() => onRowClick(question)}>
+              <TableRow
+                key={question.id}
+                tabIndex={0}
+                className="cursor-pointer hover:bg-indigo-50/60 focus-visible:bg-indigo-50 focus-visible:outline-none"
+                onClick={() => onRowClick(question)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onRowClick(question);
+                  }
+                }}
+              >
                 <TableCell className="whitespace-nowrap">
-                  <button
-                    className="text-left font-bold text-indigo-600 hover:underline"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    {question.userName}
-                  </button>
+                  <span className="font-bold text-indigo-600">{question.userName}</span>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">{question.language}</TableCell>
                 <TableCell className="min-w-64">

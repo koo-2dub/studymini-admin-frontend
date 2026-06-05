@@ -35,7 +35,7 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
           </Link>
         }
       />
-      <div className="mb-6">
+      <div className="space-y-6">
         <UserInfoCard
           title="문의자 정보"
           description="일반 문의를 등록한 회원의 기본 정보와 회원 상세 링크입니다."
@@ -48,8 +48,6 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
             lastLogin: inquiry.lastLogin,
           }}
         />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>
           <CardHeader>
             <CardTitle>문의 내용</CardTitle>
