@@ -75,8 +75,8 @@ export function InquiriesDashboard() {
   return (
     <>
       <PageHeader
-        eyebrow="Support desk"
-        title="General inquiries"
+        eyebrow="고객 지원"
+        title="일반 문의"
         description="일반 문의 목록, 답변 상태, 담당자를 확인하고 상세 화면에서 답변을 처리합니다."
       />
 
@@ -152,17 +152,17 @@ export function InquiriesDashboard() {
           <CardDescription>목록의 아무 행이나 클릭하면 일반 문의 상세 화면으로 이동합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[980px]">
             <TableHeader>
               <TableRow>
-                <TableHead>문의번호</TableHead>
-                <TableHead>제목</TableHead>
-                <TableHead>문의자</TableHead>
-                <TableHead>이메일</TableHead>
-                <TableHead>답변상태</TableHead>
-                <TableHead>담당자</TableHead>
-                <TableHead>문의일</TableHead>
-                <TableHead>답변일</TableHead>
+                <TableHead className="w-28 whitespace-nowrap">문의번호</TableHead>
+                <TableHead className="min-w-64 whitespace-nowrap">제목</TableHead>
+                <TableHead className="w-28 whitespace-nowrap">문의자</TableHead>
+                <TableHead className="min-w-52 whitespace-nowrap">이메일</TableHead>
+                <TableHead className="w-28 whitespace-nowrap">답변상태</TableHead>
+                <TableHead className="w-32 whitespace-nowrap">담당자</TableHead>
+                <TableHead className="w-32 whitespace-nowrap">문의일</TableHead>
+                <TableHead className="w-32 whitespace-nowrap">답변일</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -179,14 +179,14 @@ export function InquiriesDashboard() {
                     }
                   }}
                 >
-                  <TableCell className="font-bold text-slate-900">{inquiry.id}</TableCell>
-                  <TableCell className="min-w-56 font-semibold text-slate-800">{inquiry.subject}</TableCell>
-                  <TableCell>{inquiry.requester}</TableCell>
-                  <TableCell>{inquiry.email}</TableCell>
-                  <TableCell><InquiryStatusBadge status={inquiry.status} /></TableCell>
-                  <TableCell>{inquiry.assignee}</TableCell>
-                  <TableCell>{inquiry.inquiryDate}</TableCell>
-                  <TableCell>{inquiry.answeredAt}</TableCell>
+                  <TableCell className="whitespace-nowrap font-bold text-slate-900">{inquiry.id}</TableCell>
+                  <TableCell className="min-w-64 font-semibold text-slate-800">{inquiry.subject}</TableCell>
+                  <TableCell className="whitespace-nowrap">{inquiry.requester}</TableCell>
+                  <TableCell className="whitespace-nowrap">{inquiry.email}</TableCell>
+                  <TableCell className="whitespace-nowrap"><InquiryStatusBadge status={inquiry.status} /></TableCell>
+                  <TableCell className="whitespace-nowrap">{inquiry.assignee}</TableCell>
+                  <TableCell className="whitespace-nowrap">{inquiry.inquiryDate}</TableCell>
+                  <TableCell className="whitespace-nowrap">{inquiry.answeredAt}</TableCell>
                 </TableRow>
               ))}
               {filteredInquiries.length === 0 && (

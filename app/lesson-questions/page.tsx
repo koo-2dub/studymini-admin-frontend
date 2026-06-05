@@ -2,6 +2,7 @@
 
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -60,12 +61,12 @@ export default function LessonQuestionsPage() {
     [trashedQuestions.length],
   );
 
-  const handleRestore = (event: React.MouseEvent, id: string) => {
+  const handleRestore = (event: MouseEvent, id: string) => {
     event.stopPropagation();
     setToast(`${id} 학습 문의를 일반 목록으로 복구했습니다. (mock)`);
   };
 
-  const handleDelete = (event: React.MouseEvent, id: string) => {
+  const handleDelete = (event: MouseEvent, id: string) => {
     event.stopPropagation();
     if (window.confirm("영구 삭제하면 복구할 수 없습니다. 계속 진행할까요?")) {
       setToast(`${id} 학습 문의를 영구 삭제 처리했습니다. (mock)`);
@@ -75,8 +76,8 @@ export default function LessonQuestionsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Academic support"
-        title="Lesson questions"
+        eyebrow="학습 지원"
+        title="학습 질문"
         description="학습 문의를 승인하고 답변 상태와 휴지통 항목을 관리합니다."
       />
 
@@ -171,22 +172,22 @@ function LessonQuestionTable({ questions, onRowClick }: { questions: LessonQuest
         <CardDescription>행을 클릭하면 별도 상세 페이지에서 승인 및 답변 처리를 진행합니다.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <Table>
+        <Table className="min-w-[1040px]">
           <TableHeader>
             <TableRow>
-              <TableHead>유저</TableHead>
-              <TableHead>언어</TableHead>
-              <TableHead>강의 정보</TableHead>
-              <TableHead>질문 미리보기</TableHead>
-              <TableHead>공개상태</TableHead>
-              <TableHead>답변상태</TableHead>
-              <TableHead>문의일</TableHead>
+              <TableHead className="w-32 whitespace-nowrap">유저</TableHead>
+              <TableHead className="w-24 whitespace-nowrap">언어</TableHead>
+              <TableHead className="min-w-64 whitespace-nowrap">강의 정보</TableHead>
+              <TableHead className="min-w-80 whitespace-nowrap">질문 미리보기</TableHead>
+              <TableHead className="w-28 whitespace-nowrap">공개상태</TableHead>
+              <TableHead className="w-28 whitespace-nowrap">답변상태</TableHead>
+              <TableHead className="w-40 whitespace-nowrap">문의일</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {questions.map((question) => (
               <TableRow key={question.id} className="cursor-pointer" onClick={() => onRowClick(question)}>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <button
                     className="text-left font-bold text-indigo-600 hover:underline"
                     onClick={(event) => event.stopPropagation()}
@@ -194,15 +195,15 @@ function LessonQuestionTable({ questions, onRowClick }: { questions: LessonQuest
                     {question.userName}
                   </button>
                 </TableCell>
-                <TableCell>{question.language}</TableCell>
-                <TableCell className="min-w-56">
+                <TableCell className="whitespace-nowrap">{question.language}</TableCell>
+                <TableCell className="min-w-64">
                   <p className="font-bold text-slate-900">{question.courseLevel} / {question.lessonDay}</p>
                   <p className="text-sm text-slate-500">{question.lectureTitle}</p>
                 </TableCell>
-                <TableCell className="min-w-72 text-slate-600">{question.questionPreview}</TableCell>
-                <TableCell><Badge variant={badgeVariant(question.visibilityStatus)}>{question.visibilityStatus}</Badge></TableCell>
-                <TableCell><Badge variant={badgeVariant(question.answerStatus)}>{question.answerStatus}</Badge></TableCell>
-                <TableCell>{formatDateTime(question.askedAt)}</TableCell>
+                <TableCell className="min-w-80 text-slate-600">{question.questionPreview}</TableCell>
+                <TableCell className="whitespace-nowrap"><Badge variant={badgeVariant(question.visibilityStatus)}>{question.visibilityStatus}</Badge></TableCell>
+                <TableCell className="whitespace-nowrap"><Badge variant={badgeVariant(question.answerStatus)}>{question.answerStatus}</Badge></TableCell>
+                <TableCell className="whitespace-nowrap">{formatDateTime(question.askedAt)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -218,8 +219,8 @@ function TrashTable({
   onDelete,
 }: {
   questions: LessonQuestionRecord[];
-  onRestore: (event: React.MouseEvent, id: string) => void;
-  onDelete: (event: React.MouseEvent, id: string) => void;
+  onRestore: (event: MouseEvent, id: string) => void;
+  onDelete: (event: MouseEvent, id: string) => void;
 }) {
   return (
     <Card>
@@ -228,32 +229,32 @@ function TrashTable({
         <CardDescription>삭제된 학습 문의를 복구하거나 영구 삭제합니다.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <Table>
+        <Table className="min-w-[1040px]">
           <TableHeader>
             <TableRow>
-              <TableHead>유저</TableHead>
-              <TableHead>언어</TableHead>
-              <TableHead>강의 정보</TableHead>
-              <TableHead>질문 미리보기</TableHead>
-              <TableHead>삭제일</TableHead>
-              <TableHead>삭제한 관리자</TableHead>
-              <TableHead>액션</TableHead>
+              <TableHead className="w-32 whitespace-nowrap">유저</TableHead>
+              <TableHead className="w-24 whitespace-nowrap">언어</TableHead>
+              <TableHead className="min-w-64 whitespace-nowrap">강의 정보</TableHead>
+              <TableHead className="min-w-80 whitespace-nowrap">질문 미리보기</TableHead>
+              <TableHead className="w-40 whitespace-nowrap">삭제일</TableHead>
+              <TableHead className="w-36 whitespace-nowrap">삭제한 관리자</TableHead>
+              <TableHead className="w-44 whitespace-nowrap">액션</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {questions.map((question) => (
               <TableRow key={question.id}>
-                <TableCell className="font-bold text-slate-900">{question.userName}</TableCell>
-                <TableCell>{question.language}</TableCell>
-                <TableCell className="min-w-56">
+                <TableCell className="whitespace-nowrap font-bold text-slate-900">{question.userName}</TableCell>
+                <TableCell className="whitespace-nowrap">{question.language}</TableCell>
+                <TableCell className="min-w-64">
                   <p className="font-bold text-slate-900">{question.courseLevel} / {question.lessonDay}</p>
                   <p className="text-sm text-slate-500">{question.lectureTitle}</p>
                 </TableCell>
-                <TableCell className="min-w-72 text-slate-600">{question.questionPreview}</TableCell>
-                <TableCell>{formatDateTime(question.deletedAt)}</TableCell>
-                <TableCell>{question.deletedBy}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
+                <TableCell className="min-w-80 text-slate-600">{question.questionPreview}</TableCell>
+                <TableCell className="whitespace-nowrap">{formatDateTime(question.deletedAt)}</TableCell>
+                <TableCell className="whitespace-nowrap">{question.deletedBy}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  <div className="flex flex-nowrap gap-2">
                     <Button type="button" variant="outline" size="sm" onClick={(event) => onRestore(event, question.id)}>
                       <RotateCcw className="h-4 w-4" />
                       복구

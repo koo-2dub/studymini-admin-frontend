@@ -1,9 +1,9 @@
-import { ArrowLeft, CalendarDays, Mail, UserRound } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { UserInfoCard } from "@/app/_components/user-info-card";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { inquiries } from "../data";
@@ -11,22 +11,6 @@ import { AnswerPanel } from "./answer-panel";
 
 export function generateStaticParams() {
   return inquiries.map((inquiry) => ({ id: inquiry.id }));
-}
-
-function InfoCard({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value: string }) {
-  return (
-    <Card>
-      <CardContent className="flex items-start gap-3 p-5">
-        <div className="rounded-2xl bg-indigo-50 p-3 text-indigo-600">
-          <Icon className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
-          <p className="mt-1 font-bold text-slate-900">{value}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 export default async function InquiryDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,8 +22,8 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
   return (
     <>
       <PageHeader
-        eyebrow="Support desk"
-        title="General inquiry detail"
+        eyebrow="일반 문의"
+        title="일반 문의 상세"
         description="일반 문의 상세 내용을 확인하고 답변을 저장합니다."
         action={
           <Link
@@ -51,25 +35,20 @@ export default async function InquiryDetailPage({ params }: { params: Promise<{ 
           </Link>
         }
       />
-      <section className="mb-6 grid gap-4 md:grid-cols-4">
-        <InfoCard icon={UserRound} label="문의자" value={inquiry.requester} />
-        <InfoCard icon={Mail} label="이메일" value={inquiry.email} />
-        <InfoCard icon={CalendarDays} label="문의일" value={inquiry.inquiryDate} />
-        <Card>
-          <CardContent className="flex h-full items-center justify-between gap-3 p-5">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">답변상태</p>
-              <div className="mt-2">
-                <Badge variant={inquiry.status === "답변완료" ? "success" : "warning"}>{inquiry.status}</Badge>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">담당자</p>
-              <p className="mt-2 font-bold text-slate-900">{inquiry.assignee}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      <div className="mb-6">
+        <UserInfoCard
+          title="문의자 정보"
+          description="일반 문의를 등록한 회원의 기본 정보와 회원 상세 링크입니다."
+          user={{
+            name: inquiry.requester,
+            memberId: inquiry.memberId,
+            email: inquiry.email,
+            phone: inquiry.phone,
+            memberStatus: inquiry.memberStatus,
+            lastLogin: inquiry.lastLogin,
+          }}
+        />
+      </div>
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>
           <CardHeader>

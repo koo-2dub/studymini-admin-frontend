@@ -4,10 +4,14 @@ import { ArrowLeft, ExternalLink, Save, Trash2, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
+import { UserInfoCard } from "@/app/_components/user-info-card";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { members } from "@/lib/mock-data";
 
 import { lessonQuestions } from "../data";
 
@@ -20,7 +24,7 @@ const badgeVariant = (value: string): BadgeProps["variant"] => {
   return "slate";
 };
 
-function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
+function InfoItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4">
       <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
@@ -29,7 +33,7 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <Card>
       <CardHeader>
@@ -81,6 +85,8 @@ export default function LessonQuestionDetailPage() {
       </Card>
     );
   }
+
+  const member = members.find((item) => item.id === question.memberId);
 
   const addLog = (action: string, note: string) => {
     setLogs((previous) => [{ action, actor: currentAdminName, at: nowLabel, note }, ...previous]);
@@ -144,19 +150,20 @@ export default function LessonQuestionDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <Section title="질문 정보" description="학습 문의의 작성자와 강의 정보를 확인합니다.">
-            <div className="grid gap-4 md:grid-cols-3">
-              <InfoItem label="유저" value={`${question.userName} (${question.memberId})`} />
-              <InfoItem label="공개상태" value={<Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>} />
-              <InfoItem label="답변상태" value={<Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>} />
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <InfoItem label="이메일" value={question.email} />
-              <InfoItem label="문의일" value={question.askedAt} />
-            </div>
-          </Section>
+          <UserInfoCard
+            title="질문자 정보"
+            description="학습 질문을 등록한 회원의 기본 정보와 회원 상세 링크입니다."
+            user={{
+              name: question.userName,
+              memberId: question.memberId,
+              email: question.email,
+              phone: member?.phone ?? "-",
+              memberStatus: member?.status ?? "-",
+              lastLogin: member?.lastLogin ?? "-",
+            }}
+          />
 
-          <Section title="강의 및 질문" description="학습 문의가 등록된 강의와 질문 본문입니다.">
+          <Section title="질문 내용" description="학습 질문이 등록된 강의와 질문 본문입니다.">
             <div className="rounded-2xl border border-slate-100 bg-white p-5">
               <p className="text-sm font-bold text-slate-500">강의 정보</p>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
