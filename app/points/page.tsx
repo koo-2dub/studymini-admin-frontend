@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CalendarDays, Coins, FileSpreadsheet, MinusCircle, PlusCircle, Search, Settings, ShieldAlert, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, CalendarDays, Coins, FileSpreadsheet, MinusCircle, PlusCircle, Search, Settings, ShieldAlert } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -142,8 +142,6 @@ export default function PointsPage() {
     });
   }, [adminQuery, campaignQuery, memberQuery, methodFilter, orderQuery, pointTypeFilter, typeFilter]);
 
-  const activeCampaignCount = campaigns.filter((campaign) => campaign.status === "진행중").length;
-  const failedIssueCount = campaigns.reduce((sum, campaign) => sum + campaign.failedCount, 0);
   const isCsvMode = adjustmentMode.includes("CSV");
   const isSetMode = adjustmentMode === "SET";
   const operationLabel = adjustmentMode.replace("개별 ", "").replace("CSV ", "");
@@ -186,66 +184,32 @@ export default function PointsPage() {
               <StatCard label="오늘 사용 포인트" value="84K P" change="주문 사용 완료" tone="indigo" />
               <StatCard label="오늘 차감 포인트" value="12K P" change="관리자 차감·SET 감소" tone="amber" />
               <StatCard label="오늘 소멸 포인트" value="32K P" change="배치 소멸 완료" tone="rose" />
-              <StatCard label="7일 내 소멸 예정" value="284K P" change="알림 우선 확인" tone="rose" />
-              <StatCard label="30일 내 소멸 예정" value="1.1M P" change="대상 342명" tone="rose" />
-              <StatCard label="활성 캠페인 수" value={`${activeCampaignCount}개`} change="진행중 캠페인" tone="emerald" />
-              <StatCard label="지급 실패 건수" value={`${formatNumber(failedIssueCount)}건`} change="캠페인 실패 합계" tone="amber" />
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />소멸 예정 포인트</CardTitle>
-                  <CardDescription>회원별 소멸 예정 포인트와 알림 발송 상태를 빠르게 확인합니다.</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <Table>
-                    <TableHeader><TableRow><TableHead>회원</TableHead><TableHead>캠페인</TableHead><TableHead>포인트 유형</TableHead><TableHead>소멸 예정</TableHead><TableHead>소멸일</TableHead><TableHead>알림</TableHead><TableHead>상태</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {expiringPoints.map((item) => (
-                        <TableRow key={`${item.member}-${item.expireDate}`}>
-                          <TableCell className="font-semibold">{item.member}</TableCell>
-                          <TableCell>{item.campaign}</TableCell>
-                          <TableCell>{item.pointType}</TableCell>
-                          <TableCell className="font-black text-rose-600">{item.points}</TableCell>
-                          <TableCell>{item.expireDate}</TableCell>
-                          <TableCell><Badge variant={statusVariant(item.notification)}>{item.notification}</Badge></TableCell>
-                          <TableCell><Badge variant={statusVariant(item.status)}>{item.status}</Badge></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><SlidersHorizontal className="h-5 w-5 text-primary" />운영 바로가기</CardTitle>
-                  <CardDescription>운영자가 자주 수행하는 업무로 이동합니다.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { title: "포인트 캠페인 생성", target: "campaigns" as PointTab },
-                    { title: "CS 보상 수동 지급", target: "manual" as PointTab, mode: "개별 지급" as AdjustmentMode },
-                    { title: "오지급 정정 차감", target: "manual" as PointTab, mode: "개별 차감" as AdjustmentMode },
-                    { title: "포인트 로그 조회", target: "logs" as PointTab },
-                  ].map((action) => (
-                    <button
-                      key={action.title}
-                      className="flex w-full items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 text-left text-sm font-bold hover:border-indigo-100 hover:bg-indigo-50"
-                      onClick={() => {
-                        setActiveTab(action.target);
-                        if (action.mode) setAdjustmentMode(action.mode);
-                      }}
-                      type="button"
-                    >
-                      {action.title}
-                      <span className="text-primary">이동</span>
-                    </button>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />소멸 예정 포인트</CardTitle>
+                <CardDescription>회원별 소멸 예정 포인트와 알림 발송 상태를 빠르게 확인합니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <Table>
+                  <TableHeader><TableRow><TableHead>회원</TableHead><TableHead>캠페인</TableHead><TableHead>포인트 유형</TableHead><TableHead>소멸 예정</TableHead><TableHead>소멸일</TableHead><TableHead>알림</TableHead><TableHead>상태</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {expiringPoints.map((item) => (
+                      <TableRow key={`${item.member}-${item.expireDate}`}>
+                        <TableCell className="font-semibold">{item.member}</TableCell>
+                        <TableCell>{item.campaign}</TableCell>
+                        <TableCell>{item.pointType}</TableCell>
+                        <TableCell className="font-black text-rose-600">{item.points}</TableCell>
+                        <TableCell>{item.expireDate}</TableCell>
+                        <TableCell><Badge variant={statusVariant(item.notification)}>{item.notification}</Badge></TableCell>
+                        <TableCell><Badge variant={statusVariant(item.status)}>{item.status}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -270,51 +234,24 @@ export default function PointsPage() {
               </CardContent>
             </Card>
 
-            <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5 text-primary" />포인트 사용 정책 설명</CardTitle>
-                  <CardDescription>일반/기간제 포인트를 합산한 전체 사용 가능 포인트 기준으로 한도를 계산합니다.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm font-semibold leading-7 text-slate-700">
-                  <p className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-indigo-900">
-                    포인트 사용 한도는 일반/기간제 포인트별로 따로 계산하지 않고, 회원의 전체 사용 가능 포인트를 기준으로 계산합니다.
-                  </p>
-                  <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                    <p className="font-black text-slate-950">차감 순서</p>
-                    <ol className="mt-2 list-decimal space-y-1 pl-5">
-                      <li>기간제 포인트</li>
-                      <li>일반 포인트</li>
-                    </ol>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>계산 예시</CardTitle>
-                  <CardDescription>상품금액 100,000원, 최대 사용 가능 비율 20% 기준입니다.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  {[
-                    ["일반 포인트", "3,000P"],
-                    ["기간제 포인트", "5,000P"],
-                    ["총 보유 포인트", "8,000P"],
-                    ["상품금액", "100,000원"],
-                    ["주문 기준 최대 사용 가능 포인트", "20,000P"],
-                    ["실제 사용 가능 포인트", "8,000P"],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 font-semibold">
-                      <span className="text-slate-500">{label}</span>
-                      <span className="font-black text-slate-950">{value}</span>
-                    </div>
-                  ))}
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 font-black text-emerald-900">
-                    차감 순서: 기간제 포인트 5,000P → 일반 포인트 3,000P
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5 text-primary" />포인트 사용 정책 설명</CardTitle>
+                <CardDescription>일반/기간제 포인트를 합산한 전체 사용 가능 포인트 기준으로 한도를 계산합니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm font-semibold leading-7 text-slate-700">
+                <p className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-indigo-900">
+                  포인트 사용 한도는 일반/기간제 포인트별로 따로 계산하지 않고, 회원의 전체 사용 가능 포인트를 기준으로 계산합니다.
+                </p>
+                <div className="rounded-2xl border border-slate-100 bg-white p-4">
+                  <p className="font-black text-slate-950">차감 순서</p>
+                  <ol className="mt-2 list-decimal space-y-1 pl-5">
+                    <li>기간제 포인트</li>
+                    <li>일반 포인트</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 

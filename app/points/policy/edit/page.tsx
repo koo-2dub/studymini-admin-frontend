@@ -63,51 +63,24 @@ export default function PointPolicyEditPage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><AlertCircle className="h-5 w-5 text-primary" />포인트 사용 정책 설명</CardTitle>
-              <CardDescription>운영자가 저장 전 계산 기준을 명확히 확인할 수 있도록 고정 노출합니다.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm font-semibold leading-7 text-slate-700">
-              <p className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-indigo-900">
-                포인트 사용 한도는 일반/기간제 포인트별로 따로 계산하지 않고, 회원의 전체 사용 가능 포인트를 기준으로 계산합니다.
-              </p>
-              <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                <p className="font-black text-slate-950">차감 순서</p>
-                <ol className="mt-2 list-decimal space-y-1 pl-5">
-                  <li>기간제 포인트</li>
-                  <li>일반 포인트</li>
-                </ol>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>사용 가능 포인트 계산 예시</CardTitle>
-              <CardDescription>상품금액 100,000원, 최대 사용 가능 비율 20% 기준입니다.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {[
-                ["일반 포인트", "3,000P"],
-                ["기간제 포인트", "5,000P"],
-                ["총 보유 포인트", "8,000P"],
-                ["상품금액", "100,000원"],
-                ["주문 기준 최대 사용 가능 포인트", "20,000P"],
-                ["실제 사용 가능 포인트", "8,000P"],
-              ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 font-semibold">
-                  <span className="text-slate-500">{label}</span>
-                  <span className="font-black text-slate-950">{value}</span>
-                </div>
-              ))}
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 font-black text-emerald-900">
-                차감 순서: 기간제 포인트 5,000P → 일반 포인트 3,000P
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><AlertCircle className="h-5 w-5 text-primary" />포인트 사용 정책 설명</CardTitle>
+            <CardDescription>운영자가 저장 전 계산 기준을 명확히 확인할 수 있도록 고정 노출합니다.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm font-semibold leading-7 text-slate-700">
+            <p className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-indigo-900">
+              포인트 사용 한도는 일반/기간제 포인트별로 따로 계산하지 않고, 회원의 전체 사용 가능 포인트를 기준으로 계산합니다.
+            </p>
+            <div className="rounded-2xl border border-slate-100 bg-white p-4">
+              <p className="font-black text-slate-950">차감 순서</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>기간제 포인트</li>
+                <li>일반 포인트</li>
+              </ol>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

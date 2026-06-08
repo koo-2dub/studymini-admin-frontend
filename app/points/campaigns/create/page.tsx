@@ -66,7 +66,6 @@ export default function PointCampaignCreatePage() {
             <Field label="캠페인명"><Input defaultValue="신규가입 기본 포인트" /></Field>
             <Field label="캠페인 목적"><Select value={purpose} onChange={(event) => setPurpose(event.target.value as PointCampaignPurpose)}>{campaignPurposes.map((option) => <option key={option}>{option}</option>)}</Select></Field>
             <Field label="포인트 유형"><Select value={pointType} onChange={(event) => setPointType(event.target.value as PointType)}>{pointTypes.map((option) => <option key={option}>{option}</option>)}</Select></Field>
-            <Field label="알림 발송 여부"><Select value="발송"><option>발송</option><option>미발송</option></Select></Field>
             <label className="space-y-1 text-sm font-semibold text-slate-700 md:col-span-2">
               관리자 메모
               <textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary" defaultValue={`${purpose} 목적의 ${pointType} 지급 캠페인입니다.`} />
