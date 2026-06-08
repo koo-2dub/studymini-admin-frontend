@@ -36,7 +36,6 @@ export const navItems: (NavLinkItem | NavGroupItem)[] = [
     title: "수강 권한 관리",
     icon: KeyRound,
     children: [
-      { title: "체험단 관리", href: "/access/trials" },
       { title: "수강코드 관리", href: "/access/codes" },
     ],
   },
