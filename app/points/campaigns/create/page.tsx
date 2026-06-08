@@ -1,12 +1,15 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FileSpreadsheet, Search, Send, Sparkles } from "lucide-react";
+import { CalendarClock, FileSpreadsheet, Search, Send, Sparkles } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatPoints } from "../../data";
+import { campaignPurposes, formatPoints, pointTypes, type PointCampaignPurpose, type PointType } from "../../data";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -21,8 +24,10 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" {...props} />;
 }
 
-function Select({ children, defaultValue }: { children: React.ReactNode; defaultValue?: string }) {
-  return <select className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue={defaultValue}>{children}</select>;
+function Select({ children, value, defaultValue, onChange }: { children: React.ReactNode; value?: string; defaultValue?: string; onChange?: React.ChangeEventHandler<HTMLSelectElement> }) {
+  const selectProps = onChange ? { value, onChange } : { defaultValue: defaultValue ?? value };
+
+  return <select className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" {...selectProps}>{children}</select>;
 }
 
 const previewTargets = [
@@ -32,16 +37,22 @@ const previewTargets = [
 ];
 
 export default function PointCampaignCreatePage() {
+  const [pointType, setPointType] = useState<PointType>("일반 포인트");
+  const [purpose, setPurpose] = useState<PointCampaignPurpose>("신규가입");
   const expectedTargetCount = previewTargets.length;
   const expectedTotal = previewTargets.reduce((sum, target) => sum + target.points, 0);
-  const expectedExpiringTotal = expectedTotal;
+  const expectedExpiringTotal = pointType === "기간제 포인트" ? expectedTotal : 0;
+  const summaryText = useMemo(() => {
+    if (pointType === "일반 포인트") return "일반 포인트 · 정책 기본값 12개월 또는 직접 설정";
+    return "기간제 포인트 · 사용 기간과 만료일 직접 설정";
+  }, [pointType]);
 
   return (
     <>
       <PageHeader
         eyebrow="Rewards"
-        title="기간제한 포인트 캠페인 생성"
-        description="기간, 만료 기준, 지급 설정, 대상자를 Mock UI로 구성하고 저장 전 요약을 검토합니다."
+        title="포인트 캠페인 생성"
+        description="신규가입, 이벤트, 리뷰, 복귀회원, 환급 이벤트 등 포인트 지급 캠페인을 생성합니다."
         action={<Button asChild variant="secondary"><Link href="/points">포인트 관리로</Link></Button>}
       />
 
@@ -49,51 +60,59 @@ export default function PointCampaignCreatePage() {
         <Card>
           <CardHeader>
             <CardTitle>기본 정보</CardTitle>
-            <CardDescription>운영자가 캠페인을 식별할 수 있는 이름, 코드, 상태를 입력합니다.</CardDescription>
+            <CardDescription>캠페인명, 목적, 포인트 유형, 관리자 메모를 입력합니다.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field label="캠페인명"><Input defaultValue="7월 장기 미사용 회원 리마인드" /></Field>
-            <Field label="캠페인 코드"><Input defaultValue="POINT-REMIND-202607" /></Field>
-            <Field label="월렛 선택"><Select defaultValue="기간제 포인트"><option>기간제 포인트</option><option>이벤트 포인트</option><option>일반 포인트</option></Select></Field>
-            <Field label="상태"><Select defaultValue="예정"><option>예정</option><option>진행중</option><option>종료</option></Select></Field>
+            <Field label="캠페인명"><Input defaultValue="신규가입 기본 포인트" /></Field>
+            <Field label="캠페인 목적"><Select value={purpose} onChange={(event) => setPurpose(event.target.value as PointCampaignPurpose)}>{campaignPurposes.map((option) => <option key={option}>{option}</option>)}</Select></Field>
+            <Field label="포인트 유형"><Select value={pointType} onChange={(event) => setPointType(event.target.value as PointType)}>{pointTypes.map((option) => <option key={option}>{option}</option>)}</Select></Field>
+            <Field label="알림 발송 여부"><Select value="발송"><option>발송</option><option>미발송</option></Select></Field>
             <label className="space-y-1 text-sm font-semibold text-slate-700 md:col-span-2">
-              설명/메모
-              <textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary" defaultValue="30일 이상 접속하지 않은 회원에게 재방문 유도를 위한 기간제한 포인트를 지급합니다." />
+              관리자 메모
+              <textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary" defaultValue={`${purpose} 목적의 ${pointType} 지급 캠페인입니다.`} />
             </label>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>기간/만료 설정</CardTitle>
-            <CardDescription>지급 가능 기간, 실제 사용 가능 기간, 만료 기준을 설정합니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <Field label="지급 가능 시작일"><Input type="date" defaultValue="2026-07-01" /></Field>
-            <Field label="지급 가능 종료일"><Input type="date" defaultValue="2026-07-31" /></Field>
-            <Field label="사용 시작일"><Input type="date" defaultValue="2026-07-01" /></Field>
-            <Field label="사용 종료일"><Input type="date" defaultValue="2026-08-15" /></Field>
-            <Field label="만료 기준"><Select defaultValue="사용 종료일 23:59"><option>사용 종료일 23:59</option><option>캠페인 종료일</option><option>지급일 기준 30일</option></Select></Field>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle>지급 설정</CardTitle>
-            <CardDescription>지급 포인트와 발송 여부, 관리자 사유를 지정합니다.</CardDescription>
+            <CardDescription>지급 대상, 지급 포인트, 지급 기간을 설정합니다.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Field label="기본 지급 포인트"><Input defaultValue="5000" /></Field>
-            <Field label="지급 유형"><Select defaultValue="고정 포인트"><option>고정 포인트</option><option>회원별 포인트</option></Select></Field>
-            <Field label="알림 발송 여부"><Select defaultValue="발송"><option>발송</option><option>미발송</option></Select></Field>
-            <Field label="관리자 사유"><Select defaultValue="리마인드 이벤트"><option>리마인드 이벤트</option><option>CS 보상</option><option>마케팅 캠페인</option><option>기타</option></Select></Field>
+            <Field label="지급 포인트"><Input defaultValue="5000" /></Field>
+            <Field label="지급 대상"><Select value="선택/CSV 대상"><option>선택/CSV 대상</option><option>조건 충족 전체 회원</option><option>신규가입 회원</option></Select></Field>
+            <Field label="지급 시작일"><Input type="date" defaultValue="2026-07-01" /></Field>
+            <Field label="지급 종료일"><Input type="date" defaultValue="2026-07-31" /></Field>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>대상자 추가</CardTitle>
-            <CardDescription>회원 검색 또는 CSV 업로드로 대상자를 추가하는 Mock UI입니다.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><CalendarClock className="h-5 w-5 text-primary" />유효기간 설정</CardTitle>
+            <CardDescription>포인트 유형에 따라 필요한 만료 정보를 입력합니다.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pointType === "일반 포인트" ? (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <Field label="유효기간 설정 방식"><Select value="정책 기본값 사용"><option>정책 기본값 사용</option><option>직접 설정</option></Select></Field>
+                <Field label="유효기간 N개월"><Input defaultValue="12" /></Field>
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm font-semibold text-indigo-900">정책 기본값은 일반 포인트 지급일 기준 12개월입니다.</div>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <Field label="사용 시작일"><Input type="date" defaultValue="2026-07-01" /></Field>
+                <Field label="사용 종료일"><Input type="date" defaultValue="2026-07-31" /></Field>
+                <Field label="만료일"><Input type="datetime-local" defaultValue="2026-07-31T23:59" /></Field>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>지급 대상 추가</CardTitle>
+            <CardDescription>회원 검색 또는 CSV 업로드로 지급 대상자를 추가합니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
@@ -109,27 +128,15 @@ export default function PointCampaignCreatePage() {
               <div className="rounded-2xl border-2 border-dashed border-indigo-100 bg-indigo-50/60 p-6 text-center">
                 <FileSpreadsheet className="mx-auto h-10 w-10 text-primary" />
                 <p className="mt-3 text-sm font-black">CSV 업로드</p>
-                <p className="mt-1 text-xs text-slate-500">user_id, email, points 컬럼을 사용하는 Mock 템플릿입니다.</p>
+                <p className="mt-1 text-xs text-slate-500">user_id, email, points 컬럼을 사용하는 템플릿입니다.</p>
                 <Button className="mt-4" variant="secondary">CSV 파일 선택</Button>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-                <p className="text-xs font-bold text-indigo-700">예상 지급 대상</p>
-                <p className="mt-2 text-2xl font-black text-slate-950">{expectedTargetCount}명</p>
-                <p className="mt-1 text-xs font-semibold text-indigo-700">선택/업로드 즉시 반영</p>
-              </div>
-              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                <p className="text-xs font-bold text-emerald-700">예상 지급 포인트</p>
-                <p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedTotal)}</p>
-                <p className="mt-1 text-xs font-semibold text-emerald-700">대상별 지급 포인트 합계</p>
-              </div>
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4">
-                <p className="text-xs font-bold text-rose-700">예상 소멸 예정 포인트</p>
-                <p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedExpiringTotal)}</p>
-                <p className="mt-1 text-xs font-semibold text-rose-700">기간제 만료 대상 예상치</p>
-              </div>
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4"><p className="text-xs font-bold text-indigo-700">예상 지급 대상</p><p className="mt-2 text-2xl font-black text-slate-950">{expectedTargetCount}명</p><p className="mt-1 text-xs font-semibold text-indigo-700">선택/업로드 즉시 반영</p></div>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4"><p className="text-xs font-bold text-emerald-700">예상 지급 포인트</p><p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedTotal)}</p><p className="mt-1 text-xs font-semibold text-emerald-700">대상별 지급 포인트 합계</p></div>
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4"><p className="text-xs font-bold text-rose-700">예상 소멸 예정 포인트</p><p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedExpiringTotal)}</p><p className="mt-1 text-xs font-semibold text-rose-700">기간제 포인트 선택 시 반영</p></div>
             </div>
 
             <div className="overflow-x-auto">
@@ -157,8 +164,8 @@ export default function PointCampaignCreatePage() {
             <CardDescription>저장 전 캠페인 설정과 예상 지급 규모를 확인합니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">캠페인 설정 요약</p><p className="mt-2 font-black text-slate-950">기간제 포인트 · 예정 · 사용 종료일 만료</p></div>
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">캠페인 설정 요약</p><p className="mt-2 font-black text-slate-950">{purpose} · {summaryText}</p></div>
               <div className="rounded-2xl bg-indigo-50 p-4"><p className="text-xs font-bold text-indigo-700">예상 지급 대상 수</p><p className="mt-2 text-2xl font-black text-slate-950">{expectedTargetCount}명</p></div>
               <div className="rounded-2xl bg-emerald-50 p-4"><p className="text-xs font-bold text-emerald-700">예상 총 지급 포인트</p><p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedTotal)}</p></div>
               <div className="rounded-2xl bg-rose-50 p-4"><p className="text-xs font-bold text-rose-700">예상 소멸 예정 포인트</p><p className="mt-2 text-2xl font-black text-slate-950">{formatPoints(expectedExpiringTotal)}</p></div>

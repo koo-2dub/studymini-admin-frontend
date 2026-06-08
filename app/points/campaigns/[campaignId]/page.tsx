@@ -66,8 +66,8 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
     <>
       <PageHeader
         eyebrow="Rewards"
-        title="기간제한 포인트 캠페인 상세"
-        description="기간제한 포인트를 누구에게 지급했고, 누가 언제 얼마를 소멸 예정으로 보유 중인지 확인합니다."
+        title="포인트 캠페인 상세"
+        description="포인트 캠페인을 누구에게 지급했고, 누가 언제 얼마를 사용·소멸 예정으로 보유 중인지 확인합니다."
         action={<Button asChild variant="secondary"><Link href="/points">포인트 목록으로</Link></Button>}
       />
 
@@ -80,11 +80,12 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant={statusVariant(campaign.status)}>{campaign.status}</Badge>
-              <Badge variant="slate">{campaign.wallet}</Badge>
+              <Badge variant="slate">{campaign.pointType}</Badge>
             </div>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {summaryCard("캠페인 상태", campaign.status, campaign.wallet)}
+            {summaryCard("캠페인 상태", campaign.status, campaign.pointType)}
+            {summaryCard("캠페인 목적", campaign.purpose, "지급 사유 분류")}
             {summaryCard("지급 대상 수", `${formatNumber(campaign.targetCount)}명`, "캠페인 타겟")}
             {summaryCard("지급 완료 수", `${formatNumber(campaign.issuedCount)}명`, `${Math.round((campaign.issuedCount / Math.max(campaign.targetCount, 1)) * 100)}% 지급 완료`)}
             {summaryCard("지급 실패 수", `${formatNumber(campaign.failedCount)}명`, "운영 우선 확인")}
@@ -105,7 +106,8 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
             <CardContent className="grid gap-3">
               {infoRow("캠페인명", campaign.name)}
               {infoRow("캠페인 코드", <span className="font-mono">{campaign.code}</span>)}
-              {infoRow("월렛", campaign.wallet)}
+              {infoRow("캠페인 목적", campaign.purpose)}
+              {infoRow("포인트 유형", campaign.pointType)}
               {infoRow("지급 기간", `${campaign.startDate} ~ ${campaign.endDate}`)}
               {infoRow("사용 가능 기간", `${campaign.usageStartDate} ~ ${campaign.usageEndDate}`)}
               {infoRow("만료 기준", campaign.expirationRule)}
@@ -287,7 +289,7 @@ export default async function PointCampaignDetailPage({ params }: { params: Prom
           </CardHeader>
           <CardContent className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm leading-6 text-indigo-900">
             <FileSpreadsheet className="mb-2 h-5 w-5" />
-            엑셀 다운로드 버튼은 브라우저에서 열 수 있는 CSV 파일을 생성하며, 기간제한 포인트 운영 확인용 Mock 데이터 기준으로 동작합니다.
+            엑셀 다운로드 버튼은 브라우저에서 열 수 있는 CSV 파일을 생성하며, 포인트 캠페인 운영 확인용 Mock 데이터 기준으로 동작합니다.
           </CardContent>
         </Card>
       </div>
