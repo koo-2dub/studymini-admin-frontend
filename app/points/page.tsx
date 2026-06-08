@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Coins, FileSpreadsheet, MinusCircle, PlusCircle, Search, Settings, ShieldAlert } from "lucide-react";
+import { FileSpreadsheet, MinusCircle, PlusCircle, Search } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -15,7 +15,7 @@ import { ExportButton } from "./export-button";
 import { campaignPurposes, campaigns, formatNumber, formatPoints, pointTypes, type PointCampaignPurpose, type PointType } from "./data";
 
 type PointTab = "dashboard" | "policy" | "campaigns" | "manual" | "logs";
-type AdjustmentMode = "개별 지급" | "CSV 지급" | "개별 차감" | "CSV 차감" | "SET";
+type AdjustmentMode = "개별 지급" | "CSV 지급" | "개별 차감" | "CSV 차감";
 type PointLogType = "전체" | "지급" | "차감" | "SET" | "사용" | "소멸";
 type PointMethod = "전체" | "캠페인" | "관리자" | "CSV" | "주문" | "배치";
 type PointTypeFilter = "전체" | PointType;
@@ -48,7 +48,7 @@ const tabs: { id: PointTab; label: string; description: string }[] = [
   { id: "logs", label: "포인트 로그", description: "전체 변동 이력" },
 ];
 
-const adjustmentModes: AdjustmentMode[] = ["개별 지급", "CSV 지급", "개별 차감", "CSV 차감", "SET"];
+const adjustmentModes: AdjustmentMode[] = ["개별 지급", "CSV 지급", "개별 차감", "CSV 차감"];
 const pointTypeOptions: PointTypeFilter[] = ["전체", ...pointTypes];
 const purposeOptions: PurposeFilter[] = ["전체", ...campaignPurposes];
 const logTypeOptions: PointLogType[] = ["전체", "지급", "차감", "SET", "사용", "소멸"];
@@ -78,7 +78,6 @@ const policyRows = [
   ["최대 사용 가능 비율", "주문금액의 20%", "전체 사용 가능 포인트 기준으로 한도 계산"],
   ["최소 사용 가능 포인트", "1,000P", "회원이 주문에서 사용할 수 있는 최소 단위"],
   ["일반 포인트 유효기간 기본값", "지급일 기준 12개월", "캠페인 생성 시 정책 기본값으로 선택 가능"],
-  ["소멸 알림 기준", "D-30, D-7, D-1", "알림 발송 최소 포인트 500P"],
   ["차감 우선순위", "기간제 포인트 → 일반 포인트", "기간제 포인트를 먼저 사용"],
 ];
 
@@ -143,7 +142,6 @@ export default function PointsPage() {
   }, [adminQuery, campaignQuery, memberQuery, methodFilter, orderQuery, pointTypeFilter, typeFilter]);
 
   const isCsvMode = adjustmentMode.includes("CSV");
-  const isSetMode = adjustmentMode === "SET";
   const operationLabel = adjustmentMode.replace("개별 ", "").replace("CSV ", "");
 
   return (
@@ -178,10 +176,10 @@ export default function PointsPage() {
         </Card>
 
         {activeTab === "dashboard" && (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-2">
             <StatCard label="오늘 지급 포인트" value="128K P" change="캠페인·수동 지급 합산" tone="emerald" />
             <StatCard label="오늘 사용 포인트" value="84K P" change="주문 사용 완료" tone="indigo" />
-            <StatCard label="오늘 차감 포인트" value="12K P" change="관리자 차감·SET 감소" tone="amber" />
+            <StatCard label="오늘 차감 포인트" value="12K P" change="관리자 차감" tone="amber" />
             <StatCard label="오늘 소멸 포인트" value="32K P" change="배치 소멸 완료" tone="rose" />
           </div>
         )}
@@ -196,7 +194,7 @@ export default function PointsPage() {
                 </div>
                 <Button onClick={() => router.push("/points/policy/edit")} type="button">정책 수정</Button>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {policyRows.map(([label, value, helper]) => (
                   <div key={label} className="rounded-2xl bg-slate-50 p-4">
                     <p className="text-xs font-bold text-slate-500">{label}</p>
@@ -204,25 +202,6 @@ export default function PointsPage() {
                     <p className="mt-1 text-xs font-semibold text-slate-500">{helper}</p>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5 text-primary" />포인트 사용 정책 설명</CardTitle>
-                <CardDescription>일반/기간제 포인트를 합산한 전체 사용 가능 포인트 기준으로 한도를 계산합니다.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm font-semibold leading-7 text-slate-700">
-                <p className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-indigo-900">
-                  포인트 사용 한도는 일반/기간제 포인트별로 따로 계산하지 않고, 회원의 전체 사용 가능 포인트를 기준으로 계산합니다.
-                </p>
-                <div className="rounded-2xl border border-slate-100 bg-white p-4">
-                  <p className="font-black text-slate-950">차감 순서</p>
-                  <ol className="mt-2 list-decimal space-y-1 pl-5">
-                    <li>기간제 포인트</li>
-                    <li>일반 포인트</li>
-                  </ol>
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -327,10 +306,10 @@ export default function PointsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    {isCsvMode ? <FileSpreadsheet className="h-5 w-5 text-primary" /> : isSetMode ? <ShieldAlert className="h-5 w-5 text-primary" /> : operationLabel === "지급" ? <PlusCircle className="h-5 w-5 text-primary" /> : <MinusCircle className="h-5 w-5 text-primary" />}
+                    {isCsvMode ? <FileSpreadsheet className="h-5 w-5 text-primary" /> : operationLabel === "지급" ? <PlusCircle className="h-5 w-5 text-primary" /> : <MinusCircle className="h-5 w-5 text-primary" />}
                     {adjustmentMode} 입력
                   </CardTitle>
-                  <CardDescription>모든 수동 처리에는 사유가 필수이며, SET은 실행 전 확인이 필요한 위험 작업입니다.</CardDescription>
+                  <CardDescription>모든 수동 지급/차감 처리에는 운영 사유가 필수입니다.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {isCsvMode ? (
@@ -354,20 +333,8 @@ export default function PointsPage() {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <FilterInput label="포인트 유형"><select className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="일반 포인트">{pointTypes.map((type) => <option key={type}>{type}</option>)}</select></FilterInput>
-                    <FilterInput label={isSetMode ? "SET 목표 잔액" : "포인트"}><input className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue={isSetMode ? "0" : "5000"} /></FilterInput>
+                    <FilterInput label="포인트"><input className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="5000" /></FilterInput>
                   </div>
-
-                  {isSetMode && (
-                    <div className="space-y-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
-                      <div className="flex items-center gap-2 font-black text-rose-900"><AlertTriangle className="h-5 w-5" />SET은 잔액을 직접 변경하는 위험 작업입니다. 실행 전 확인이 필요합니다.</div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div><p className="text-xs font-bold text-rose-700">현재 잔액</p><p className="mt-1 text-2xl font-black text-slate-950">4,850P</p></div>
-                        <div><p className="text-xs font-bold text-rose-700">변경 후 잔액</p><p className="mt-1 text-2xl font-black text-slate-950">0P</p></div>
-                        <div><p className="text-xs font-bold text-rose-700">변경 포인트</p><p className="mt-1 text-2xl font-black text-rose-600">-4,850P</p></div>
-                      </div>
-                      <label className="flex items-start gap-2 text-sm font-bold text-rose-900"><input className="mt-1" type="checkbox" />위험 작업임을 확인했으며 실행 전 최종 확인 모달을 표시합니다.</label>
-                    </div>
-                  )}
 
                   <FilterInput label="처리 사유"><select className="mt-1 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="CS 보상"><option>CS 보상</option><option>오지급 정정</option><option>테스트 데이터 정리</option><option>기타</option></select></FilterInput>
                   <FilterInput label="상세 사유"><textarea className="mt-1 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary" defaultValue={`${adjustmentMode} 처리를 위한 필수 운영자 입력 사유입니다.`} /></FilterInput>
@@ -385,7 +352,7 @@ export default function PointsPage() {
                   <Table>
                     <TableHeader>{isCsvMode ? <TableRow><TableHead>행</TableHead><TableHead>회원</TableHead><TableHead>포인트 유형</TableHead><TableHead>포인트</TableHead><TableHead>상태</TableHead><TableHead>실패 사유</TableHead></TableRow> : <TableRow><TableHead>회원</TableHead><TableHead>포인트 유형</TableHead><TableHead>현재</TableHead><TableHead>{operationLabel}</TableHead><TableHead>처리 후</TableHead><TableHead>상태</TableHead></TableRow>}</TableHeader>
                     <TableBody>
-                      {isCsvMode ? csvPreview.map((row) => <TableRow key={row.row}><TableCell>{row.row}</TableCell><TableCell className="font-semibold">{row.member}<p className="text-xs font-normal text-slate-500">{row.email}</p></TableCell><TableCell>{row.pointType}</TableCell><TableCell>{row.amount}</TableCell><TableCell><Badge variant={statusVariant(row.status)}>{row.status}</Badge></TableCell><TableCell>{row.reason}</TableCell></TableRow>) : selectedMembers.map((row) => <TableRow key={row.email}><TableCell className="font-semibold">{row.member}<p className="text-xs font-normal text-slate-500">{row.email}</p></TableCell><TableCell>{row.pointType}</TableCell><TableCell>{row.current}</TableCell><TableCell>{isSetMode ? "0P" : row.amount}</TableCell><TableCell>{isSetMode ? "0P" : row.after}</TableCell><TableCell><Badge variant="success">{row.status}</Badge></TableCell></TableRow>)}
+                      {isCsvMode ? csvPreview.map((row) => <TableRow key={row.row}><TableCell>{row.row}</TableCell><TableCell className="font-semibold">{row.member}<p className="text-xs font-normal text-slate-500">{row.email}</p></TableCell><TableCell>{row.pointType}</TableCell><TableCell>{row.amount}</TableCell><TableCell><Badge variant={statusVariant(row.status)}>{row.status}</Badge></TableCell><TableCell>{row.reason}</TableCell></TableRow>) : selectedMembers.map((row) => <TableRow key={row.email}><TableCell className="font-semibold">{row.member}<p className="text-xs font-normal text-slate-500">{row.email}</p></TableCell><TableCell>{row.pointType}</TableCell><TableCell>{row.current}</TableCell><TableCell>{row.amount}</TableCell><TableCell>{row.after}</TableCell><TableCell><Badge variant="success">{row.status}</Badge></TableCell></TableRow>)}
                     </TableBody>
                   </Table>
                 </CardContent>

@@ -43,8 +43,8 @@ export default function PointCampaignCreatePage() {
   const expectedTotal = previewTargets.reduce((sum, target) => sum + target.points, 0);
   const expectedExpiringTotal = pointType === "기간제 포인트" ? expectedTotal : 0;
   const summaryText = useMemo(() => {
-    if (pointType === "일반 포인트") return "일반 포인트 · 정책 기본값 12개월 또는 직접 설정";
-    return "기간제 포인트 · 사용 기간과 만료일 직접 설정";
+    if (pointType === "일반 포인트") return "일반 포인트 · 지급일 기준 유효기간 설정";
+    return "기간제 포인트 · 지급일과 만료일 설정";
   }, [pointType]);
 
   return (
@@ -75,35 +75,17 @@ export default function PointCampaignCreatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>지급 설정</CardTitle>
-            <CardDescription>지급 대상, 지급 포인트, 지급 기간을 설정합니다.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><CalendarClock className="h-5 w-5 text-primary" />지급 및 유효기간 설정</CardTitle>
+            <CardDescription>포인트 유형에 따라 지급일 이후 필요한 유효기간 또는 만료일만 입력합니다.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <Field label="지급 포인트"><Input defaultValue="5000" /></Field>
             <Field label="지급 대상"><Select value="선택/CSV 대상"><option>선택/CSV 대상</option><option>조건 충족 전체 회원</option><option>신규가입 회원</option></Select></Field>
-            <Field label="지급 시작일"><Input type="date" defaultValue="2026-07-01" /></Field>
-            <Field label="지급 종료일"><Input type="date" defaultValue="2026-07-31" /></Field>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><CalendarClock className="h-5 w-5 text-primary" />유효기간 설정</CardTitle>
-            <CardDescription>포인트 유형에 따라 필요한 만료 정보를 입력합니다.</CardDescription>
-          </CardHeader>
-          <CardContent>
+            <Field label="지급일"><Input type="date" defaultValue="2026-07-01" /></Field>
             {pointType === "일반 포인트" ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <Field label="유효기간 설정 방식"><Select value="정책 기본값 사용"><option>정책 기본값 사용</option><option>직접 설정</option></Select></Field>
-                <Field label="유효기간 N개월"><Input defaultValue="12" /></Field>
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm font-semibold text-indigo-900">정책 기본값은 일반 포인트 지급일 기준 12개월입니다.</div>
-              </div>
+              <Field label="유효기간"><Select value="정책 기본값 12개월"><option>정책 기본값 12개월</option><option>6개월</option><option>12개월</option><option>24개월</option></Select></Field>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <Field label="사용 시작일"><Input type="date" defaultValue="2026-07-01" /></Field>
-                <Field label="사용 종료일"><Input type="date" defaultValue="2026-07-31" /></Field>
-                <Field label="만료일"><Input type="datetime-local" defaultValue="2026-07-31T23:59" /></Field>
-              </div>
+              <Field label="만료일"><Input type="date" defaultValue="2026-07-31" /></Field>
             )}
           </CardContent>
         </Card>
