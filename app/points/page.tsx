@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CalendarDays, Coins, FileSpreadsheet, MinusCircle, PlusCircle, Search, Settings, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Coins, FileSpreadsheet, MinusCircle, PlusCircle, Search, Settings, ShieldAlert } from "lucide-react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { ExportButton } from "./export-button";
-import { campaignPurposes, campaigns, expiringPoints, formatNumber, formatPoints, pointTypes, type PointCampaignPurpose, type PointType } from "./data";
+import { campaignPurposes, campaigns, formatNumber, formatPoints, pointTypes, type PointCampaignPurpose, type PointType } from "./data";
 
 type PointTab = "dashboard" | "policy" | "campaigns" | "manual" | "logs";
 type AdjustmentMode = "개별 지급" | "CSV 지급" | "개별 차감" | "CSV 차감" | "SET";
@@ -41,9 +41,9 @@ type PointLog = {
 };
 
 const tabs: { id: PointTab; label: string; description: string }[] = [
-  { id: "dashboard", label: "대시보드", description: "오늘 현황·소멸 예정" },
+  { id: "dashboard", label: "대시보드", description: "오늘 포인트 흐름" },
   { id: "policy", label: "포인트 정책", description: "사용·소멸 공통 정책" },
-  { id: "campaigns", label: "포인트 캠페인", description: "지급 이벤트 통합 관리" },
+  { id: "campaigns", label: "포인트 캠페인", description: "지급·사용·잔여·소멸 관리" },
   { id: "manual", label: "수동 지급/차감", description: "CS·오지급 예외 처리" },
   { id: "logs", label: "포인트 로그", description: "전체 변동 이력" },
 ];
@@ -100,7 +100,7 @@ function FilterInput({ label, children }: { label: string; children: React.React
 
 export default function PointsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<PointTab>("dashboard");
+  const [activeTab, setActiveTab] = useState<PointTab>("campaigns");
   const [adjustmentMode, setAdjustmentMode] = useState<AdjustmentMode>("개별 지급");
   const [memberQuery, setMemberQuery] = useState("");
   const [campaignQuery, setCampaignQuery] = useState("");
@@ -178,38 +178,11 @@ export default function PointsPage() {
         </Card>
 
         {activeTab === "dashboard" && (
-          <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <StatCard label="오늘 지급 포인트" value="128K P" change="캠페인·수동 지급 합산" tone="emerald" />
-              <StatCard label="오늘 사용 포인트" value="84K P" change="주문 사용 완료" tone="indigo" />
-              <StatCard label="오늘 차감 포인트" value="12K P" change="관리자 차감·SET 감소" tone="amber" />
-              <StatCard label="오늘 소멸 포인트" value="32K P" change="배치 소멸 완료" tone="rose" />
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />소멸 예정 포인트</CardTitle>
-                <CardDescription>회원별 소멸 예정 포인트와 알림 발송 상태를 빠르게 확인합니다.</CardDescription>
-              </CardHeader>
-              <CardContent className="overflow-x-auto">
-                <Table>
-                  <TableHeader><TableRow><TableHead>회원</TableHead><TableHead>캠페인</TableHead><TableHead>포인트 유형</TableHead><TableHead>소멸 예정</TableHead><TableHead>소멸일</TableHead><TableHead>알림</TableHead><TableHead>상태</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {expiringPoints.map((item) => (
-                      <TableRow key={`${item.member}-${item.expireDate}`}>
-                        <TableCell className="font-semibold">{item.member}</TableCell>
-                        <TableCell>{item.campaign}</TableCell>
-                        <TableCell>{item.pointType}</TableCell>
-                        <TableCell className="font-black text-rose-600">{item.points}</TableCell>
-                        <TableCell>{item.expireDate}</TableCell>
-                        <TableCell><Badge variant={statusVariant(item.notification)}>{item.notification}</Badge></TableCell>
-                        <TableCell><Badge variant={statusVariant(item.status)}>{item.status}</Badge></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="오늘 지급 포인트" value="128K P" change="캠페인·수동 지급 합산" tone="emerald" />
+            <StatCard label="오늘 사용 포인트" value="84K P" change="주문 사용 완료" tone="indigo" />
+            <StatCard label="오늘 차감 포인트" value="12K P" change="관리자 차감·SET 감소" tone="amber" />
+            <StatCard label="오늘 소멸 포인트" value="32K P" change="배치 소멸 완료" tone="rose" />
           </div>
         )}
 
@@ -260,7 +233,7 @@ export default function PointsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>포인트 캠페인 필터</CardTitle>
-                <CardDescription>캠페인 목적과 포인트 유형을 기준으로 지급 이벤트를 통합 조회합니다.</CardDescription>
+                <CardDescription>포인트 지급 캠페인의 지급, 사용, 잔여, 소멸 현황을 목적과 포인트 유형별로 조회합니다.</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 lg:grid-cols-4">
                 <FilterInput label="캠페인명/코드">
@@ -279,7 +252,7 @@ export default function PointsPage() {
               <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <CardTitle>포인트 캠페인</CardTitle>
-                  <CardDescription>일반 포인트와 기간제 포인트 지급 캠페인을 한 곳에서 관리합니다.</CardDescription>
+                  <CardDescription>포인트 지급 캠페인의 지급, 사용, 잔여, 소멸 현황을 관리합니다.</CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <ExportButton
@@ -298,15 +271,18 @@ export default function PointsPage() {
                       지급완료수: campaign.issuedCount,
                       지급실패수: campaign.failedCount,
                       총지급포인트: campaign.amount,
-                      만료일: campaign.expires,
+                      사용포인트: campaign.usedPoints,
+                      잔여포인트: campaign.remainingPoints,
+                      만료일또는유효기간: campaign.expires,
+                      지급기간: campaign.period,
                     }))}
                   />
-                  <Button onClick={() => router.push("/points/campaigns/create")} type="button">캠페인 생성</Button>
+                  <Button onClick={() => router.push("/points/campaigns/create")} type="button">포인트 캠페인 생성</Button>
                 </div>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <Table>
-                  <TableHeader><TableRow><TableHead className="whitespace-nowrap">캠페인명</TableHead><TableHead className="whitespace-nowrap">목적</TableHead><TableHead className="whitespace-nowrap">포인트 유형</TableHead><TableHead className="whitespace-nowrap">상태</TableHead><TableHead className="whitespace-nowrap">대상자</TableHead><TableHead className="whitespace-nowrap">완료</TableHead><TableHead className="whitespace-nowrap">실패</TableHead><TableHead className="whitespace-nowrap">총 지급 포인트</TableHead><TableHead className="whitespace-nowrap">지급 기간</TableHead><TableHead className="whitespace-nowrap">만료일</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead className="whitespace-nowrap">캠페인명</TableHead><TableHead className="whitespace-nowrap">목적</TableHead><TableHead className="whitespace-nowrap">포인트 유형</TableHead><TableHead className="whitespace-nowrap">상태</TableHead><TableHead className="whitespace-nowrap">대상자</TableHead><TableHead className="whitespace-nowrap">완료</TableHead><TableHead className="whitespace-nowrap">실패</TableHead><TableHead className="whitespace-nowrap">총 지급 포인트</TableHead><TableHead className="whitespace-nowrap">사용 포인트</TableHead><TableHead className="whitespace-nowrap">잔여 포인트</TableHead><TableHead className="whitespace-nowrap">만료일/유효기간</TableHead><TableHead className="whitespace-nowrap">지급 기간</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {filteredCampaigns.map((campaign) => (
                       <TableRow key={campaign.id} className="cursor-pointer transition-colors hover:bg-indigo-50/70" onClick={() => router.push(`/points/campaigns/${campaign.id}`)}>
@@ -318,8 +294,10 @@ export default function PointsPage() {
                         <TableCell className="whitespace-nowrap font-semibold text-emerald-700">{formatNumber(campaign.issuedCount)}명</TableCell>
                         <TableCell className="whitespace-nowrap font-semibold text-rose-600">{formatNumber(campaign.failedCount)}명</TableCell>
                         <TableCell className="whitespace-nowrap font-black">{formatPoints(campaign.amount)}</TableCell>
-                        <TableCell className="whitespace-nowrap">{campaign.period}</TableCell>
+                        <TableCell className="whitespace-nowrap font-semibold text-indigo-700">{formatPoints(campaign.usedPoints)}</TableCell>
+                        <TableCell className="whitespace-nowrap font-semibold text-slate-800">{formatPoints(campaign.remainingPoints)}</TableCell>
                         <TableCell className="whitespace-nowrap">{campaign.expires}</TableCell>
+                        <TableCell className="whitespace-nowrap">{campaign.period}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
