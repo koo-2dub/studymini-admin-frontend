@@ -9,14 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { searchableAccessContents, type AccessCodeContent, type AccessCodeType } from "../data";
+import { searchableAccessContents, type AccessCodeCategory, type AccessCodeContent } from "../data";
 
 function contentLabel(content: AccessCodeContent) {
   return `${content.type}: ${content.title}`;
 }
 
+function categoryVariant(value: AccessCodeCategory) {
+  return value === "체험단" ? "warning" : "default";
+}
+
 export default function CreateAccessCodePage() {
-  const [codeType, setCodeType] = useState<AccessCodeType>("개인별 코드");
+  const [category, setCategory] = useState<AccessCodeCategory>("B2B");
   const [searchQuery, setSearchQuery] = useState("비즈니스");
   const [selectedContents, setSelectedContents] = useState<AccessCodeContent[]>([
     searchableAccessContents[0],
@@ -50,25 +54,44 @@ export default function CreateAccessCodePage() {
       <PageHeader
         eyebrow="Access management"
         title="수강코드 생성"
-        description="기업/기관 담당자에게 전달할 B2B 수강코드를 저장 전 mock UI로 구성합니다."
+        description="B2B 또는 체험단 대상의 개인별 수강코드를 생성합니다. 모든 코드는 16자리 영문+숫자 조합이며 1인 1회 사용으로 고정됩니다."
         action={<Button asChild variant="secondary"><Link href="/access/codes">목록으로</Link></Button>}
       />
       <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>기본 정보</CardTitle>
-            <CardDescription>수강코드명과 담당자에게 공유할 운영 메모를 입력합니다.</CardDescription>
+            <CardDescription>수강코드명, 구분값, 운영 메모를 입력합니다.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <label className="space-y-1 text-sm font-semibold text-slate-700 md:col-span-2">
               수강코드명
               <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="신규 B2B 수강코드" />
             </label>
+            <div className="space-y-2 md:col-span-2">
+              <p className="text-sm font-semibold text-slate-700">구분</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {(["B2B", "체험단"] as AccessCodeCategory[]).map((value) => (
+                  <label key={value} className="flex cursor-pointer gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                    <input type="radio" name="category" className="mt-1" checked={category === value} onChange={() => setCategory(value)} />
+                    <span>
+                      <span className="flex items-center gap-2 text-base font-bold text-slate-900">
+                        {value}
+                        <Badge variant={categoryVariant(value)}>{value}</Badge>
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-500">
+                        {value === "B2B" ? "기업/기관 대상자에게 개인별 코드를 배포합니다." : "체험단 선정자에게 개인별 코드를 배포합니다."}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
             <label className="space-y-1 text-sm font-semibold text-slate-700 md:col-span-2">
               설명/메모
               <textarea
                 className="min-h-28 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none focus:border-primary"
-                defaultValue="기업/기관 담당자명, 전달 방식, 회수 정책 등 운영 메모를 입력하세요."
+                defaultValue="담당자명, 전달 방식, 체험단 안내, 회수 정책 등 운영 메모를 입력하세요."
               />
             </label>
           </CardContent>
@@ -137,62 +160,18 @@ export default function CreateAccessCodePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>코드 유형 및 발급 기준</CardTitle>
-            <CardDescription>공용 코드와 개인별 코드에 따라 필요한 입력 항목이 다르게 표시됩니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="grid gap-3 md:grid-cols-2">
-              {(["개인별 코드", "공용 코드"] as AccessCodeType[]).map((type) => (
-                <label key={type} className="flex cursor-pointer gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                  <input type="radio" name="codeType" className="mt-1" checked={codeType === type} onChange={() => setCodeType(type)} />
-                  <span>
-                    <span className="block text-base font-bold text-slate-900">{type}</span>
-                    <span className="mt-1 block text-xs leading-5 text-slate-500">
-                      {type === "개인별 코드" ? "회원별로 다른 코드를 발급하고 발급 수량만큼 코드 목록을 생성합니다." : "하나의 공용 코드를 여러 명이 입력하며 사용 가능 인원으로 총량을 제한합니다."}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            {codeType === "개인별 코드" ? (
-              <label className="block space-y-1 text-sm font-semibold text-slate-700 md:max-w-sm">
-                발급 수량
-                <input type="number" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue={120} />
-                <span className="block text-xs font-medium text-slate-500">입력한 수량만큼 서로 다른 개인별 코드가 생성되는 mock 설정입니다.</span>
-              </label>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="space-y-1 text-sm font-semibold text-slate-700">
-                  공용 코드
-                  <input className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 font-mono text-sm outline-none focus:border-primary" defaultValue="WELCOME-2026" />
-                </label>
-                <label className="space-y-1 text-sm font-semibold text-slate-700">
-                  사용 가능 인원
-                  <input type="number" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue={80} />
-                </label>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>입력 가능 기간 및 권한 기간</CardTitle>
-            <CardDescription>사용자가 프로필에서 코드를 입력할 수 있는 기간과 권한 부여 기간을 설정합니다.</CardDescription>
+            <CardTitle>발급 및 권한 설정</CardTitle>
+            <CardDescription>발급 수량만큼 16자리 개인별 코드가 생성되며, 모든 코드는 1인 1회 사용으로 고정됩니다.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-1 text-sm font-semibold text-slate-700">
-              입력 가능 시작일
-              <input type="date" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="2026-06-04" />
-            </label>
-            <label className="space-y-1 text-sm font-semibold text-slate-700">
-              입력 가능 종료일
-              <input type="date" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="2026-07-31" />
+            <label className="space-y-1 text-sm font-semibold text-slate-700 md:col-span-2 md:max-w-sm">
+              발급 수량
+              <input type="number" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue={120} />
+              <span className="block text-xs font-medium text-slate-500">예: 120 입력 시 A7K9-P2LM-Q8XZ-3T6B 형태의 16자리 코드 120개가 생성됩니다.</span>
             </label>
             <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-sm font-bold text-slate-700">권한 시작 기준</p>
-              <label className="flex items-center gap-2 text-sm text-slate-600"><input type="radio" name="accessStart" defaultChecked /> 입력 즉시 시작</label>
+              <label className="flex items-center gap-2 text-sm text-slate-600"><input type="radio" name="accessStart" defaultChecked /> 코드 입력 즉시 시작</label>
               <label className="flex items-center gap-2 text-sm text-slate-600"><input type="radio" name="accessStart" /> 지정일 시작</label>
               <input type="date" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary" defaultValue="2026-06-10" />
             </div>
@@ -206,24 +185,9 @@ export default function CreateAccessCodePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>사용 제한</CardTitle>
-            <CardDescription>중복 입력과 전체 사용 수량 제한을 설정합니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700">
-              <input type="checkbox" defaultChecked /> 1인 1회
-            </label>
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700">
-              <input type="checkbox" defaultChecked /> 전체 사용 수량 제한
-            </label>
-          </CardContent>
-        </Card>
-
         <div className="flex justify-end gap-2">
           <Button asChild variant="outline"><Link href="/access/codes">취소</Link></Button>
-          <Button type="button">저장</Button>
+          <Button type="button">저장/발행</Button>
         </div>
       </div>
     </>

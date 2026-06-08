@@ -5,13 +5,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatNumber, getAccessCodeCampaignById, usageRate } from "../data";
+import { formatNumber, getAccessCodeCampaignById, usageRate, type AccessCodeCategory } from "../data";
 
 function statusVariant(value: string) {
   if (value === "진행중" || value === "미사용") return "success";
   if (value === "예정") return "warning";
   if (value === "폐기" || value === "만료") return "rose";
   return "slate";
+}
+
+function categoryVariant(value: AccessCodeCategory) {
+  return value === "체험단" ? "warning" : "default";
 }
 
 export default async function AccessCodeDetailPage({ params }: { params: Promise<{ codeId: string }> }) {
@@ -25,25 +29,28 @@ export default async function AccessCodeDetailPage({ params }: { params: Promise
       <PageHeader
         eyebrow="Access management"
         title="수강코드 상세"
-        description="B2B 수강코드 기본 정보, 사용 현황, 코드별 상태와 운영 로그를 확인합니다."
+        description="B2B/체험단 구분, 기본 정보, 통합 코드 목록과 운영 로그를 확인합니다."
         action={<Button asChild variant="secondary"><Link href="/access/codes">목록으로</Link></Button>}
       />
       <div className="space-y-6">
         <Card>
           <CardHeader className="gap-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
             <div className="space-y-2">
-              <CardTitle>{campaign.name}</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle>{campaign.name}</CardTitle>
+                <Badge variant={categoryVariant(campaign.category)}>{campaign.category}</Badge>
+              </div>
               <CardDescription>{campaign.memo}</CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Badge variant={categoryVariant(campaign.category)}>구분: {campaign.category}</Badge>
               <Badge variant={statusVariant(campaign.status)}>{campaign.status}</Badge>
-              <Badge variant="slate">{campaign.codeType}</Badge>
             </div>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl bg-slate-50 p-4">
-              <p className="text-xs font-bold uppercase text-slate-400">입력 가능 기간</p>
-              <p className="mt-2 font-semibold text-slate-800">{campaign.availableStartDate} ~ {campaign.availableEndDate}</p>
+              <p className="text-xs font-bold uppercase text-slate-400">구분</p>
+              <p className="mt-2 font-semibold text-slate-800">{campaign.category}</p>
             </div>
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs font-bold uppercase text-slate-400">권한 기간</p>
@@ -67,13 +74,17 @@ export default async function AccessCodeDetailPage({ params }: { params: Promise
           <Card>
             <CardHeader>
               <CardTitle>기본 정보</CardTitle>
-              <CardDescription>수강코드 운영 주체와 제한 정책입니다.</CardDescription>
+              <CardDescription>수강코드 운영 주체와 권한 정책입니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <InfoRow label="기업/기관" value={campaign.organization} />
-              <InfoRow label="코드 유형" value={campaign.codeType} />
+              <InfoRow label="구분" value={campaign.category} />
+              <InfoRow label="운영 주체" value={campaign.organization} />
               <InfoRow label="권한 시작 기준" value={campaign.accessStartBasis} />
-              <InfoRow label="사용 제한" value={campaign.usageLimit} />
+              <InfoRow label="권한 기간" value={campaign.accessPeriod} />
+              <InfoRow label="발급 수량" value={`${formatNumber(campaign.issuedCount)}개`} />
+              <InfoRow label="사용 수량" value={`${formatNumber(campaign.usedCount)}개`} />
+              <InfoRow label="미사용 수량" value={`${formatNumber(unusedCount)}개`} />
+              <InfoRow label="사용률" value={`${rate}%`} />
             </CardContent>
           </Card>
 
@@ -99,70 +110,21 @@ export default async function AccessCodeDetailPage({ params }: { params: Promise
 
         <Card>
           <CardHeader>
-            <CardTitle>코드 사용 현황</CardTitle>
-            <CardDescription>발급 수량 대비 사용 수량과 코드 상태별 운영 현황입니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-4">
-            <MetricCard label="발급 수량" value={`${formatNumber(campaign.issuedCount)}개`} />
-            <MetricCard label="사용 수량" value={`${formatNumber(campaign.usedCount)}개`} tone="text-primary" />
-            <MetricCard label="미사용 수량" value={`${formatNumber(unusedCount)}개`} />
-            <MetricCard label="사용률" value={`${rate}%`} tone="text-emerald-700" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>사용 회원 목록</CardTitle>
-            <CardDescription>User ID를 클릭하면 회원 상세 mock link로 이동합니다.</CardDescription>
+            <CardTitle>코드 목록</CardTitle>
+            <CardDescription>발급된 개인별 코드와 사용 회원 정보를 하나의 목록에서 확인합니다. 미사용 코드는 회원 정보가 비어 있습니다.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
-            <Table className="min-w-[980px]">
+            <Table className="min-w-[1320px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">이름</TableHead>
+                  <TableHead className="whitespace-nowrap">수강코드</TableHead>
+                  <TableHead className="whitespace-nowrap">상태</TableHead>
+                  <TableHead className="whitespace-nowrap">사용 여부</TableHead>
+                  <TableHead className="whitespace-nowrap">사용 회원 이름</TableHead>
                   <TableHead className="whitespace-nowrap">이메일</TableHead>
                   <TableHead className="whitespace-nowrap">User ID</TableHead>
-                  <TableHead className="whitespace-nowrap">입력한 코드</TableHead>
-                  <TableHead className="whitespace-nowrap">권한 시작일</TableHead>
-                  <TableHead className="whitespace-nowrap">권한 종료일</TableHead>
-                  <TableHead className="whitespace-nowrap">사용일</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaign.members.length > 0 ? campaign.members.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-semibold text-slate-900">{member.name}</TableCell>
-                    <TableCell className="text-slate-600">{member.email}</TableCell>
-                    <TableCell className="whitespace-nowrap font-semibold text-primary">
-                      <Link href={`/members/${member.userId}`} className="hover:underline">{member.userId}</Link>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap font-mono text-xs text-slate-600">{member.enteredCode}</TableCell>
-                    <TableCell className="whitespace-nowrap">{member.accessStartDate}</TableCell>
-                    <TableCell className="whitespace-nowrap">{member.accessEndDate}</TableCell>
-                    <TableCell className="whitespace-nowrap text-slate-600">{member.usedAt}</TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm font-semibold text-slate-500">아직 코드를 입력한 회원이 없습니다.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>코드 목록</CardTitle>
-            <CardDescription>개별 코드 또는 공용 코드의 상태를 미사용, 사용완료, 만료, 폐기로 확인합니다.</CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Table className="min-w-[840px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">코드</TableHead>
-                  <TableHead className="whitespace-nowrap">상태</TableHead>
-                  <TableHead className="whitespace-nowrap">사용 회원</TableHead>
+                  <TableHead className="whitespace-nowrap">시작일</TableHead>
+                  <TableHead className="whitespace-nowrap">종료일</TableHead>
                   <TableHead className="whitespace-nowrap">사용일</TableHead>
                   <TableHead className="whitespace-nowrap">메모</TableHead>
                 </TableRow>
@@ -170,9 +132,16 @@ export default async function AccessCodeDetailPage({ params }: { params: Promise
               <TableBody>
                 {campaign.codes.map((code) => (
                   <TableRow key={code.id}>
-                    <TableCell className="font-mono text-xs font-semibold text-slate-900">{code.code}</TableCell>
+                    <TableCell className="whitespace-nowrap font-mono text-xs font-semibold text-slate-900">{code.code}</TableCell>
                     <TableCell><Badge variant={statusVariant(code.status)}>{code.status}</Badge></TableCell>
-                    <TableCell className="whitespace-nowrap text-slate-600">{code.assignee ?? "-"}</TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold text-slate-700">{code.isUsed ? "사용" : "미사용"}</TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">{code.memberName ?? "-"}</TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">{code.email ?? "-"}</TableCell>
+                    <TableCell className="whitespace-nowrap font-semibold text-primary">
+                      {code.userId ? <Link href={`/members/${code.userId}`} className="hover:underline">{code.userId}</Link> : "-"}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">{code.accessStartDate ?? "-"}</TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">{code.accessEndDate ?? "-"}</TableCell>
                     <TableCell className="whitespace-nowrap text-slate-600">{code.usedAt ?? "-"}</TableCell>
                     <TableCell className="min-w-[220px] text-slate-600">{code.memo ?? "-"}</TableCell>
                   </TableRow>
@@ -221,15 +190,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-start justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3">
       <span className="font-bold text-slate-500">{label}</span>
       <span className="text-right font-semibold text-slate-900">{value}</span>
-    </div>
-  );
-}
-
-function MetricCard({ label, value, tone = "text-slate-900" }: { label: string; value: string; tone?: string }) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-4">
-      <p className="text-xs font-bold uppercase text-slate-400">{label}</p>
-      <p className={`mt-2 text-2xl font-black ${tone}`}>{value}</p>
     </div>
   );
 }
