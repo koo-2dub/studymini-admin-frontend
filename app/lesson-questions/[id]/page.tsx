@@ -75,7 +75,6 @@ export default function LessonQuestionDetailPage() {
     return answerStatus === "답변완료" ? "저장된 답변을 수정할 수 있습니다." : "승인된 질문입니다. 답변을 작성하고 저장할 수 있습니다.";
   }, [answerStatus, visibilityStatus]);
 
-  const restrictedStatus = visibilityStatus === "승인 대기" || visibilityStatus === "비밀";
   const statusDescription = (() => {
     if (visibilityStatus === "승인 대기") return "작성자와 관리자만 조회 가능";
     if (visibilityStatus === "승인됨") return "모든 사용자가 조회 가능";
@@ -177,20 +176,6 @@ export default function LessonQuestionDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <Section title="처리상태" description="학습 질문의 현재 처리 상태와 노출 범위입니다.">
-            <div className="grid gap-4 md:grid-cols-3">
-              <InfoItem label="상태" value={<Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>} />
-              <InfoItem label="노출 범위" value={statusDescription} />
-              <InfoItem label="답변 상태" value={<Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>} />
-            </div>
-            {restrictedStatus && (
-              <div className="mt-4 flex gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm font-semibold leading-6 text-indigo-800">
-                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
-                <p>이 질문과 답변은 작성자와 관리자만 볼 수 있습니다.</p>
-              </div>
-            )}
-          </Section>
-
           <UserInfoCard
             title="질문자 정보"
             description="학습 질문을 등록한 회원의 기본 정보와 회원 상세 링크입니다."
@@ -204,11 +189,8 @@ export default function LessonQuestionDetailPage() {
             }}
           />
 
-          <Section title="질문 내용" description="학습 질문 본문과 관련 강의 정보입니다.">
-            <div className="rounded-3xl border border-indigo-100 bg-indigo-50/70 p-6 text-lg font-semibold leading-9 text-slate-900 md:text-xl md:leading-10">
-              <p className="whitespace-pre-wrap">{question.questionBody}</p>
-            </div>
-            <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+          <Section title="질문 내용" description="강의 정보와 학습 질문 본문입니다.">
+            <div className="rounded-2xl border border-slate-100 bg-white p-4">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">강의 정보</p>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-bold text-slate-700">{question.courseLevel} / {question.lessonDay} - {question.lectureTitle}</p>
@@ -222,6 +204,9 @@ export default function LessonQuestionDetailPage() {
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
+            </div>
+            <div className="mt-4 rounded-3xl border border-indigo-100 bg-indigo-50/70 p-6 text-lg font-semibold leading-9 text-slate-900 md:text-xl md:leading-10">
+              <p className="whitespace-pre-wrap">{question.questionBody}</p>
             </div>
           </Section>
 
@@ -298,6 +283,29 @@ export default function LessonQuestionDetailPage() {
                   </Button>
                   <Button className="w-full" variant="outline" onClick={permanentlyDelete}>영구 삭제</Button>
                 </>
+              )}
+            </div>
+          </Section>
+
+          <Section title="처리상태">
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                <span className="font-bold text-slate-500">상태</span>
+                <Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>
+              </div>
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="font-bold text-slate-500">노출 범위</p>
+                <p className="mt-1 font-semibold leading-6 text-slate-800">{statusDescription}</p>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                <span className="font-bold text-slate-500">답변 상태</span>
+                <Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>
+              </div>
+              {visibilityStatus === "비밀" && (
+                <div className="flex gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 font-semibold leading-6 text-indigo-800">
+                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>이 질문과 답변은 작성자와 관리자만 볼 수 있습니다.</p>
+                </div>
               )}
             </div>
           </Section>
