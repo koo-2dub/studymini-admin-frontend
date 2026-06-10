@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ExternalLink, Save, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, LockKeyhole, Save, Trash2, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -19,6 +19,7 @@ const currentAdminName = "관리자 한나";
 
 const badgeVariant = (value: string): BadgeProps["variant"] => {
   if (value === "승인됨" || value === "답변완료") return "success";
+  if (value === "비밀") return "default";
   if (value === "승인 대기" || value === "미답변") return "warning";
   if (value === "휴지통") return "rose";
   return "slate";
@@ -56,19 +57,30 @@ export default function LessonQuestionDetailPage() {
   const [answeredAt, setAnsweredAt] = useState(question?.answeredAt ?? "-");
   const [logs, setLogs] = useState(question?.logs ?? []);
 
-  const canWriteAnswer = visibilityStatus === "승인됨";
   const isTrashed = visibilityStatus === "휴지통";
+  const canWriteAnswer = !isTrashed;
+  const hasAnswerDraft = answerBody.trim().length > 0;
   const nowLabel = "2026-06-01 11:30";
 
   const actionGuide = useMemo(() => {
     if (visibilityStatus === "승인 대기") {
-      return "승인 전 질문은 사용자에게 공개되지 않습니다.\n승인 후 답변 작성이 가능합니다.";
+      return "승인 대기 상태는 작성자와 관리자만 조회할 수 있습니다. 답변 작성 후 승인/비밀/휴지통 처리할 수 있습니다.";
+    }
+    if (visibilityStatus === "비밀") {
+      return "비밀 처리된 질문입니다. 질문과 답변은 작성자와 관리자만 조회할 수 있습니다.";
     }
     if (visibilityStatus === "휴지통") {
       return "휴지통 상태에서는 답변을 작성할 수 없습니다. 복구 후 다시 처리해 주세요.";
     }
     return answerStatus === "답변완료" ? "저장된 답변을 수정할 수 있습니다." : "승인된 질문입니다. 답변을 작성하고 저장할 수 있습니다.";
   }, [answerStatus, visibilityStatus]);
+
+  const statusDescription = (() => {
+    if (visibilityStatus === "승인 대기") return "작성자와 관리자만 조회 가능";
+    if (visibilityStatus === "승인됨") return "모든 사용자가 조회 가능";
+    if (visibilityStatus === "비밀") return "작성자와 관리자만 조회 가능";
+    return "삭제 처리 상태";
+  })();
 
   if (!question) {
     return (
@@ -93,9 +105,23 @@ export default function LessonQuestionDetailPage() {
   };
 
   const approve = () => {
+    if (!hasAnswerDraft) {
+      setToast("답변 작성 후 승인 처리할 수 있습니다. (mock)");
+      return;
+    }
     setVisibilityStatus("승인됨");
-    addLog("승인 처리", "승인 대기 질문을 공개 승인했습니다. (mock)");
-    setToast("학습 질문이 승인되었습니다. 이제 답변 작성이 가능합니다. (mock)");
+    addLog("승인 처리", "답변 후 질문을 모든 사용자가 볼 수 있도록 승인했습니다. (mock)");
+    setToast("학습 질문이 승인됨 상태로 변경되었습니다. (mock)");
+  };
+
+  const markSecret = () => {
+    if (!hasAnswerDraft) {
+      setToast("답변 작성 후 비밀 처리할 수 있습니다. (mock)");
+      return;
+    }
+    setVisibilityStatus("비밀");
+    addLog("비밀 처리", "답변 후 작성자와 관리자만 질문과 답변을 볼 수 있도록 비밀 처리했습니다. (mock)");
+    setToast("학습 질문이 비밀 상태로 변경되었습니다. 작성자와 관리자만 조회할 수 있습니다. (mock)");
   };
 
   const moveToTrash = () => {
@@ -163,15 +189,11 @@ export default function LessonQuestionDetailPage() {
             }}
           />
 
-          <Section title="질문 내용" description="학습 질문 제목, 강의 정보, 질문 본문입니다.">
-            <div className="rounded-2xl border border-slate-100 bg-white p-5">
-              <p className="text-sm font-bold text-slate-500">질문 제목</p>
-              <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{question.questionPreview}</p>
-            </div>
-            <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-5">
-              <p className="text-sm font-bold text-slate-500">강의 정보</p>
+          <Section title="질문 내용" description="강의 정보와 학습 질문 본문입니다.">
+            <div className="rounded-2xl border border-slate-100 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">강의 정보</p>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-lg font-black text-slate-950">{question.courseLevel} / {question.lessonDay} - {question.lectureTitle}</p>
+                <p className="text-sm font-bold text-slate-700">{question.courseLevel} / {question.lessonDay} - {question.lectureTitle}</p>
                 <a
                   href="https://studymini.com"
                   target="_blank"
@@ -183,22 +205,8 @@ export default function LessonQuestionDetailPage() {
                 </a>
               </div>
             </div>
-            <div className="mt-4 rounded-2xl bg-slate-50 p-5 text-sm leading-7 text-slate-700">
+            <div className="mt-4 rounded-3xl border border-indigo-100 bg-indigo-50/70 p-6 text-lg font-semibold leading-9 text-slate-900 md:text-xl md:leading-10">
               <p className="whitespace-pre-wrap">{question.questionBody}</p>
-            </div>
-            <div className="mt-4">
-              <p className="mb-2 text-sm font-bold text-slate-500">첨부파일</p>
-              {question.attachments.length > 0 ? (
-                <ul className="space-y-2">
-                  {question.attachments.map((file) => (
-                    <li key={file.name} className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-                      {file.name} <span className="text-slate-400">{file.size}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm font-semibold text-slate-400">첨부파일이 없습니다.</div>
-              )}
             </div>
           </Section>
 
@@ -231,11 +239,15 @@ export default function LessonQuestionDetailPage() {
         </div>
 
         <aside className="space-y-6">
-          <Section title="처리 액션" description="현재 상태에 맞는 승인/휴지통 처리를 진행합니다.">
+          <Section title="처리 액션" description="답변 작성 후 승인/비밀/휴지통 처리를 진행합니다.">
             <div className="space-y-2">
               {visibilityStatus === "승인 대기" && (
                 <>
-                  <Button className="w-full" onClick={approve}>승인</Button>
+                  <Button className="w-full" onClick={approve} disabled={!hasAnswerDraft}>승인</Button>
+                  <Button className="w-full" variant="outline" onClick={markSecret} disabled={!hasAnswerDraft}>
+                    <LockKeyhole className="h-4 w-4" />
+                    비밀
+                  </Button>
                   <Button className="w-full" variant="outline" onClick={moveToTrash}>
                     <Trash2 className="h-4 w-4" />
                     휴지통 이동
@@ -243,10 +255,25 @@ export default function LessonQuestionDetailPage() {
                 </>
               )}
               {visibilityStatus === "승인됨" && (
-                <Button className="w-full" variant="outline" onClick={moveToTrash}>
-                  <Trash2 className="h-4 w-4" />
-                  휴지통 이동
-                </Button>
+                <>
+                  <Button className="w-full" variant="outline" onClick={markSecret} disabled={!hasAnswerDraft}>
+                    <LockKeyhole className="h-4 w-4" />
+                    비밀
+                  </Button>
+                  <Button className="w-full" variant="outline" onClick={moveToTrash}>
+                    <Trash2 className="h-4 w-4" />
+                    휴지통 이동
+                  </Button>
+                </>
+              )}
+              {visibilityStatus === "비밀" && (
+                <>
+                  <Button className="w-full" onClick={approve} disabled={!hasAnswerDraft}>승인</Button>
+                  <Button className="w-full" variant="outline" onClick={moveToTrash}>
+                    <Trash2 className="h-4 w-4" />
+                    휴지통 이동
+                  </Button>
+                </>
               )}
               {visibilityStatus === "휴지통" && (
                 <>
@@ -256,6 +283,29 @@ export default function LessonQuestionDetailPage() {
                   </Button>
                   <Button className="w-full" variant="outline" onClick={permanentlyDelete}>영구 삭제</Button>
                 </>
+              )}
+            </div>
+          </Section>
+
+          <Section title="처리상태">
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                <span className="font-bold text-slate-500">상태</span>
+                <Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>
+              </div>
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="font-bold text-slate-500">노출 범위</p>
+                <p className="mt-1 font-semibold leading-6 text-slate-800">{statusDescription}</p>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                <span className="font-bold text-slate-500">답변 상태</span>
+                <Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>
+              </div>
+              {visibilityStatus === "비밀" && (
+                <div className="flex gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 font-semibold leading-6 text-indigo-800">
+                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>이 질문과 답변은 작성자와 관리자만 볼 수 있습니다.</p>
+                </div>
               )}
             </div>
           </Section>
