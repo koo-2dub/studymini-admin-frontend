@@ -25,6 +25,15 @@ const badgeVariant = (value: string): BadgeProps["variant"] => {
   return "slate";
 };
 
+function InfoItem({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
+      <div className="mt-2 font-bold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <Card>
@@ -44,6 +53,8 @@ export default function LessonQuestionDetailPage() {
   const [visibilityStatus, setVisibilityStatus] = useState(question?.visibilityStatus ?? "승인 대기");
   const [answerStatus, setAnswerStatus] = useState(question?.answerStatus ?? "미답변");
   const [answerBody, setAnswerBody] = useState(question?.answerBody ?? "");
+  const [answeredBy, setAnsweredBy] = useState(question?.answeredBy ?? "-");
+  const [answeredAt, setAnsweredAt] = useState(question?.answeredAt ?? "-");
   const [logs, setLogs] = useState(question?.logs ?? []);
 
   const isTrashed = visibilityStatus === "휴지통";
@@ -66,10 +77,10 @@ export default function LessonQuestionDetailPage() {
 
   const restrictedStatus = visibilityStatus === "승인 대기" || visibilityStatus === "비밀";
   const statusDescription = (() => {
-    if (visibilityStatus === "승인 대기") return "작성자와 관리자만 조회 가능하며, 답변 작성 후 승인/비밀/휴지통 처리할 수 있습니다.";
-    if (visibilityStatus === "승인됨") return "모든 사용자가 질문과 답변을 조회할 수 있습니다.";
-    if (visibilityStatus === "비밀") return "승인된 질문을 작성자와 관리자만 볼 수 있도록 제한한 상태입니다.";
-    return "삭제 처리된 상태이며 일반 사용자에게 노출되지 않습니다.";
+    if (visibilityStatus === "승인 대기") return "작성자와 관리자만 조회 가능";
+    if (visibilityStatus === "승인됨") return "모든 사용자가 조회 가능";
+    if (visibilityStatus === "비밀") return "작성자와 관리자만 조회 가능";
+    return "삭제 처리 상태";
   })();
 
   if (!question) {
@@ -99,9 +110,8 @@ export default function LessonQuestionDetailPage() {
       setToast("답변 작성 후 승인 처리할 수 있습니다. (mock)");
       return;
     }
-    const previousStatus = visibilityStatus;
     setVisibilityStatus("승인됨");
-    addLog("승인 처리", previousStatus === "비밀" ? "비밀 질문을 모든 사용자가 볼 수 있도록 승인됨으로 변경했습니다. (mock)" : "답변 후 질문을 모든 사용자가 볼 수 있도록 승인했습니다. (mock)");
+    addLog("승인 처리", "답변 후 질문을 모든 사용자가 볼 수 있도록 승인했습니다. (mock)");
     setToast("학습 질문이 승인됨 상태로 변경되었습니다. (mock)");
   };
 
@@ -122,9 +132,9 @@ export default function LessonQuestionDetailPage() {
   };
 
   const restore = () => {
-    setVisibilityStatus("승인 대기");
-    addLog("복구", "휴지통에서 승인 대기 상태로 복구했습니다. 작성자와 관리자만 조회할 수 있습니다. (mock)");
-    setToast("학습 질문을 승인 대기 상태로 복구했습니다. (mock)");
+    setVisibilityStatus("승인됨");
+    addLog("복구", "휴지통에서 일반 학습 질문 목록으로 복구했습니다. (mock)");
+    setToast("학습 질문을 복구했습니다. (mock)");
   };
 
   const permanentlyDelete = () => {
@@ -136,6 +146,8 @@ export default function LessonQuestionDetailPage() {
 
   const saveAnswer = () => {
     setAnswerStatus("답변완료");
+    setAnsweredBy(currentAdminName);
+    setAnsweredAt(nowLabel);
     addLog("답변 저장", "답변상태를 답변완료로 변경했습니다. (mock)");
     setToast("답변이 저장되었습니다. (mock)");
   };
@@ -165,6 +177,20 @@ export default function LessonQuestionDetailPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
+          <Section title="처리상태" description="학습 질문의 현재 처리 상태와 노출 범위입니다.">
+            <div className="grid gap-4 md:grid-cols-3">
+              <InfoItem label="상태" value={<Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>} />
+              <InfoItem label="노출 범위" value={statusDescription} />
+              <InfoItem label="답변 상태" value={<Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>} />
+            </div>
+            {restrictedStatus && (
+              <div className="mt-4 flex gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm font-semibold leading-6 text-indigo-800">
+                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
+                <p>이 질문과 답변은 작성자와 관리자만 볼 수 있습니다.</p>
+              </div>
+            )}
+          </Section>
+
           <UserInfoCard
             title="질문자 정보"
             description="학습 질문을 등록한 회원의 기본 정보와 회원 상세 링크입니다."
@@ -214,6 +240,17 @@ export default function LessonQuestionDetailPage() {
               </Button>
             </div>
           </Section>
+
+          <Section title="답변 상태">
+            <div className="grid gap-4 md:grid-cols-3">
+              <InfoItem label="답변상태" value={<Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>} />
+              <InfoItem label="담당자/답변자" value={answeredBy} />
+              <InfoItem label="답변일" value={answeredAt} />
+            </div>
+            <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-5 text-sm leading-7 text-slate-700">
+              {answerBody || "저장된 답변 내용이 없습니다."}
+            </div>
+          </Section>
         </div>
 
         <aside className="space-y-6">
@@ -261,29 +298,6 @@ export default function LessonQuestionDetailPage() {
                   </Button>
                   <Button className="w-full" variant="outline" onClick={permanentlyDelete}>영구 삭제</Button>
                 </>
-              )}
-            </div>
-          </Section>
-
-          <Section title="처리상태">
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                <span className="font-bold text-slate-500">상태</span>
-                <Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>
-              </div>
-              <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                <p className="font-bold text-slate-500">노출 범위</p>
-                <p className="mt-1 font-semibold leading-6 text-slate-800">{statusDescription}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-                <span className="font-bold text-slate-500">답변 상태</span>
-                <Badge variant={badgeVariant(answerStatus)}>{answerStatus}</Badge>
-              </div>
-              {restrictedStatus && (
-                <div className="flex gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 font-semibold leading-6 text-indigo-800">
-                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
-                  <p>이 질문과 답변은 작성자와 관리자만 볼 수 있습니다.</p>
-                </div>
               )}
             </div>
           </Section>
