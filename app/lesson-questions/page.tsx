@@ -15,11 +15,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { lessonQuestionCourses, lessonQuestions, type LessonQuestionRecord } from "./data";
 
 const languages = ["전체", "영어", "일본어", "중국어", "스페인어", "프랑스어", "독일어", "이탈리아어"];
-const visibilityOptions = ["전체", "승인 대기", "승인됨", "휴지통"];
+const visibilityOptions = ["전체", "승인 대기", "승인됨", "비밀", "휴지통"];
 const answerOptions = ["전체", "미답변", "답변완료"];
 
 const badgeVariant = (value: string): BadgeProps["variant"] => {
   if (value === "승인됨" || value === "답변완료") return "success";
+  if (value === "비밀") return "default";
   if (value === "승인 대기" || value === "미답변") return "warning";
   if (value === "휴지통") return "rose";
   return "slate";
@@ -92,7 +93,7 @@ export default function LessonQuestionsPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>필터</CardTitle>
-          <CardDescription>유저, 강의, 공개상태, 답변상태, 문의일 기준으로 학습 문의를 찾습니다.</CardDescription>
+          <CardDescription>유저, 강의, 처리상태, 답변상태, 문의일 기준으로 학습 문의를 찾습니다.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-5 flex justify-end">
@@ -123,7 +124,7 @@ export default function LessonQuestionsPage() {
                 ))}
               </select>
             </FilterInput>
-            <FilterInput label="공개상태">
+            <FilterInput label="처리상태">
               <select className="h-10 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none">
                 {visibilityOptions.map((status) => (
                   <option key={status}>{status}</option>
@@ -179,7 +180,7 @@ function LessonQuestionTable({ questions, onRowClick }: { questions: LessonQuest
               <TableHead className="w-24 whitespace-nowrap">언어</TableHead>
               <TableHead className="min-w-64 whitespace-nowrap">강의 정보</TableHead>
               <TableHead className="min-w-80 whitespace-nowrap">질문 미리보기</TableHead>
-              <TableHead className="w-28 whitespace-nowrap">공개상태</TableHead>
+              <TableHead className="w-28 whitespace-nowrap">처리상태</TableHead>
               <TableHead className="w-28 whitespace-nowrap">답변상태</TableHead>
               <TableHead className="w-40 whitespace-nowrap">문의일</TableHead>
             </TableRow>

@@ -1,4 +1,4 @@
-export type LessonQuestionVisibility = "승인 대기" | "승인됨" | "휴지통";
+export type LessonQuestionVisibility = "승인 대기" | "승인됨" | "비밀" | "휴지통";
 export type LessonQuestionAnswerStatus = "미답변" | "답변완료";
 
 export type LessonQuestionRecord = {
@@ -108,7 +108,7 @@ export const lessonQuestions: LessonQuestionRecord[] = [
     questionPreview: "把자문에서 목적어가 길어질 때 어순을 어떻게 잡아야 하는지 궁금합니다.",
     questionBody:
       "‘我把昨天买的书放在桌子上了’ 같은 문장에서 목적어가 길어지면 문장이 너무 복잡해 보입니다.\n실제 회화에서도 이렇게 말하는지, 짧게 나누는 방법이 있는지 알고 싶습니다.",
-    visibilityStatus: "승인됨",
+    visibilityStatus: "비밀",
     answerStatus: "답변완료",
     askedAt: "2026-05-30 14:03",
     answeredBy: "관리자 민준",
@@ -117,8 +117,9 @@ export const lessonQuestions: LessonQuestionRecord[] = [
       "목적어가 길어도 把 뒤에 한 덩어리로 놓을 수 있습니다.\n다만 회화에서는 ‘我昨天买了一本书。把它放在桌子上了。’처럼 앞 문장에서 대상을 먼저 소개하고 다음 문장에서 它로 받으면 더 자연스럽습니다.",
     attachments: [],
     logs: [
-      { action: "승인 처리", actor: "관리자 민준", at: "2026-05-30 14:20", note: "질문 공개 승인" },
+      { action: "비밀 처리", actor: "관리자 민준", at: "2026-05-30 16:25", note: "답변 후 작성자와 관리자만 볼 수 있도록 비밀 처리" },
       { action: "답변 저장", actor: "관리자 민준", at: "2026-05-30 16:20", note: "문장 분리 예시 추가" },
+      { action: "질문 접수", actor: "시스템", at: "2026-05-30 14:03", note: "승인 대기 상태로 등록" },
     ],
   },
   {

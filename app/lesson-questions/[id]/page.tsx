@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ExternalLink, Save, Trash2, Undo2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, LockKeyhole, Save, Trash2, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -19,6 +19,7 @@ const currentAdminName = "관리자 한나";
 
 const badgeVariant = (value: string): BadgeProps["variant"] => {
   if (value === "승인됨" || value === "답변완료") return "success";
+  if (value === "비밀") return "default";
   if (value === "승인 대기" || value === "미답변") return "warning";
   if (value === "휴지통") return "rose";
   return "slate";
@@ -56,19 +57,32 @@ export default function LessonQuestionDetailPage() {
   const [answeredAt, setAnsweredAt] = useState(question?.answeredAt ?? "-");
   const [logs, setLogs] = useState(question?.logs ?? []);
 
-  const canWriteAnswer = visibilityStatus === "승인됨";
   const isTrashed = visibilityStatus === "휴지통";
+  const canWriteAnswer = !isTrashed;
+  const hasAnswerDraft = answerBody.trim().length > 0;
   const nowLabel = "2026-06-01 11:30";
 
   const actionGuide = useMemo(() => {
     if (visibilityStatus === "승인 대기") {
-      return "승인 전 질문은 사용자에게 공개되지 않습니다.\n승인 후 답변 작성이 가능합니다.";
+      return "승인 대기 상태는 작성자와 관리자만 조회할 수 있습니다. 답변 작성 후 승인/비밀/휴지통 처리할 수 있습니다.";
+    }
+    if (visibilityStatus === "비밀") {
+      return "비밀 처리된 질문입니다. 질문과 답변은 작성자와 관리자만 조회할 수 있습니다.";
     }
     if (visibilityStatus === "휴지통") {
       return "휴지통 상태에서는 답변을 작성할 수 없습니다. 복구 후 다시 처리해 주세요.";
     }
     return answerStatus === "답변완료" ? "저장된 답변을 수정할 수 있습니다." : "승인된 질문입니다. 답변을 작성하고 저장할 수 있습니다.";
   }, [answerStatus, visibilityStatus]);
+
+
+  const restrictedStatus = visibilityStatus === "승인 대기" || visibilityStatus === "비밀";
+  const statusDescription = (() => {
+    if (visibilityStatus === "승인 대기") return "작성자와 관리자만 조회 가능하며, 답변 작성 후 승인/비밀/휴지통 처리할 수 있습니다.";
+    if (visibilityStatus === "승인됨") return "모든 사용자가 질문과 답변을 조회할 수 있습니다.";
+    if (visibilityStatus === "비밀") return "승인된 질문을 작성자와 관리자만 볼 수 있도록 제한한 상태입니다.";
+    return "삭제 처리된 상태이며 일반 사용자에게 노출되지 않습니다.";
+  })();
 
   if (!question) {
     return (
@@ -93,9 +107,24 @@ export default function LessonQuestionDetailPage() {
   };
 
   const approve = () => {
+    if (!hasAnswerDraft) {
+      setToast("답변 작성 후 승인 처리할 수 있습니다. (mock)");
+      return;
+    }
+    const previousStatus = visibilityStatus;
     setVisibilityStatus("승인됨");
-    addLog("승인 처리", "승인 대기 질문을 공개 승인했습니다. (mock)");
-    setToast("학습 질문이 승인되었습니다. 이제 답변 작성이 가능합니다. (mock)");
+    addLog("승인 처리", previousStatus === "비밀" ? "비밀 질문을 모든 사용자가 볼 수 있도록 승인됨으로 변경했습니다. (mock)" : "답변 후 질문을 모든 사용자가 볼 수 있도록 승인했습니다. (mock)");
+    setToast("학습 질문이 승인됨 상태로 변경되었습니다. (mock)");
+  };
+
+  const markSecret = () => {
+    if (!hasAnswerDraft) {
+      setToast("답변 작성 후 비밀 처리할 수 있습니다. (mock)");
+      return;
+    }
+    setVisibilityStatus("비밀");
+    addLog("비밀 처리", "답변 후 작성자와 관리자만 질문과 답변을 볼 수 있도록 비밀 처리했습니다. (mock)");
+    setToast("학습 질문이 비밀 상태로 변경되었습니다. 작성자와 관리자만 조회할 수 있습니다. (mock)");
   };
 
   const moveToTrash = () => {
@@ -105,9 +134,9 @@ export default function LessonQuestionDetailPage() {
   };
 
   const restore = () => {
-    setVisibilityStatus("승인됨");
-    addLog("복구", "휴지통에서 일반 학습 질문 목록으로 복구했습니다. (mock)");
-    setToast("학습 질문을 복구했습니다. (mock)");
+    setVisibilityStatus("승인 대기");
+    addLog("복구", "휴지통에서 승인 대기 상태로 복구했습니다. 작성자와 관리자만 조회할 수 있습니다. (mock)");
+    setToast("학습 질문을 승인 대기 상태로 복구했습니다. (mock)");
   };
 
   const permanentlyDelete = () => {
@@ -148,8 +177,25 @@ export default function LessonQuestionDetailPage() {
 
       {toast && <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{toast}</div>}
 
+      {restrictedStatus && (
+        <div className="flex gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-800">
+          <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>이 질문과 답변은 작성자와 관리자만 볼 수 있습니다.</p>
+        </div>
+      )}
+
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
+          <Section title="처리상태" description="학습 질문의 현재 처리 상태와 노출 범위입니다.">
+            <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+              <InfoItem label="상태" value={<Badge variant={badgeVariant(visibilityStatus)}>{visibilityStatus}</Badge>} />
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">노출 범위</p>
+                <p className="mt-2 font-bold text-slate-900">{statusDescription}</p>
+              </div>
+            </div>
+          </Section>
+
           <UserInfoCard
             title="질문자 정보"
             description="학습 질문을 등록한 회원의 기본 정보와 회원 상세 링크입니다."
@@ -231,11 +277,15 @@ export default function LessonQuestionDetailPage() {
         </div>
 
         <aside className="space-y-6">
-          <Section title="처리 액션" description="현재 상태에 맞는 승인/휴지통 처리를 진행합니다.">
+          <Section title="처리 액션" description="답변 작성 후 승인/비밀/휴지통 처리를 진행합니다.">
             <div className="space-y-2">
               {visibilityStatus === "승인 대기" && (
                 <>
-                  <Button className="w-full" onClick={approve}>승인</Button>
+                  <Button className="w-full" onClick={approve} disabled={!hasAnswerDraft}>승인</Button>
+                  <Button className="w-full" variant="outline" onClick={markSecret} disabled={!hasAnswerDraft}>
+                    <LockKeyhole className="h-4 w-4" />
+                    비밀
+                  </Button>
                   <Button className="w-full" variant="outline" onClick={moveToTrash}>
                     <Trash2 className="h-4 w-4" />
                     휴지통 이동
@@ -243,10 +293,25 @@ export default function LessonQuestionDetailPage() {
                 </>
               )}
               {visibilityStatus === "승인됨" && (
-                <Button className="w-full" variant="outline" onClick={moveToTrash}>
-                  <Trash2 className="h-4 w-4" />
-                  휴지통 이동
-                </Button>
+                <>
+                  <Button className="w-full" variant="outline" onClick={markSecret} disabled={!hasAnswerDraft}>
+                    <LockKeyhole className="h-4 w-4" />
+                    비밀
+                  </Button>
+                  <Button className="w-full" variant="outline" onClick={moveToTrash}>
+                    <Trash2 className="h-4 w-4" />
+                    휴지통 이동
+                  </Button>
+                </>
+              )}
+              {visibilityStatus === "비밀" && (
+                <>
+                  <Button className="w-full" onClick={approve} disabled={!hasAnswerDraft}>승인</Button>
+                  <Button className="w-full" variant="outline" onClick={moveToTrash}>
+                    <Trash2 className="h-4 w-4" />
+                    휴지통 이동
+                  </Button>
+                </>
               )}
               {visibilityStatus === "휴지통" && (
                 <>
