@@ -60,7 +60,9 @@ export function getCourseIncludedClasses(course: LmsCourse): CourseIncludedClass
   const classKey = getCourseClassKey(course);
 
   return courseClasses
-    .filter((courseClass) => `${courseClass.language}|${courseClass.course}` === classKey)
+    .filter((courseClass) =>
+      courseClass.linkedCourseIds.includes(course.id) || `${courseClass.language}|${courseClass.course}` === classKey,
+    )
     .map((courseClass) => ({ ...courseClass, step: getStep(courseClass.className) }));
 }
 
