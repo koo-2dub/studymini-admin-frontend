@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, GraduationCap, Languages, Layers3 } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, Headphones, Languages, Link2, MonitorPlay, Network } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -6,32 +6,42 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { lessons, type LessonContentType } from "../data";
+import {
+  getLessonLinkedClassCount,
+  getLessonLinkedCourseCount,
+  hasLessonAudio,
+  hasLessonQuiz,
+  hasLessonVideo,
+  lessons,
+} from "../data";
 
 export function generateStaticParams() {
   return lessons.map((lesson) => ({ lessonId: lesson.id }));
 }
 
-function InfoCard({ icon: Icon, label, value }: { icon: typeof Languages; label: string; value: string }) {
+function SummaryCard({ icon: Icon, label, value, note }: { icon: typeof Languages; label: string; value: string; note?: string }) {
   return (
     <Card>
-      <CardContent className="flex items-start gap-3 p-5">
+      <CardContent className="flex h-full items-start gap-3 p-5">
         <div className="rounded-2xl bg-indigo-50 p-3 text-indigo-600">
           <Icon className="h-5 w-5" />
         </div>
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{label}</p>
           <p className="mt-1 font-bold text-slate-900">{value}</p>
+          {note ? <p className="mt-1 text-xs font-semibold text-slate-500">{note}</p> : null}
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function ContentTypeBadge({ type }: { type: LessonContentType }) {
-  const variant = type === "영상" ? "default" : type === "오디오" ? "success" : "warning";
-
-  return <Badge variant={variant}>{type}</Badge>;
+function EmptyMediaMessage({ children }: { children: string }) {
+  return (
+    <div className="flex min-h-32 items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
+      {children}
+    </div>
+  );
 }
 
 export default async function LessonDetailPage({ params }: { params: Promise<{ lessonId: string }> }) {
@@ -40,12 +50,15 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ l
 
   if (!lesson) notFound();
 
+  const linkedClassCount = getLessonLinkedClassCount(lesson);
+  const linkedCourseCount = getLessonLinkedCourseCount(lesson);
+
   return (
     <>
       <PageHeader
         eyebrow="LMS management"
         title="레슨 상세"
-        description="레슨의 기본 정보와 영상, 오디오, 퀴즈 콘텐츠 구성을 확인합니다."
+        description="레슨의 핵심 콘텐츠인 영상, 오디오, 퀴즈 링크를 먼저 확인하고, 하단에서 기본 정보와 연결 요약을 확인합니다."
         action={
           <Link
             href="/lms/lessons"
@@ -56,30 +69,89 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ l
           </Link>
         }
       />
-      <section className="mb-6 grid gap-4 md:grid-cols-4">
-        <InfoCard icon={Languages} label="언어" value={lesson.language} />
-        <InfoCard icon={Layers3} label="코스" value={lesson.course} />
-        <InfoCard icon={GraduationCap} label="수업명" value={lesson.className} />
-        <Card>
-          <CardContent className="flex h-full items-center justify-between gap-3 p-5">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">공개 여부</p>
-              <div className="mt-2">
-                <Badge variant={lesson.visibility === "공개" ? "success" : "slate"}>{lesson.visibility}</Badge>
-              </div>
+
+      <section className="mb-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+        <Card className="overflow-hidden">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MonitorPlay className="h-5 w-5 text-indigo-500" />
+              <CardTitle>영상 player</CardTitle>
             </div>
-            <div className="text-right">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">수정일</p>
-              <p className="mt-2 font-bold text-slate-900">{lesson.updatedAt}</p>
-            </div>
+            <CardDescription>영상 URL이 등록되어 있으면 실제 재생 가능한 player로 표시합니다.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {hasLessonVideo(lesson) ? (
+              <video className="aspect-video w-full rounded-3xl bg-slate-950" src={lesson.videoUrl} controls>
+                영상 player를 지원하지 않는 브라우저입니다.
+              </video>
+            ) : (
+              <EmptyMediaMessage>등록된 영상이 없습니다.</EmptyMediaMessage>
+            )}
           </CardContent>
         </Card>
+
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Headphones className="h-5 w-5 text-emerald-500" />
+                <CardTitle>오디오 player</CardTitle>
+              </div>
+              <CardDescription>오디오 URL이 있으면 controls가 포함된 player로 확인합니다.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {hasLessonAudio(lesson) ? (
+                <audio className="w-full" src={lesson.audioUrl} controls>
+                  오디오 player를 지원하지 않는 브라우저입니다.
+                </audio>
+              ) : (
+                <EmptyMediaMessage>등록된 오디오가 없습니다.</EmptyMediaMessage>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-amber-500" />
+                <CardTitle>퀴즈 링크</CardTitle>
+              </div>
+              <CardDescription>퀴즈는 상세 화면에서 렌더링하지 않고 링크로만 제공합니다.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {hasLessonQuiz(lesson) ? (
+                <div className="rounded-3xl bg-amber-50 p-5">
+                  <p className="break-all text-sm font-semibold text-amber-900">{lesson.quizUrl}</p>
+                  <Link
+                    href={lesson.quizUrl!}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-amber-600"
+                  >
+                    새 창 열기
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                </div>
+              ) : (
+                <EmptyMediaMessage>등록된 퀴즈 링크가 없습니다.</EmptyMediaMessage>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </section>
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+
+      <section className="mb-6 grid gap-4 md:grid-cols-4">
+        <SummaryCard icon={Languages} label="언어" value={lesson.language} />
+        <SummaryCard icon={Network} label="연결된 수업 수" value={`${linkedClassCount}개`} note="수업 구성 단계에서 연결" />
+        <SummaryCard icon={Network} label="연결된 코스 수" value={`${linkedCourseCount}개`} note="코스 구성 결과 기준" />
+        <SummaryCard icon={FileText} label="수정일" value={lesson.updatedAt} />
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>레슨 정보</CardTitle>
-            <CardDescription>언어 → 코스 → 수업(단계) → 레슨 구조로 표시됩니다.</CardDescription>
+            <CardTitle>레슨 기본 정보</CardTitle>
+            <CardDescription>레슨은 코스나 수업 선택 없이 먼저 생성되는 독립 콘텐츠 단위입니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
@@ -87,42 +159,37 @@ export default async function LessonDetailPage({ params }: { params: Promise<{ l
               <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{lesson.lessonName}</p>
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-500">레슨 구조</p>
-              <p className="mt-2 rounded-2xl bg-slate-50 p-5 leading-7 text-slate-700">
-                {lesson.language} → {lesson.course} → {lesson.className} → {lesson.lessonName}
-              </p>
+              <p className="text-sm font-bold text-slate-500">설명/메모</p>
+              <p className="mt-2 rounded-2xl bg-slate-50 p-5 leading-7 text-slate-700">{lesson.description}</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-500">레슨 ID</p>
+              <p className="mt-2 font-mono text-sm font-semibold text-slate-700">{lesson.id}</p>
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-indigo-500" />
-              <CardTitle>학습 콘텐츠 목록</CardTitle>
-            </div>
-            <CardDescription>콘텐츠 타입을 영상, 오디오, 퀴즈로 구분해서 표시합니다.</CardDescription>
+            <CardTitle>연결 요약</CardTitle>
+            <CardDescription>코스명/수업명을 필수 정보처럼 강조하지 않고 연결 규모만 확인합니다.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {lesson.contents
-              .slice()
-              .sort((first, second) => first.order - second.order)
-              .map((content) => (
-                <div key={content.id} className="rounded-2xl bg-slate-50 p-4 text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-slate-900">{content.title}</p>
-                      <p className="mt-1 text-slate-500">{content.id}</p>
-                    </div>
-                    <ContentTypeBadge type={content.type} />
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-                    <span className="font-bold text-slate-600">순서 {content.order}</span>
-                    <span className="font-semibold text-slate-900">
-                      {content.type === "퀴즈" ? `${content.itemCount ?? 0}문항` : content.duration}
-                    </span>
-                  </div>
-                </div>
-              ))}
+          <CardContent className="space-y-4">
+            <div className="rounded-3xl bg-slate-50 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-bold text-slate-600">연결된 수업 수</span>
+                <Badge variant={linkedClassCount > 0 ? "success" : "slate"}>{linkedClassCount}개</Badge>
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
+                <span className="font-bold text-slate-600">연결된 코스 수</span>
+                <Badge variant={linkedCourseCount > 0 ? "success" : "slate"}>{linkedCourseCount}개</Badge>
+              </div>
+            </div>
+            <p className="text-sm leading-6 text-slate-500">
+              {linkedClassCount > 0
+                ? "이 레슨은 이후 수업 구성 단계에서 연결된 이력이 있습니다."
+                : "이 레슨은 아직 어떤 수업에도 연결되지 않았습니다."}
+            </p>
           </CardContent>
         </Card>
       </div>
