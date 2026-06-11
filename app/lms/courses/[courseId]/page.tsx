@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, GraduationCap, Languages, Layers3, Pencil } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, GraduationCap, Languages, ListChecks, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -16,7 +16,7 @@ export function generateStaticParams() {
 function InfoCard({ icon: Icon, label, value }: { icon: typeof Languages; label: string; value: string }) {
   return (
     <Card>
-      <CardContent className="flex items-start gap-3 p-5">
+      <CardContent className="flex h-full items-start gap-3 p-5">
         <div className="rounded-2xl bg-indigo-50 p-3 text-indigo-600">
           <Icon className="h-5 w-5" />
         </div>
@@ -27,6 +27,10 @@ function InfoCard({ icon: Icon, label, value }: { icon: typeof Languages; label:
       </CardContent>
     </Card>
   );
+}
+
+function MediaBadge({ active, label }: { active: boolean; label: string }) {
+  return <Badge variant={active ? "success" : "slate"}>{active ? `${label} 등록` : `${label} 없음`}</Badge>;
 }
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ courseId: string }> }) {
@@ -62,30 +66,19 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
           </div>
         }
       />
+
       <section className="mb-6 grid gap-4 md:grid-cols-4">
-        <InfoCard icon={Languages} label="언어" value={courseClass.language} />
-        <InfoCard icon={Layers3} label="코스" value={courseClass.course} />
         <InfoCard icon={GraduationCap} label="수업명" value={courseClass.className} />
-        <Card>
-          <CardContent className="flex h-full items-center justify-between gap-3 p-5">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">공개 여부</p>
-              <div className="mt-2">
-                <Badge variant={courseClass.visibility === "공개" ? "success" : "slate"}>{courseClass.visibility}</Badge>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">수정일</p>
-              <p className="mt-2 font-bold text-slate-900">{courseClass.updatedAt}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <InfoCard icon={Languages} label="언어" value={courseClass.language} />
+        <InfoCard icon={ListChecks} label="포함된 레슨 수" value={`${courseClass.lessons.length}개`} />
+        <InfoCard icon={CalendarDays} label="수정일" value={courseClass.updatedAt} />
       </section>
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+
+      <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         <Card>
           <CardHeader>
             <CardTitle>수업 정보</CardTitle>
-            <CardDescription>언어 → 코스 → 수업(단계) → 레슨 구조로 표시됩니다.</CardDescription>
+            <CardDescription>수업명, 언어, 포함된 레슨 수만 중심으로 표시합니다.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
@@ -93,52 +86,50 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
               <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{courseClass.className}</p>
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-500">수업 구조</p>
+              <p className="text-sm font-bold text-slate-500">설명/메모</p>
               <p className="mt-2 rounded-2xl bg-slate-50 p-5 leading-7 text-slate-700">
-                {courseClass.language} → {courseClass.course} → {courseClass.className} → {courseClass.lessons.length}개 레슨
+                {courseClass.description ?? `${courseClass.className} 수업은 ${courseClass.lessons.length}개의 레슨으로 구성되어 있습니다.`}
               </p>
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-indigo-500" />
               <CardTitle>포함된 레슨 목록</CardTitle>
             </div>
-            <CardDescription>레슨명, 공개 여부, 콘텐츠 수, 수정일을 표시합니다.</CardDescription>
+            <CardDescription>레슨 순서와 영상/오디오/퀴즈 링크 등록 여부를 확인합니다.</CardDescription>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>순서</TableHead>
                   <TableHead>레슨명</TableHead>
-                  <TableHead>공개 여부</TableHead>
-                  <TableHead>콘텐츠 수</TableHead>
-                  <TableHead>수정일</TableHead>
+                  <TableHead>언어</TableHead>
+                  <TableHead>영상 등록 여부</TableHead>
+                  <TableHead>오디오 등록 여부</TableHead>
+                  <TableHead>퀴즈 링크 등록 여부</TableHead>
+                  <TableHead>레슨 상세 보기</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {courseClass.lessons.map((lesson) => (
-                  <TableRow key={lesson.id} className="cursor-pointer hover:bg-slate-50">
-                    <TableCell className="min-w-32 p-0 font-bold text-slate-900">
-                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
-                        {lesson.lessonName}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="p-0">
-                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
-                        <Badge variant={lesson.visibility === "공개" ? "success" : "slate"}>{lesson.visibility}</Badge>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="p-0 font-semibold text-slate-900">
-                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
-                        {lesson.contentCount}개
-                      </Link>
-                    </TableCell>
-                    <TableCell className="p-0">
-                      <Link href={`/lms/lessons/${lesson.id}`} className="block px-4 py-3">
-                        {lesson.updatedAt}
+                {courseClass.lessons.map((lesson, index) => (
+                  <TableRow key={lesson.id}>
+                    <TableCell className="font-semibold text-slate-900">{index + 1}</TableCell>
+                    <TableCell className="min-w-32 font-bold text-slate-900">{lesson.lessonName}</TableCell>
+                    <TableCell>{lesson.language}</TableCell>
+                    <TableCell><MediaBadge active={lesson.hasVideo} label="영상" /></TableCell>
+                    <TableCell><MediaBadge active={lesson.hasAudio} label="오디오" /></TableCell>
+                    <TableCell><MediaBadge active={lesson.hasQuiz} label="퀴즈" /></TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/lms/lessons/${lesson.id}`}
+                        className="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                      >
+                        상세 보기
                       </Link>
                     </TableCell>
                   </TableRow>
