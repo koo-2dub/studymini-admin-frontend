@@ -15,6 +15,8 @@ type OrderListFilters = {
   orderStatus: string;
   paymentStatus: string;
   shippingStatus: string;
+  startDate: string;
+  endDate: string;
 };
 
 const emptyFilters: OrderListFilters = {
@@ -22,7 +24,11 @@ const emptyFilters: OrderListFilters = {
   orderStatus: "all",
   paymentStatus: "all",
   shippingStatus: "all",
+  startDate: "",
+  endDate: "",
 };
+
+const today = new Date().toISOString().slice(0, 10);
 
 export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   const router = useRouter();
@@ -43,17 +49,40 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
       const matchesOrderStatus = filters.orderStatus === "all" || order.orderStatus === filters.orderStatus;
       const matchesPaymentStatus = filters.paymentStatus === "all" || order.paymentStatus === filters.paymentStatus;
       const matchesShippingStatus = filters.shippingStatus === "all" || order.shippingStatus === filters.shippingStatus;
+      const matchesStartDate = !filters.startDate || order.date >= filters.startDate;
+      const matchesEndDate = !filters.endDate || order.date <= filters.endDate;
 
-      return matchesQuery && matchesOrderStatus && matchesPaymentStatus && matchesShippingStatus;
+      return matchesQuery && matchesOrderStatus && matchesPaymentStatus && matchesShippingStatus && matchesStartDate && matchesEndDate;
     });
   }, [filters, orders]);
+
+  const todayOrders = useMemo(() => orders.filter((order) => order.date === today), [orders]);
+  const todayPaidAmount = todayOrders.reduce((sum, order) => order.paymentStatus === "결제완료" || order.paymentStatus === "환불요청" ? sum + order.paymentAmount : sum, 0);
+  const todayRefundAmount = todayOrders.reduce((sum, order) => sum + order.refundAmount, 0);
 
   const updateFilter = (key: keyof OrderListFilters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
   };
 
+  const setDateRange = (startDate: string, endDate: string) => {
+    setFilters((current) => ({ ...current, startDate, endDate }));
+  };
+
+  const applyRecentDays = (days: number) => {
+    const end = new Date(today);
+    const start = new Date(today);
+    start.setDate(end.getDate() - (days - 1));
+    setDateRange(start.toISOString().slice(0, 10), today);
+  };
+
   return (
     <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-3">
+        <KpiCard label="오늘 주문 건수" value={`${todayOrders.length.toLocaleString()}건`} detail={`오늘 기준 · ${today}`} />
+        <KpiCard label="오늘 결제금액" value={formatCurrency(todayPaidAmount)} detail={`오늘 기준 · ${today}`} />
+        <KpiCard label="오늘 환불금액" value={formatCurrency(todayRefundAmount)} detail={`오늘 기준 · ${today}`} tone="rose" />
+      </section>
+
       <Card>
         <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -79,6 +108,22 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
             <FilterSelect label="주문상태" value={filters.orderStatus} onChange={(value) => updateFilter("orderStatus", value)} options={orderStatuses} />
             <FilterSelect label="결제상태" value={filters.paymentStatus} onChange={(value) => updateFilter("paymentStatus", value)} options={paymentStatuses} />
             <FilterSelect label="배송상태" value={filters.shippingStatus} onChange={(value) => updateFilter("shippingStatus", value)} options={shippingStatuses} />
+            <div className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2 xl:col-span-4">
+              <span>주문일</span>
+              <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                  <input type="date" className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={filters.startDate} onChange={(event) => updateFilter("startDate", event.target.value)} />
+                  <span className="text-center text-slate-400">~</span>
+                  <input type="date" className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={filters.endDate} onChange={(event) => updateFilter("endDate", event.target.value)} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" onClick={() => setDateRange(today, today)}>오늘</Button>
+                  <Button type="button" variant="outline" onClick={() => applyRecentDays(7)}>최근 7일</Button>
+                  <Button type="button" variant="outline" onClick={() => applyRecentDays(30)}>최근 30일</Button>
+                  <Button type="button" variant="secondary" onClick={() => setDateRange("", "")}>전체</Button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-3xl border border-slate-100">
@@ -133,33 +178,41 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
 }
 
 const paymentLinkProducts = [
-  { id: "JP-POWERPACK", name: "일본어 파워팩", price: 500000 },
+  { id: "PACK-JP-POWER", name: "일본어 파워팩", price: 500000 },
   { id: "BIZ-KO-12W", name: "비즈니스 회화 집중반", price: 229000 },
   { id: "SPA-BASIC-08W", name: "스페인어 베이직", price: 149000 },
   { id: "BOOK-ADD-01", name: "교재 추가 배송", price: 35000 },
 ];
 
 function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
-  const [selectedUserId, setSelectedUserId] = useState(members[0]?.id ?? "");
-  const [selectedProductId, setSelectedProductId] = useState(paymentLinkProducts[0].id);
+  const [userQuery, setUserQuery] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [productQuery, setProductQuery] = useState("");
+  const [selectedProductId, setSelectedProductId] = useState("");
   const [memo, setMemo] = useState("도서만 구매 요청");
   const [paymentAmount, setPaymentAmount] = useState(paymentLinkProducts[0].price);
   const [shippingFee, setShippingFee] = useState(3000);
   const [createdLink, setCreatedLink] = useState("");
 
-  const selectedUser = members.find((member) => member.id === selectedUserId) ?? members[0];
-  const selectedProduct = paymentLinkProducts.find((product) => product.id === selectedProductId) ?? paymentLinkProducts[0];
+  const normalizedUserQuery = userQuery.trim().toLowerCase();
+  const normalizedProductQuery = productQuery.trim().toLowerCase();
+  const userResults = members.filter((member) => !normalizedUserQuery || [member.id, member.name, member.email].join(" ").toLowerCase().includes(normalizedUserQuery)).slice(0, 5);
+  const productResults = paymentLinkProducts.filter((product) => !normalizedProductQuery || [product.id, product.name].join(" ").toLowerCase().includes(normalizedProductQuery)).slice(0, 5);
+  const selectedUser = members.find((member) => member.id === selectedUserId);
+  const selectedProduct = paymentLinkProducts.find((product) => product.id === selectedProductId);
   const finalAmount = paymentAmount + shippingFee;
 
   const updateProduct = (productId: string) => {
     const product = paymentLinkProducts.find((item) => item.id === productId);
     if (!product) return;
     setSelectedProductId(product.id);
+    setProductQuery(product.id);
     setPaymentAmount(product.price);
     setCreatedLink("");
   };
 
   const createPaymentLink = () => {
+    if (!selectedUser || !selectedProduct) return;
     setCreatedLink(`https://studymini.com/checkout/link/${selectedUser.id}-${selectedProduct.id}?amount=${finalAmount}`);
   };
 
@@ -175,27 +228,31 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
         </CardHeader>
         <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-5">
-            <FormSection title="유저 선택" description="유저 리스트에서 결제 링크를 전달할 대상을 선택합니다.">
-              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
-                <span>유저 검색/선택</span>
-                <select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
-                  {members.map((member) => <option key={member.id} value={member.id}>{member.name} / {member.email} / {member.id}</option>)}
-                </select>
-              </label>
-              <ReadOnlyField label="이름" value={selectedUser.name} />
-              <ReadOnlyField label="이메일" value={selectedUser.email} />
-              <ReadOnlyField label="User ID" value={selectedUser.id} />
+            <FormSection title="유저 선택" description="User ID를 검색한 뒤 결제 링크를 전달할 상담 완료 고객을 선택합니다.">
+              <SearchField label="User ID 검색" value={userQuery} onChange={(value) => { setUserQuery(value); setCreatedLink(""); }} placeholder="SM-1024" />
+              <div className="space-y-2 md:col-span-2">
+                {userResults.map((member) => (
+                  <button key={member.id} type="button" onClick={() => { setSelectedUserId(member.id); setUserQuery(member.id); setCreatedLink(""); }} className={selectedUserId === member.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}>
+                    <p className="font-mono text-sm font-black text-indigo-700">{member.id}</p>
+                    <p className="mt-1 text-sm font-bold text-slate-900">{member.name}</p>
+                    <p className="text-xs font-semibold text-slate-500">{member.email}</p>
+                  </button>
+                ))}
+              </div>
             </FormSection>
 
-            <FormSection title="상품 선택" description="상품 원가와 별도로 실제 결제 받을 금액을 입력합니다.">
-              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
-                <span>상품 리스트</span>
-                <select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={selectedProductId} onChange={(event) => updateProduct(event.target.value)}>
-                  {paymentLinkProducts.map((product) => <option key={product.id} value={product.id}>{product.name} / {formatCurrency(product.price)}</option>)}
-                </select>
-              </label>
-              <ReadOnlyField label="상품명" value={selectedProduct.name} />
-              <ReadOnlyField label="원가" value={formatCurrency(selectedProduct.price)} />
+            <FormSection title="상품 선택" description="코스 ID 또는 패키지 ID를 검색한 뒤 상품을 선택합니다.">
+              <SearchField label="코스 ID / 패키지 ID 검색" value={productQuery} onChange={(value) => { setProductQuery(value); setCreatedLink(""); }} placeholder="PACK-JP-POWER" />
+              <div className="space-y-2 md:col-span-2">
+                {productResults.map((product) => (
+                  <button key={product.id} type="button" onClick={() => updateProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}>
+                    <p className="font-mono text-sm font-black text-indigo-700">{product.id}</p>
+                    <p className="mt-1 text-sm font-bold text-slate-900">{product.name}</p>
+                    <p className="text-xs font-semibold text-slate-500">원가 {formatCurrency(product.price)}</p>
+                  </button>
+                ))}
+              </div>
+              {selectedProduct ? <ReadOnlyField label="선택 상품 원가" value={formatCurrency(selectedProduct.price)} /> : null}
               <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
                 <span>상품 메모</span>
                 <textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={memo} onChange={(event) => setMemo(event.target.value)} placeholder="도서만 구매 요청" />
@@ -212,7 +269,6 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
                 <CardDescription>실제 결제금액 + 배송비 기준입니다.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <PreviewRow label="상품 원가" value={formatCurrency(selectedProduct.price)} />
                 <PreviewRow label="실제 결제금액" value={formatCurrency(paymentAmount)} />
                 <PreviewRow label="배송비" value={formatCurrency(shippingFee)} />
                 <div className="border-t border-indigo-100 pt-3">
@@ -220,7 +276,7 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
                   <p className="mt-1 text-3xl font-black text-indigo-700">{formatCurrency(finalAmount)}</p>
                 </div>
                 <p className="rounded-2xl bg-white/80 p-3 text-xs font-semibold text-slate-600">생성된 링크의 결제 화면에서 유저가 배송정보를 직접 입력합니다.</p>
-                <Button type="button" className="w-full" onClick={createPaymentLink}>링크 생성</Button>
+                <Button type="button" className="w-full" onClick={createPaymentLink} disabled={!selectedUser || !selectedProduct}>링크 생성</Button>
               </CardContent>
             </Card>
             {createdLink ? (
@@ -238,6 +294,30 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function KpiCard({ label, value, detail, tone = "indigo" }: { label: string; value: string; detail: string; tone?: "indigo" | "rose" }) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <p className="text-sm font-black text-slate-500">{label}</p>
+        <p className={tone === "rose" ? "mt-3 text-3xl font-black text-rose-700" : "mt-3 text-3xl font-black text-slate-950"}>{value}</p>
+        <p className="mt-2 text-xs font-bold text-slate-500">{detail}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SearchField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
+      <span>{label}</span>
+      <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-4 transition focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-100">
+        <Search className="h-4 w-4 text-slate-400" />
+        <input className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-slate-400" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      </div>
+    </label>
   );
 }
 
