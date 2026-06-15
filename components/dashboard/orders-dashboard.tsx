@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { CreditCard, Search, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { AdminOrder } from "@/lib/mock-data";
+import { members, type AdminOrder } from "@/lib/mock-data";
 
 type OrderListFilters = {
   query: string;
@@ -26,6 +27,7 @@ const emptyFilters: OrderListFilters = {
 export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   const router = useRouter();
   const [filters, setFilters] = useState(emptyFilters);
+  const [paymentLinkOpen, setPaymentLinkOpen] = useState(false);
 
   const orderStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.orderStatus))), [orders]);
   const paymentStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.paymentStatus))), [orders]);
@@ -53,9 +55,12 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>주문 목록</CardTitle>
-          <CardDescription>주문 행을 클릭하면 주문 상세 화면으로 이동합니다.</CardDescription>
+        <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <CardTitle>주문 목록</CardTitle>
+            <CardDescription>주문 행을 클릭하면 주문 상세 화면으로 이동합니다.</CardDescription>
+          </div>
+          <Button type="button" onClick={() => setPaymentLinkOpen(true)}><CreditCard className="h-4 w-4" />결제 링크 생성</Button>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -122,6 +127,155 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
           )}
         </CardContent>
       </Card>
+      {paymentLinkOpen ? <PaymentLinkDialog onClose={() => setPaymentLinkOpen(false)} /> : null}
+    </div>
+  );
+}
+
+const paymentLinkProducts = [
+  { id: "JP-POWERPACK", name: "일본어 파워팩", price: 500000 },
+  { id: "BIZ-KO-12W", name: "비즈니스 회화 집중반", price: 229000 },
+  { id: "SPA-BASIC-08W", name: "스페인어 베이직", price: 149000 },
+  { id: "BOOK-ADD-01", name: "교재 추가 배송", price: 35000 },
+];
+
+function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
+  const [selectedUserId, setSelectedUserId] = useState(members[0]?.id ?? "");
+  const [selectedProductId, setSelectedProductId] = useState(paymentLinkProducts[0].id);
+  const [memo, setMemo] = useState("도서만 구매 요청");
+  const [paymentAmount, setPaymentAmount] = useState(paymentLinkProducts[0].price);
+  const [shippingFee, setShippingFee] = useState(3000);
+  const [createdLink, setCreatedLink] = useState("");
+
+  const selectedUser = members.find((member) => member.id === selectedUserId) ?? members[0];
+  const selectedProduct = paymentLinkProducts.find((product) => product.id === selectedProductId) ?? paymentLinkProducts[0];
+  const finalAmount = paymentAmount + shippingFee;
+
+  const updateProduct = (productId: string) => {
+    const product = paymentLinkProducts.find((item) => item.id === productId);
+    if (!product) return;
+    setSelectedProductId(product.id);
+    setPaymentAmount(product.price);
+    setCreatedLink("");
+  };
+
+  const createPaymentLink = () => {
+    setCreatedLink(`https://studymini.com/checkout/link/${selectedUser.id}-${selectedProduct.id}?amount=${finalAmount}`);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-8 backdrop-blur-sm">
+      <Card className="w-full max-w-5xl border-white/80 bg-white shadow-2xl">
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>결제 링크 생성</CardTitle>
+            <CardDescription>주문이 생성되기 전, 특정 유저에게 전달할 결제 링크를 만듭니다. 배송정보는 유저가 결제 화면에서 직접 입력합니다.</CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}><X className="h-4 w-4" />닫기</Button>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-5">
+            <FormSection title="유저 선택" description="유저 리스트에서 결제 링크를 전달할 대상을 선택합니다.">
+              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
+                <span>유저 검색/선택</span>
+                <select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                  {members.map((member) => <option key={member.id} value={member.id}>{member.name} / {member.email} / {member.id}</option>)}
+                </select>
+              </label>
+              <ReadOnlyField label="이름" value={selectedUser.name} />
+              <ReadOnlyField label="이메일" value={selectedUser.email} />
+              <ReadOnlyField label="User ID" value={selectedUser.id} />
+            </FormSection>
+
+            <FormSection title="상품 선택" description="상품 원가와 별도로 실제 결제 받을 금액을 입력합니다.">
+              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
+                <span>상품 리스트</span>
+                <select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={selectedProductId} onChange={(event) => updateProduct(event.target.value)}>
+                  {paymentLinkProducts.map((product) => <option key={product.id} value={product.id}>{product.name} / {formatCurrency(product.price)}</option>)}
+                </select>
+              </label>
+              <ReadOnlyField label="상품명" value={selectedProduct.name} />
+              <ReadOnlyField label="원가" value={formatCurrency(selectedProduct.price)} />
+              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2">
+                <span>상품 메모</span>
+                <textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={memo} onChange={(event) => setMemo(event.target.value)} placeholder="도서만 구매 요청" />
+              </label>
+              <NumberField label="실제 결제금액" value={paymentAmount} onChange={setPaymentAmount} />
+              <NumberField label="배송비" value={shippingFee} onChange={setShippingFee} />
+            </FormSection>
+          </div>
+
+          <aside className="space-y-4">
+            <Card className="border-indigo-100 bg-indigo-50/70">
+              <CardHeader>
+                <CardTitle className="text-base">최종 결제금액 미리보기</CardTitle>
+                <CardDescription>실제 결제금액 + 배송비 기준입니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <PreviewRow label="상품 원가" value={formatCurrency(selectedProduct.price)} />
+                <PreviewRow label="실제 결제금액" value={formatCurrency(paymentAmount)} />
+                <PreviewRow label="배송비" value={formatCurrency(shippingFee)} />
+                <div className="border-t border-indigo-100 pt-3">
+                  <p className="text-xs font-bold text-slate-500">최종 결제금액</p>
+                  <p className="mt-1 text-3xl font-black text-indigo-700">{formatCurrency(finalAmount)}</p>
+                </div>
+                <p className="rounded-2xl bg-white/80 p-3 text-xs font-semibold text-slate-600">생성된 링크의 결제 화면에서 유저가 배송정보를 직접 입력합니다.</p>
+                <Button type="button" className="w-full" onClick={createPaymentLink}>링크 생성</Button>
+              </CardContent>
+            </Card>
+            {createdLink ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">생성된 결제 링크</CardTitle>
+                  <CardDescription>유저에게 전달할 mock 링크입니다.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="break-all rounded-2xl bg-slate-100 p-4 text-sm font-bold text-slate-700">{createdLink}</p>
+                </CardContent>
+              </Card>
+            ) : null}
+          </aside>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function FormSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 md:grid-cols-2">{children}</CardContent>
+    </Card>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-bold text-slate-500">{label}</p>
+      <p className="mt-1 break-words text-sm font-black text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700">
+      <span>{label}</span>
+      <input type="number" className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={value} onChange={(event) => onChange(Number(event.target.value) || 0)} />
+    </label>
+  );
+}
+
+function PreviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="font-bold text-slate-500">{label}</span>
+      <span className="font-black text-slate-900">{value}</span>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CreditCard, PackageCheck, RefreshCcw, Truck } from "lucide-react";
+import { ArrowLeft, PackageCheck, RefreshCcw, Truck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,23 +83,59 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
               ["최종 결제금액", formatCurrency(order.paymentAmount)],
             ]}
           />
+
+          <InfoCard
+            title="결제 정보"
+            description="결제 수단, 승인 정보와 환불 반영 금액입니다."
+            rows={[
+              ["결제수단", order.paymentMethod],
+              ["결제일", order.paidAt ?? "-"],
+              ["PG사", order.pgProvider ?? "-"],
+              ["결제 승인번호", order.paymentApprovalNumber ?? "-"],
+              ["결제상태", order.paymentStatus, "badge"],
+              ["결제금액", formatCurrency(order.paymentAmount)],
+              ["환불금액", formatCurrency(order.refundAmount)],
+              ["환불 후 결제금액", formatCurrency(finalPaidAmount)],
+            ]}
+          />
         </div>
 
         <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
           <Card>
             <CardHeader>
-              <CardTitle>운영 정보</CardTitle>
-              <CardDescription>결제 링크, 송장, 배송, 환불 처리 진입점입니다.</CardDescription>
+              <CardTitle>배송 정보</CardTitle>
+              <CardDescription>송장 번호 입력 후 저장하면 배송 상태가 배송 중으로 반영되는 흐름입니다.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button type="button" className="w-full justify-start" variant="secondary"><CreditCard className="h-4 w-4" />결제 링크 생성</Button>
-              <Button type="button" className="w-full justify-start" variant="outline"><PackageCheck className="h-4 w-4" />송장 등록</Button>
-              <Button type="button" className="w-full justify-start" variant="outline"><Truck className="h-4 w-4" />배송 처리</Button>
-              <Button type="button" className="w-full justify-start" variant="outline" disabled={!refundable}><RefreshCcw className="h-4 w-4" />환불 처리</Button>
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-600">
-                <p>택배사: <span className="font-black text-slate-900">{order.courier ?? "-"}</span></p>
-                <p className="mt-2">송장번호: <span className="font-black text-slate-900">{order.invoiceNumber ?? "-"}</span></p>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3">
+                <InfoRow label="수령인" value={order.recipient} />
+                <InfoRow label="배송 연락처" value={order.shippingPhone} />
+                <InfoRow label="배송지" value={order.shippingAddress} />
+                <InfoRow label="배송 메모" value={order.shippingMemo ?? "-"} />
               </div>
+              <div className="space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4">
+                <label className="space-y-2 text-sm font-semibold text-slate-700">
+                  <span>택배사 선택</span>
+                  <select className="h-11 w-full rounded-2xl border border-indigo-100 bg-white px-4 text-sm font-semibold outline-none">
+                    <option>{order.courier ?? "CJ대한통운"}</option>
+                    <option>우체국택배</option>
+                    <option>한진택배</option>
+                    <option>롯데택배</option>
+                  </select>
+                </label>
+                <label className="space-y-2 text-sm font-semibold text-slate-700">
+                  <span>송장 번호 입력</span>
+                  <input className="h-11 w-full rounded-2xl border border-indigo-100 bg-white px-4 text-sm font-semibold outline-none" defaultValue={order.invoiceNumber === "-" ? "" : order.invoiceNumber} placeholder="송장 번호를 입력하세요" />
+                </label>
+                <Button type="button" className="w-full"><PackageCheck className="h-4 w-4" />송장 저장</Button>
+              </div>
+              <div className="grid gap-2">
+                <ShippingStep label="배송 대기" active={order.shippingStatus === "배송대기" || order.shippingStatus === "배송전"} />
+                <ShippingStep label="배송 중" active={order.shippingStatus === "배송중"} />
+                <ShippingStep label="배송 완료" active={order.shippingStatus === "배송완료"} />
+              </div>
+              <Button type="button" className="w-full justify-start" variant="outline"><Truck className="h-4 w-4" />배송 완료 처리</Button>
+              <Button type="button" className="w-full justify-start" variant="outline" disabled={!refundable}><RefreshCcw className="h-4 w-4" />환불 처리</Button>
             </CardContent>
           </Card>
 
@@ -236,6 +272,14 @@ function InfoRow({ label, value, type }: { label: string; value: string; type?: 
         ) : null}
         {!type ? <p className="break-words text-sm font-black text-slate-900">{value}</p> : null}
       </div>
+    </div>
+  );
+}
+
+function ShippingStep({ label, active }: { label: string; active: boolean }) {
+  return (
+    <div className={active ? "rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-black text-indigo-700" : "rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500"}>
+      {label}
     </div>
   );
 }
