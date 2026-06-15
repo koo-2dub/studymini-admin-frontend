@@ -1,6 +1,7 @@
 import {
   BadgePercent,
   BellRing,
+  CalendarDays,
   BookOpenCheck,
   CircleDollarSign,
   Coins,
@@ -43,6 +44,7 @@ export const navItems: (NavLinkItem | NavGroupItem)[] = [
   { title: "학습 질문", href: "/lesson-questions", icon: BookOpenCheck },
   { title: "Coupons", href: "/coupons", icon: BadgePercent },
   { title: "Points", href: "/points", icon: Coins },
+  { title: "이벤트 관리", href: "/events", icon: CalendarDays },
   { title: "Popup management", href: "/popups", icon: Megaphone },
   { title: "Sales analytics", href: "/analytics", icon: CircleDollarSign },
 ];
