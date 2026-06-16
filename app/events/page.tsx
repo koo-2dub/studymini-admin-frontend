@@ -37,7 +37,7 @@ export default function EventsPage() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return events.filter((event) => {
-      const matchesQuery = !normalizedQuery || `${event.title} ${event.cardTitle} ${event.cardBottomText}`.toLowerCase().includes(normalizedQuery);
+      const matchesQuery = !normalizedQuery || event.title.toLowerCase().includes(normalizedQuery);
       const matchesStatus = status === "전체" || event.status === status;
 
       return matchesQuery && matchesStatus;
@@ -56,7 +56,7 @@ export default function EventsPage() {
         <Card>
           <CardHeader>
             <CardTitle>이벤트 필터</CardTitle>
-            <CardDescription>이벤트 타이틀, 카드 타이틀, 카드 하단 문구와 노출 상태로 목록을 확인합니다.</CardDescription>
+            <CardDescription>이벤트 타이틀과 노출 상태로 목록을 확인합니다.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 lg:grid-cols-[1fr_220px]">
             <label className="space-y-1 text-sm font-semibold text-slate-700">
@@ -65,7 +65,7 @@ export default function EventsPage() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm outline-none focus:border-primary"
-                  placeholder="이벤트 타이틀, 카드 타이틀, 카드 하단 문구 검색"
+                  placeholder="이벤트 타이틀 검색"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                 />
@@ -84,17 +84,16 @@ export default function EventsPage() {
           <CardHeader className="gap-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
             <div className="space-y-2">
               <CardTitle>이벤트 목록</CardTitle>
-              <CardDescription>썸네일, 노출 기간, 상세 이미지 등록 상태를 row/column 형태로 확인합니다.</CardDescription>
+              <CardDescription>썸네일과 상세 이미지 등록 여부, 노출 기간을 row/column 형태로 확인합니다.</CardDescription>
             </div>
             <Badge variant="slate">{filteredEvents.length.toLocaleString("ko-KR")}개 표시</Badge>
           </CardHeader>
           <CardContent className="overflow-x-auto">
-            <Table className="min-w-[1280px]">
+            <Table className="min-w-[1080px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[112px] whitespace-nowrap">썸네일</TableHead>
                   <TableHead className="whitespace-nowrap">이벤트 타이틀</TableHead>
-                  <TableHead className="whitespace-nowrap">카드 하단 문구</TableHead>
                   <TableHead className="whitespace-nowrap">상태</TableHead>
                   <TableHead className="whitespace-nowrap">노출 시작일</TableHead>
                   <TableHead className="whitespace-nowrap">노출 종료일</TableHead>
@@ -117,14 +116,12 @@ export default function EventsPage() {
                         if (keyEvent.key === "Enter" || keyEvent.key === " ") router.push(detailHref);
                       }}
                     >
-                      <TableCell><img src={event.thumbnailImage} alt={`${event.title} 썸네일 이미지`} className="h-14 w-20 rounded-2xl object-cover" /></TableCell>
+                      <TableCell><ImageStatusBadge registered={Boolean(event.thumbnailImage)} /></TableCell>
                       <TableCell>
                         <div className="min-w-[220px] py-1">
                           <span className="block whitespace-nowrap font-bold text-slate-900">{event.title}</span>
-                          <span className="mt-1 block whitespace-nowrap text-xs font-semibold text-primary">{event.cardTitle}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="max-w-[280px] text-sm text-slate-600"><span className="line-clamp-2 py-1">{event.cardBottomText}</span></TableCell>
                       <TableCell className="whitespace-nowrap"><Badge variant={eventStatusVariant(event.status)}>{event.status}</Badge></TableCell>
                       <TableCell className="whitespace-nowrap text-sm font-semibold text-slate-700">{event.startDate}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm font-semibold text-slate-700">{event.endDate}</TableCell>
