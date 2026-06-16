@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ImagePlus, Link2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Link2, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -47,28 +47,32 @@ function ImageUploader({ label, guide, value, onChange }: { label: string; guide
         </div>
         {value ? <Button type="button" size="sm" variant="ghost" onClick={() => onChange("")}><Trash2 className="h-3.5 w-3.5" />삭제</Button> : null}
       </div>
-      <div className="mt-4 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white">
+      <label className="mt-4 block text-sm font-semibold text-slate-700">
+        이미지 URL 입력
+        <input className={fieldClassName()} placeholder="https://..." value={value} onChange={(event) => onChange(event.target.value)} />
+      </label>
+      <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
         {value ? (
           <img src={value} alt={`${label} 미리보기`} className="h-48 w-full object-cover" />
         ) : (
-          <div className="flex h-48 flex-col items-center justify-center gap-2 text-slate-400">
-            <ImagePlus className="h-8 w-8" />
-            <span className="text-sm font-semibold">이미지 미리보기</span>
-          </div>
+          <div className="flex h-48 items-center justify-center bg-slate-100 text-sm font-semibold text-slate-400">이미지 미리보기</div>
         )}
       </div>
-      <label className="mt-3 block text-sm font-semibold text-slate-700">
-        이미지 URL
-        <input className={fieldClassName()} placeholder="https://..." value={value} onChange={(event) => onChange(event.target.value)} />
-      </label>
-      <Button type="button" variant="outline" className="mt-3 w-full" onClick={() => onChange(value || "https://placehold.co/1200x720/e0e7ff/3730a3?text=Event+Image")}>업로드 영역</Button>
     </div>
   );
 }
 
 export function EventForm({ mode, event }: EventFormProps) {
-  const [form, setForm] = useState<EventRecord>(event ?? emptyEvent);
+  const initialEvent = useMemo(() => event ?? emptyEvent, [event]);
+  const [form, setForm] = useState<EventRecord>(initialEvent);
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initialEvent));
   const isCreate = mode === "create";
+  const isDirty = JSON.stringify(form) !== savedSnapshot;
+  const saveDisabled = !isCreate && !isDirty;
+
+  function handleSave() {
+    setSavedSnapshot(JSON.stringify(form));
+  }
 
   return (
     <>
@@ -162,7 +166,7 @@ export function EventForm({ mode, event }: EventFormProps) {
                   <Link2 className="h-4 w-4" />
                 </div>
               </div>
-              <Button className="w-full" type="button">{isCreate ? "이벤트 생성" : "수정 저장"}</Button>
+              <Button className="w-full" type="button" disabled={saveDisabled} onClick={handleSave}>{isCreate ? "이벤트 생성" : "수정 저장"}</Button>
             </CardContent>
           </Card>
         </aside>

@@ -96,7 +96,7 @@ export const events: EventRecord[] = [
     detailImages: {
       desktop1920: image("Review Detail 1920", 1920, 1400),
       desktop1280: image("Review Detail 1280", 1280, 1200),
-      tablet768: image("Review Detail 768", 768, 1100),
+      tablet768: "",
       mobile375: image("Review Detail 375", 375, 980),
     },
     floatingBar: {
