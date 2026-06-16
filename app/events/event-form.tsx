@@ -22,7 +22,7 @@ const emptyEvent: EventRecord = {
   cardBottomText: "",
   thumbnailImage: "",
   detailImages: { desktop1920: "", desktop1280: "", tablet768: "", mobile375: "" },
-  floatingBar: { topText: "", highlightText: "", buttonText: "", buttonUrl: "" },
+  floatingBar: { enabled: true, topText: "", highlightText: "", buttonText: "", buttonUrl: "" },
   status: "비노출",
   startDate: "2026-06-15",
   endDate: "2026-06-30",
@@ -126,11 +126,31 @@ export function EventForm({ mode, event }: EventFormProps) {
               <CardTitle>하단 플로팅 바</CardTitle>
               <CardDescription>이벤트 상세 화면 하단에 고정 노출되는 CTA 영역입니다.</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm font-semibold text-slate-700">플로팅 바 상단 문구<input className={fieldClassName()} value={form.floatingBar.topText} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, topText: event.target.value } })} /></label>
-              <label className="block text-sm font-semibold text-slate-700">플로팅 바 강조 문구<input className={fieldClassName()} value={form.floatingBar.highlightText} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, highlightText: event.target.value } })} /></label>
-              <label className="block text-sm font-semibold text-slate-700">버튼 문구<input className={fieldClassName()} value={form.floatingBar.buttonText} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, buttonText: event.target.value } })} /></label>
-              <label className="block text-sm font-semibold text-slate-700">버튼 링크<input className={fieldClassName()} value={form.floatingBar.buttonUrl} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, buttonUrl: event.target.value } })} /></label>
+            <CardContent className="space-y-4">
+              <div className="space-y-2 text-sm font-semibold text-slate-700">
+                플로팅 바 사용 여부
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[{ label: "사용", value: true }, { label: "사용 안 함", value: false }].map((option) => (
+                    <label key={option.label} className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-primary/40">
+                      <input
+                        type="radio"
+                        name="floatingBarEnabled"
+                        checked={form.floatingBar.enabled === option.value}
+                        onChange={() => setForm({ ...form, floatingBar: { ...form.floatingBar, enabled: option.value } })}
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {form.floatingBar.enabled ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="block text-sm font-semibold text-slate-700">플로팅 바 상단 문구<input className={fieldClassName()} value={form.floatingBar.topText} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, topText: event.target.value } })} /></label>
+                  <label className="block text-sm font-semibold text-slate-700">플로팅 바 강조 문구<input className={fieldClassName()} value={form.floatingBar.highlightText} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, highlightText: event.target.value } })} /></label>
+                  <label className="block text-sm font-semibold text-slate-700">버튼 문구<input className={fieldClassName()} value={form.floatingBar.buttonText} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, buttonText: event.target.value } })} /></label>
+                  <label className="block text-sm font-semibold text-slate-700">버튼 링크<input className={fieldClassName()} value={form.floatingBar.buttonUrl} onChange={(event) => setForm({ ...form, floatingBar: { ...form.floatingBar, buttonUrl: event.target.value } })} /></label>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>
@@ -158,14 +178,16 @@ export function EventForm({ mode, event }: EventFormProps) {
                   </dl>
                 </div>
               </div>
-              <div className="rounded-2xl bg-slate-950 p-4 text-white">
-                <p className="text-xs text-white/60">{form.floatingBar.topText || "플로팅 바 상단 문구"}</p>
-                <p className="mt-1 text-lg font-black">{form.floatingBar.highlightText || "플로팅 바 강조 문구"}</p>
-                <div className="mt-3 flex items-center justify-between rounded-xl bg-white px-3 py-2 text-slate-950">
-                  <span className="text-sm font-bold">{form.floatingBar.buttonText || "버튼 문구"}</span>
-                  <Link2 className="h-4 w-4" />
+              {form.floatingBar.enabled ? (
+                <div className="rounded-2xl bg-slate-950 p-4 text-white">
+                  <p className="text-xs text-white/60">{form.floatingBar.topText || "플로팅 바 상단 문구"}</p>
+                  <p className="mt-1 text-lg font-black">{form.floatingBar.highlightText || "플로팅 바 강조 문구"}</p>
+                  <div className="mt-3 flex items-center justify-between rounded-xl bg-white px-3 py-2 text-slate-950">
+                    <span className="text-sm font-bold">{form.floatingBar.buttonText || "버튼 문구"}</span>
+                    <Link2 className="h-4 w-4" />
+                  </div>
                 </div>
-              </div>
+              ) : null}
               <Button className="w-full" type="button" disabled={saveDisabled} onClick={handleSave}>{isCreate ? "이벤트 생성" : "수정 저장"}</Button>
             </CardContent>
           </Card>

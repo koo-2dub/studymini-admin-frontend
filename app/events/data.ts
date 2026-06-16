@@ -8,6 +8,7 @@ export type EventDetailImages = {
 };
 
 export type EventFloatingBar = {
+  enabled: boolean;
   topText: string;
   highlightText: string;
   buttonText: string;
@@ -54,6 +55,7 @@ export const events: EventRecord[] = [
       mobile375: image("Summer Detail 375", 375, 980),
     },
     floatingBar: {
+      enabled: true,
       topText: "07:03:55후 신청 마감",
       highlightText: "남은 수량, 단 4개!",
       buttonText: "바로 신청하기",
@@ -77,6 +79,7 @@ export const events: EventRecord[] = [
       mobile375: image("Welcome Detail 375", 375, 980),
     },
     floatingBar: {
+      enabled: true,
       topText: "신규 회원 전용 혜택 진행 중",
       highlightText: "첫 구매 쿠폰 20% 지급",
       buttonText: "혜택 받고 시작하기",
@@ -100,6 +103,7 @@ export const events: EventRecord[] = [
       mobile375: image("Review Detail 375", 375, 980),
     },
     floatingBar: {
+      enabled: false,
       topText: "매주 금요일 리워드 지급",
       highlightText: "후기 작성 시 3,000P",
       buttonText: "후기 작성하기",
