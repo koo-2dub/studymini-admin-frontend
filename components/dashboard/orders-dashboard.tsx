@@ -310,27 +310,47 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
 }
 
 const manualOrderProducts = [
-  { id: "COURSE-BIZ-KO-12W", name: "비즈니스 회화 집중반", type: "코스", price: 215000 },
-  { id: "COURSE-EN-LISTENING-STARTER", name: "영어 리스닝 스타터", type: "코스", price: 99000 },
-  { id: "PACK-JP-POWER", name: "일본어 파워팩", type: "패키지", price: 500000 },
-  { id: "PACK-SPA-BASIC", name: "스페인어 베이직 패키지", type: "패키지", price: 149000 },
+  { id: "COURSE-BIZ-KO-12W", sku: "BIZ-KO-12W", name: "비즈니스 회화 집중반", type: "코스", price: 215000, summary: "12주 비즈니스 한국어 회화 · 온라인 수업 24개" },
+  { id: "COURSE-EN-LISTENING-STARTER", sku: "EN-LISTENING-STARTER", name: "영어 리스닝 스타터", type: "코스", price: 99000, summary: "영어 듣기 입문 과정 · 핵심 레슨 18개" },
+  { id: "PACK-JP-POWER", sku: "JP-POWER-PACK", name: "일본어 파워팩", type: "패키지", price: 500000, summary: "일본어 기초 + 문법 + 네이티브 회화 패키지" },
+  { id: "PACK-SPA-BASIC", sku: "SPA-BASIC-08W", name: "스페인어 베이직 패키지", type: "패키지", price: 149000, summary: "스페인어 베이직 8주 과정 + 복습 자료" },
 ];
 
 function ManualOrderDialog({ onClose }: { onClose: () => void }) {
-  const [source, setSource] = useState("이즈웰");
-  const [externalOrderNumber, setExternalOrderNumber] = useState("EZW-20260617-001");
   const [email, setEmail] = useState("customer@example.com");
-  const [productQuery, setProductQuery] = useState("PACK");
+  const [name, setName] = useState("복지몰 고객");
+  const [phone, setPhone] = useState("010-0000-0000");
+  const [temporaryPassword, setTemporaryPassword] = useState("Studymini!2026");
+  const [source, setSource] = useState("이즈웰");
+  const [requestedAt, setRequestedAt] = useState("2026-06-17");
+  const [externalOrderNumber, setExternalOrderNumber] = useState("EZW-20260617-001");
+  const [paidAt, setPaidAt] = useState("2026-06-17");
+  const [memo, setMemo] = useState("이즈웰 복지몰 결제 확인 후 강의 지급");
+  const [productQuery, setProductQuery] = useState("JP-POWER");
   const [selectedProductId, setSelectedProductId] = useState(manualOrderProducts[2].id);
   const [paymentAmount, setPaymentAmount] = useState(manualOrderProducts[2].price);
+  const [recipient, setRecipient] = useState("복지몰 고객");
+  const [shippingPhone, setShippingPhone] = useState("010-0000-0000");
+  const [shippingAddress, setShippingAddress] = useState("서울특별시 강남구 테헤란로 123");
+  const [shippingDetailAddress, setShippingDetailAddress] = useState("8층");
+  const [shippingPostalCode, setShippingPostalCode] = useState("06234");
+  const [shippingMemo, setShippingMemo] = useState("배송 전 연락 부탁드립니다.");
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = members.find((member) => member.email.toLowerCase() === normalizedEmail);
   const selectedProduct = manualOrderProducts.find((product) => product.id === selectedProductId);
-  const productResults = manualOrderProducts.filter((product) => [product.id, product.name, product.type].join(" ").toLowerCase().includes(productQuery.trim().toLowerCase())).slice(0, 5);
+  const normalizedProductQuery = productQuery.trim().toLowerCase();
+  const productResults = manualOrderProducts.filter((product) => !normalizedProductQuery || [product.id, product.sku, product.name, product.type].join(" ").toLowerCase().includes(normalizedProductQuery)).slice(0, 5);
+  const hasShippingInfo = [recipient, shippingPhone, shippingAddress, shippingDetailAddress, shippingPostalCode].some((value) => value.trim());
+  const userStatus = existingUser ? "기존 유저" : "신규 유저 생성 예정";
+  const previewName = existingUser?.name ?? name;
+  const resultSummary = existingUser ? "기존 유저 연결 + 강의 지급 + 주문 기록 생성" : "유저 생성 + 강의 지급 + 주문 기록 생성";
 
   const selectProduct = (productId: string) => {
     const product = manualOrderProducts.find((item) => item.id === productId);
     if (!product) return;
     setSelectedProductId(product.id);
-    setProductQuery(product.id);
+    setProductQuery(product.sku);
     setPaymentAmount(product.price);
   };
 
@@ -340,35 +360,78 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
             <CardTitle>주문 생성</CardTitle>
-            <CardDescription>외부 복지몰/제휴몰에서 이미 결제 완료된 주문을 수동 등록하고 강의 이용 권한을 연결합니다.</CardDescription>
+            <CardDescription>이미 외부몰에서 결제한 주문을 바탕으로 유저 생성/매칭, 강의 지급, 주문 기록 생성을 한 번에 처리합니다.</CardDescription>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={onClose}><X className="h-4 w-4" />닫기</Button>
         </CardHeader>
-        <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
-            <FormSection title="주문 정보" description="외부 결제처에서 확인한 주문 식별 정보를 입력합니다.">
-              <TextField label="외부 주문번호" value={externalOrderNumber} onChange={setExternalOrderNumber} placeholder="EZW-20260617-001" />
-              <label className="space-y-2 text-sm font-semibold text-slate-700"><span>주문 출처</span><select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none" value={source} onChange={(event) => setSource(event.target.value)}><option>이즈웰</option><option>수동 등록</option><option>기타</option></select></label>
-            </FormSection>
-            <FormSection title="주문자 정보" description="가입 전 유저도 생성/매칭할 수 있도록 계정 생성 정보를 입력합니다.">
-              <TextField label="닉네임" value="복지몰 고객" onChange={() => undefined} placeholder="닉네임" />
+            <FormSection title="1. 이메일로 유저 검색" description="이메일을 먼저 입력해 기존 유저 여부를 확인합니다.">
               <TextField label="이메일 *" value={email} onChange={setEmail} placeholder="customer@example.com" />
-              <TextField label="임시 비밀번호" value="Studymini!2026" onChange={() => undefined} placeholder="임시 비밀번호" />
-              <TextField label="전화번호" value="010-0000-0000" onChange={() => undefined} placeholder="010-0000-0000" />
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 md:col-span-2">
+                {existingUser ? (
+                  <div className="space-y-2 text-sm">
+                    <Badge variant="success">기존 유저</Badge>
+                    <PreviewRow label="User ID" value={existingUser.id} />
+                    <PreviewRow label="이름/닉네임" value={existingUser.name} />
+                    <PreviewRow label="이메일" value={existingUser.email} />
+                    <PreviewRow label="전화번호" value={existingUser.phone} />
+                    <p className="text-xs font-semibold text-slate-600">기존 유저에게 강의를 지급합니다. 비밀번호 생성 필드는 비활성화됩니다.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Badge variant="warning">신규 유저 생성 필요</Badge>
+                    <p className="text-sm font-semibold text-slate-600">저장 시 아래 정보로 유저가 자동 생성되고 선택 상품/강의가 지급됩니다.</p>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <TextField label="이름/닉네임" value={name} onChange={setName} placeholder="복지몰 고객" />
+                      <TextField label="전화번호" value={phone} onChange={setPhone} placeholder="010-0000-0000" />
+                      <TextField label="임시 비밀번호" value={temporaryPassword} onChange={setTemporaryPassword} placeholder="임시 비밀번호" />
+                    </div>
+                  </div>
+                )}
+              </div>
             </FormSection>
-            <FormSection title="상품/강의 정보" description="코스 ID 또는 패키지 ID를 검색해 수강 권한을 연결합니다.">
-              <SearchField label="코스 ID / 패키지 ID 검색" value={productQuery} onChange={setProductQuery} placeholder="COURSE- 또는 PACK-" />
-              <div className="space-y-2 md:col-span-2">{productResults.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}><p className="font-mono text-sm font-black text-indigo-700">{product.id}</p><p className="mt-1 text-sm font-bold text-slate-900">{product.name}</p><p className="text-xs font-semibold text-slate-500">상품 유형: {product.type}</p></button>)}</div>
-              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="상품 유형" value={selectedProduct.type} /></> : null}
+
+            <FormSection title="2. 주문 정보" description="외부몰에서 전달받은 주문/결제 정보를 입력합니다.">
+              <label className="space-y-2 text-sm font-semibold text-slate-700"><span>주문 출처</span><select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none" value={source} onChange={(event) => setSource(event.target.value)}><option>이즈웰</option><option>수동 등록</option><option>기타</option></select></label>
+              <TextField label="요청일 / 주문일" value={requestedAt} onChange={setRequestedAt} placeholder="YYYY-MM-DD" />
+              <TextField label="외부 주문번호" value={externalOrderNumber} onChange={setExternalOrderNumber} placeholder="EZW-20260617-001" />
+              <TextField label="결제일" value={paidAt} onChange={setPaidAt} placeholder="YYYY-MM-DD" />
+              <NumberField label="구매 금액" value={paymentAmount} onChange={setPaymentAmount} />
+              <label className="space-y-2 text-sm font-semibold text-slate-700"><span>메모</span><textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none" value={memo} onChange={(event) => setMemo(event.target.value)} /></label>
             </FormSection>
-            <FormSection title="결제 정보" description="외부에서 이미 결제된 주문이므로 결제 링크는 발급하지 않습니다.">
-              <ReadOnlyField label="외부 결제 완료 여부" value="완료" />
-              <NumberField label="결제 금액" value={paymentAmount} onChange={setPaymentAmount} />
-              <TextField label="결제일" value="2026-06-17" onChange={() => undefined} placeholder="YYYY-MM-DD" />
-              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2"><span>메모</span><textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none" defaultValue="이즈웰 복지몰 결제 확인 후 강의 지급" /></label>
+
+            <FormSection title="3. 상품/강의 선택" description="코스 ID, 패키지 ID 또는 SKU로 검색해 지급할 상품/강의를 선택합니다.">
+              <SearchField label="코스 ID / 패키지 ID / SKU 검색" value={productQuery} onChange={setProductQuery} placeholder="COURSE-, PACK-, SKU" />
+              <div className="space-y-2 md:col-span-2">{productResults.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}><p className="font-mono text-sm font-black text-indigo-700">{product.id}</p><p className="mt-1 text-sm font-bold text-slate-900">{product.name}</p><p className="text-xs font-semibold text-slate-500">SKU {product.sku} · {product.type}</p><p className="mt-2 text-xs font-semibold text-slate-600">{product.summary}</p></button>)}</div>
+              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="SKU" value={selectedProduct.sku} /><ReadOnlyField label="상품 유형" value={selectedProduct.type} /><ReadOnlyField label="포함 강의/수업 요약" value={selectedProduct.summary} /></> : null}
+            </FormSection>
+
+            <FormSection title="4. 배송 정보" description="외부몰 주문에 포함된 배송 정보를 주문 기록에 함께 저장합니다.">
+              <TextField label="수령인" value={recipient} onChange={setRecipient} placeholder="수령인" />
+              <TextField label="전화번호" value={shippingPhone} onChange={setShippingPhone} placeholder="010-0000-0000" />
+              <TextField label="주소" value={shippingAddress} onChange={setShippingAddress} placeholder="기본 주소" />
+              <TextField label="상세 주소" value={shippingDetailAddress} onChange={setShippingDetailAddress} placeholder="상세 주소" />
+              <TextField label="우편번호" value={shippingPostalCode} onChange={setShippingPostalCode} placeholder="00000" />
+              <label className="space-y-2 text-sm font-semibold text-slate-700"><span>배송 메모</span><textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none" value={shippingMemo} onChange={(event) => setShippingMemo(event.target.value)} /></label>
             </FormSection>
           </div>
-          <aside className="space-y-4"><Card className="border-indigo-100 bg-indigo-50/70"><CardHeader><CardTitle className="text-base">생성 미리보기</CardTitle><CardDescription>외부 결제 완료 주문으로 등록됩니다.</CardDescription></CardHeader><CardContent className="space-y-3 text-sm"><PreviewRow label="주문 출처" value={source} /><PreviewRow label="외부 주문번호" value={externalOrderNumber} /><PreviewRow label="이메일" value={email || "필수 입력"} /><PreviewRow label="상품" value={selectedProduct?.name ?? "미선택"} /><PreviewRow label="결제금액" value={formatCurrency(paymentAmount)} /><Button type="button" className="w-full" disabled={!email || !selectedProduct}>주문 생성</Button></CardContent></Card></aside>
+          <aside className="space-y-4">
+            <Card className="border-indigo-100 bg-indigo-50/70">
+              <CardHeader><CardTitle className="text-base">생성 미리보기</CardTitle><CardDescription>저장 시 생성되는 결과를 확인합니다.</CardDescription></CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="rounded-2xl bg-white/80 p-4"><Badge variant={existingUser ? "success" : "warning"}>{userStatus}</Badge><p className="mt-2 break-all font-black text-slate-900">{email || "이메일 필수"}</p></div>
+                <PreviewRow label="이름" value={previewName || "-"} />
+                <PreviewRow label="주문 출처" value={source} />
+                <PreviewRow label="외부 주문번호" value={externalOrderNumber || "-"} />
+                <PreviewRow label="선택 상품/강의" value={selectedProduct?.name ?? "미선택"} />
+                <PreviewRow label="구매 금액" value={formatCurrency(paymentAmount)} />
+                <PreviewRow label="배송 정보 입력 여부" value={hasShippingInfo ? "입력됨" : "미입력"} />
+                <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">생성 결과</p><p className="mt-1 text-sm font-black text-slate-900">{resultSummary}</p><p className="mt-2 text-xs font-semibold text-slate-600">외부 주문번호, 주문 출처, 구매 금액, 배송 정보가 주문 기록에 저장됩니다.</p></div>
+                <Button type="button" className="w-full" disabled={!email || !selectedProduct}>주문 생성</Button>
+              </CardContent>
+            </Card>
+          </aside>
         </CardContent>
       </Card>
     </div>

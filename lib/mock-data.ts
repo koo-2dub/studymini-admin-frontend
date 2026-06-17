@@ -387,6 +387,14 @@ export type AdminOrder = {
   orderSource: "자사몰" | "이즈웰" | "수동 등록" | "기타";
   externalOrderNumber?: string;
   externalPaymentConfirmed?: boolean;
+  requestedAt?: string;
+  grantedProductName?: string;
+  grantedProductId?: string;
+  grantedProductType?: "코스" | "패키지";
+  grantedProductSummary?: string;
+  userProvisioningStatus?: "기존 유저 연결" | "신규 유저 생성";
+  shippingDetailAddress?: string;
+  shippingPostalCode?: string;
   originalAmount: number;
   couponDiscountAmount: number;
   pointUsedAmount: number;
@@ -481,6 +489,14 @@ export const orders: AdminOrder[] = [
     orderSource: "이즈웰",
     externalOrderNumber: "EZW-20260617-001",
     externalPaymentConfirmed: true,
+    requestedAt: "2026-06-17",
+    grantedProductName: "교재 추가 배송",
+    grantedProductId: "BOOK-ADD-01",
+    grantedProductType: "코스",
+    grantedProductSummary: "교재 배송 주문 · 강의 지급 없음",
+    userProvisioningStatus: "기존 유저 연결",
+    shippingDetailAddress: "101동 1201호",
+    shippingPostalCode: "03901",
     originalAmount: 35000,
     couponDiscountAmount: 0,
     pointUsedAmount: 0,

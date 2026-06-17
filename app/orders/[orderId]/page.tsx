@@ -50,6 +50,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
             description="주문 진행 상태를 판단하기 위한 기본 정보입니다."
             rows={[
               ["주문번호", order.id],
+              ["요청일 / 주문일", order.requestedAt ?? order.date],
               ["주문일", order.date],
               ["주문 출처", order.orderSource],
               ["외부 주문번호", order.externalOrderNumber ?? "-"],
@@ -67,6 +68,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
               ["이름", order.member],
               ["이메일", order.email],
               ["전화번호", order.phone],
+              ["유저 처리", order.userProvisioningStatus ?? "기존 유저 연결"],
               ["배송지", order.shippingAddress],
             ]}
           />
@@ -76,8 +78,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
             description="상품, 할인, 배송비와 최종 결제금액입니다."
             rows={[
               ["상품명", order.product],
+              ["상품 ID", order.grantedProductId ?? order.sku],
               ["SKU", order.sku],
+              ["상품 유형", order.grantedProductType ?? "코스"],
+              ["포함 강의/수업 요약", order.grantedProductSummary ?? "-"],
               ["수량", `${quantity.toLocaleString()}개`],
+              ["구매 금액", formatCurrency(order.paymentAmount)],
               ["상품금액", formatCurrency(order.originalAmount)],
               ["쿠폰 할인", `-${formatCurrency(order.couponDiscountAmount)}`],
               ["포인트 사용", `-${formatCurrency(order.pointUsedAmount)}`],
@@ -114,6 +120,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
                 <InfoRow label="수령인" value={order.recipient} />
                 <InfoRow label="배송 연락처" value={order.shippingPhone} />
                 <InfoRow label="배송지" value={order.shippingAddress} />
+                <InfoRow label="상세 주소" value={order.shippingDetailAddress ?? "-"} />
+                <InfoRow label="우편번호" value={order.shippingPostalCode ?? "-"} />
                 <InfoRow label="배송 메모" value={order.shippingMemo ?? "-"} />
               </div>
               <div className="space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4">
@@ -235,6 +243,14 @@ function findOrder(orderId: string): AdminOrder | undefined {
     orderSource: "수동 등록",
     externalOrderNumber: "MANUAL-MOCK-001",
     externalPaymentConfirmed: true,
+    requestedAt: "2026-06-17",
+    grantedProductName: "교재 추가 배송",
+    grantedProductId: "BOOK-ADD-01",
+    grantedProductType: "코스",
+    grantedProductSummary: "교재 배송 주문 · 강의 지급 없음",
+    userProvisioningStatus: "신규 유저 생성",
+    shippingDetailAddress: "8층",
+    shippingPostalCode: "06234",
     originalAmount: 35000,
     couponDiscountAmount: 3000,
     pointUsedAmount: 2000,
