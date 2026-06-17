@@ -25,10 +25,12 @@ export function CourseManagementPage() {
 
   const summary = useMemo(() => {
     const lessonCount = courseClasses.reduce((sum, courseClass) => sum + courseClass.lessons.length, 0);
+    const sectionCount = courseClasses.reduce((sum, courseClass) => sum + courseClass.sections.length, 0);
 
     return {
       totalCount: courseClasses.length,
       lessonCount,
+      sectionCount,
       averageLessonCount: courseClasses.length ? Math.round((lessonCount / courseClasses.length) * 10) / 10 : 0,
     };
   }, []);
@@ -82,8 +84,8 @@ export function CourseManagementPage() {
 
       <section className="mb-6 grid gap-4 md:grid-cols-3">
         <StatCard label="전체 수업 수" value={String(summary.totalCount)} change="Mock 데이터 기준" tone="indigo" />
-        <StatCard label="포함된 레슨 수" value={`${summary.lessonCount}개`} change="수업에 포함된 레슨 합계" tone="emerald" />
-        <StatCard label="평균 레슨 수" value={`${summary.averageLessonCount}개`} change="수업당 평균 구성" tone="amber" />
+        <StatCard label="섹션 수" value={`${summary.sectionCount}개`} change="수업 안에서 관리되는 섹션 합계" tone="emerald" />
+        <StatCard label="포함된 레슨 수" value={`${summary.lessonCount}개`} change={`평균 ${summary.averageLessonCount}개`} tone="amber" />
       </section>
 
       <Card className="mb-6">
@@ -134,7 +136,7 @@ export function CourseManagementPage() {
             <BookOpen className="h-5 w-5 text-indigo-500" />
             <CardTitle>수업 목록</CardTitle>
           </div>
-          <CardDescription>수업명, 언어, 포함된 레슨 수, 수정일만 표시합니다.</CardDescription>
+          <CardDescription>수업명, 언어, 섹션 수, 포함 레슨 수, 수업 퀴즈 사용 여부, 수정일을 표시합니다.</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
@@ -142,7 +144,9 @@ export function CourseManagementPage() {
               <TableRow>
                 <TableHead>수업명</TableHead>
                 <TableHead>언어</TableHead>
-                <TableHead>포함된 레슨 수</TableHead>
+                <TableHead>섹션 수</TableHead>
+                <TableHead>포함 레슨 수</TableHead>
+                <TableHead>수업 퀴즈 사용 여부</TableHead>
                 <TableHead>수정일</TableHead>
               </TableRow>
             </TableHeader>
@@ -162,13 +166,15 @@ export function CourseManagementPage() {
                 >
                   <TableCell className="min-w-48 font-bold text-slate-900">{courseClass.className}</TableCell>
                   <TableCell>{courseClass.language}</TableCell>
+                  <TableCell className="font-semibold text-slate-900">{courseClass.sections.length}개</TableCell>
                   <TableCell className="font-semibold text-slate-900">{courseClass.lessons.length}개</TableCell>
+                  <TableCell>{courseClass.classQuizStatus}</TableCell>
                   <TableCell>{courseClass.updatedAt}</TableCell>
                 </TableRow>
               ))}
               {filteredCourseClasses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-10 text-center font-semibold text-slate-500">
+                  <TableCell colSpan={6} className="py-10 text-center font-semibold text-slate-500">
                     필터 조건에 맞는 수업이 없습니다.
                   </TableCell>
                 </TableRow>
