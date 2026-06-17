@@ -17,6 +17,7 @@ import {
   getLessonLinkedCourseCount,
   hasLessonAudio,
   hasLessonQuiz,
+  getLessonBlockCount,
   hasLessonVideo,
   lessonLanguageOptions,
   lessons,
@@ -81,7 +82,7 @@ export function LessonManagementPage() {
       <PageHeader
         eyebrow="LMS management"
         title="레슨 관리"
-        description="레슨은 독립 콘텐츠 단위로 관리하며, 영상·오디오·퀴즈 링크와 이후 수업/코스 연결 현황을 확인합니다."
+        description="레슨은 등록된 블록을 조합해 구성하며, 블록 유형별 구성과 이후 수업/코스 연결 현황을 확인합니다."
         action={
           <Button asChild variant="secondary">
             <Link href="/lms/lessons/create">
@@ -94,7 +95,7 @@ export function LessonManagementPage() {
 
       <section className="mb-6 grid gap-4 md:grid-cols-3">
         <StatCard label="전체 레슨 수" value={String(summary.totalCount)} change="Mock 데이터 기준" tone="indigo" />
-        <StatCard label="영상 등록 레슨" value={String(summary.videoCount)} change="상세에서 player 표시" tone="emerald" />
+        <StatCard label="영상 블록 포함 레슨" value={String(summary.videoCount)} change="상세에서 player 표시" tone="emerald" />
         <StatCard label="미연결 레슨" value={String(summary.unlinkedCount)} change="수업 구성 전 독립 레슨" tone="amber" />
       </section>
 
@@ -162,6 +163,7 @@ export function LessonManagementPage() {
                 <TableHead>영상 등록 여부</TableHead>
                 <TableHead>오디오 등록 여부</TableHead>
                 <TableHead>퀴즈 링크 등록 여부</TableHead>
+                <TableHead>블록 수</TableHead>
                 <TableHead>연결된 수업 수</TableHead>
                 <TableHead>연결된 코스 수</TableHead>
                 <TableHead>수정일</TableHead>
@@ -186,6 +188,7 @@ export function LessonManagementPage() {
                   <TableCell><RegistrationBadge registered={hasLessonVideo(lesson)} /></TableCell>
                   <TableCell><RegistrationBadge registered={hasLessonAudio(lesson)} /></TableCell>
                   <TableCell><RegistrationBadge registered={hasLessonQuiz(lesson)} /></TableCell>
+                  <TableCell className="font-semibold text-slate-800">{getLessonBlockCount(lesson)}개</TableCell>
                   <TableCell className="font-semibold text-slate-800">{getLessonLinkedClassCount(lesson)}개</TableCell>
                   <TableCell className="font-semibold text-slate-800">{getLessonLinkedCourseCount(lesson)}개</TableCell>
                   <TableCell>{lesson.updatedAt}</TableCell>
@@ -193,7 +196,7 @@ export function LessonManagementPage() {
               ))}
               {filteredLessons.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center font-semibold text-slate-500">
+                  <TableCell colSpan={9} className="py-10 text-center font-semibold text-slate-500">
                     필터 조건에 맞는 레슨이 없습니다.
                   </TableCell>
                 </TableRow>

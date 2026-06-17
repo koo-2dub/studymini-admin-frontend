@@ -31,6 +31,7 @@ export const navItems: (NavLinkItem | NavGroupItem)[] = [
       { title: "코스 관리", href: "/lms/course-catalog" },
       { title: "수업 관리", href: "/lms/courses" },
       { title: "레슨 관리", href: "/lms/lessons" },
+      { title: "블록 관리", href: "/lms/blocks" },
     ],
   },
   {
