@@ -328,6 +328,7 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
   const [memo, setMemo] = useState("이즈웰 복지몰 결제 확인 후 강의 지급");
   const [productQuery, setProductQuery] = useState("JP-POWER");
   const [selectedProductId, setSelectedProductId] = useState(manualOrderProducts[2].id);
+  const [fulfillmentType, setFulfillmentType] = useState("디지털 + 페이퍼");
   const [paymentAmount, setPaymentAmount] = useState(manualOrderProducts[2].price);
   const [recipient, setRecipient] = useState("복지몰 고객");
   const [shippingPhone, setShippingPhone] = useState("010-0000-0000");
@@ -341,7 +342,7 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
   const selectedProduct = manualOrderProducts.find((product) => product.id === selectedProductId);
   const normalizedProductQuery = productQuery.trim().toLowerCase();
   const productResults = manualOrderProducts.filter((product) => !normalizedProductQuery || [product.id, product.sku, product.name, product.type].join(" ").toLowerCase().includes(normalizedProductQuery)).slice(0, 5);
-  const requiresShipping = selectedProduct?.requiresShipping ?? false;
+  const requiresShipping = fulfillmentType === "디지털 + 페이퍼";
   const hasShippingInfo = requiresShipping && [recipient, shippingPhone, shippingAddress, shippingDetailAddress, shippingPostalCode].some((value) => value.trim());
   const userStatus = existingUser ? "🟢 기존 회원 발견" : "🟡 신규 회원 생성 예정";
   const previewName = existingUser?.name ?? name;
@@ -354,6 +355,7 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
     setSelectedProductId(product.id);
     setProductQuery(product.sku);
     setPaymentAmount(product.price);
+    setFulfillmentType("디지털 + 페이퍼");
   };
 
   return (
@@ -406,7 +408,7 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
             <FormSection title="3. 상품/강의 선택" description="코스 ID, 패키지 ID 또는 SKU로 검색해 지급할 상품/강의를 선택합니다.">
               <SearchField label="코스 ID / 패키지 ID / SKU 검색" value={productQuery} onChange={setProductQuery} placeholder="COURSE-, PACK-, SKU" />
               <div className="space-y-2 md:col-span-2">{productResults.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}><p className="text-sm font-black text-slate-900">{product.name}</p><p className="mt-1 text-xs font-bold text-indigo-700">{product.productType}</p><p className="mt-1 font-mono text-xs font-semibold text-slate-500">{product.sku} · {product.id}</p><p className="mt-2 text-xs font-semibold text-slate-600">{product.summary}</p></button>)}</div>
-              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="SKU" value={selectedProduct.sku} /><ReadOnlyField label="상품 유형" value={selectedProduct.productType} /><ReadOnlyField label="상품 구분" value={selectedProduct.type} /><ReadOnlyField label="포함 강의/수업 요약" value={selectedProduct.summary} /><GrantPreview product={selectedProduct} /></> : null}
+              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="SKU" value={selectedProduct.sku} /><label className="space-y-2 text-sm font-semibold text-slate-700"><span>제공 방식</span><select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={fulfillmentType} onChange={(event) => setFulfillmentType(event.target.value)}><option>디지털</option><option>디지털 + 페이퍼</option></select></label><ReadOnlyField label="상품 구분" value={selectedProduct.type} /><ReadOnlyField label="포함 강의/수업 요약" value={selectedProduct.summary} /><GrantPreview product={selectedProduct} fulfillmentType={fulfillmentType} /></> : null}
             </FormSection>
 
             {requiresShipping ? <FormSection title="4. 배송 정보" description="선택 상품이 페이퍼를 포함하므로 배송 정보를 주문 기록에 함께 저장합니다.">
@@ -423,11 +425,12 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
               <CardHeader><CardTitle className="text-base">생성 미리보기</CardTitle><CardDescription>저장 시 생성되는 결과를 확인합니다.</CardDescription></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="rounded-2xl bg-white/80 p-4"><Badge variant={existingUser ? "success" : "warning"}>{userStatus}</Badge><p className="mt-2 break-all font-black text-slate-900">{email || "이메일 필수"}</p></div>
-                <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">최종 생성 결과</p><div className="mt-3 space-y-2"><PreviewRow label="회원" value={previewMemberId} /><PreviewRow label="주문 출처" value={source} /><PreviewRow label="지급 상품" value={selectedProduct?.name ?? "미선택"} /><PreviewRow label="결제 금액" value={formatCurrency(paymentAmount)} /><PreviewRow label="배송 정보" value={requiresShipping ? "필요" : "불필요"} /><PreviewRow label="생성 유형" value={userResultLabel} /></div></div>
+                <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">최종 생성 결과</p><div className="mt-3 space-y-2"><PreviewRow label="회원" value={previewMemberId} /><PreviewRow label="주문 출처" value={source} /><PreviewRow label="지급 상품" value={selectedProduct?.name ?? "미선택"} /><PreviewRow label="제공 방식" value={fulfillmentType} /><PreviewRow label="결제 금액" value={formatCurrency(paymentAmount)} /><PreviewRow label="배송 정보" value={requiresShipping ? "필요" : "불필요"} /><PreviewRow label="생성 유형" value={userResultLabel} /></div></div>
                 <PreviewRow label="이름" value={previewName || "-"} />
                 <PreviewRow label="주문 출처" value={source} />
                 <PreviewRow label="외부 주문번호" value={externalOrderNumber || "-"} />
                 <PreviewRow label="선택 상품/강의" value={selectedProduct?.name ?? "미선택"} />
+                <PreviewRow label="제공 방식" value={fulfillmentType} />
                 <PreviewRow label="구매 금액" value={formatCurrency(paymentAmount)} />
                 <PreviewRow label="배송 정보 입력 여부" value={requiresShipping ? (hasShippingInfo ? "입력됨" : "미입력") : "불필요"} />
                 <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">생성 결과</p><ul className="mt-2 space-y-2 text-sm font-black text-slate-900"><li>✓ {userResultLabel}</li>{selectedProduct?.permissions.map((permission) => <li key={permission}>✓ {permission} 지급</li>)}<li>✓ 주문 기록 생성</li></ul><p className="mt-2 text-xs font-semibold text-slate-600">외부 주문번호, 주문 출처, 구매 금액, 배송 정보가 주문 기록에 저장됩니다.</p></div>
@@ -441,7 +444,7 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function GrantPreview({ product }: { product: { name: string; type: string; productType: string; lessons: string[]; permissions: string[] } }) {
+function GrantPreview({ product, fulfillmentType }: { product: { name: string; type: string; lessons: string[]; permissions: string[] }; fulfillmentType: string }) {
   return (
     <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 md:col-span-2">
       <p className="text-xs font-bold text-slate-500">지급 예정 권한</p>
@@ -450,7 +453,7 @@ function GrantPreview({ product }: { product: { name: string; type: string; prod
       </ul>
       <p className="mt-4 text-xs font-bold text-slate-500">{product.type === "패키지" ? "지급 예정 패키지" : "지급 예정 강의"}</p>
       <p className="mt-1 text-sm font-black text-slate-900">{product.name}</p>
-      <p className="mt-1 text-xs font-semibold text-indigo-700">상품 유형: {product.productType}</p>
+      <p className="mt-1 text-xs font-semibold text-indigo-700">제공 방식: {fulfillmentType}</p>
       <p className="mt-3 text-xs font-bold text-slate-500">하위 포함 강의</p>
       <ul className="mt-2 grid gap-2 text-sm font-semibold text-slate-700 sm:grid-cols-2">
         {product.lessons.map((lesson) => <li key={lesson} className="rounded-xl bg-white/80 px-3 py-2">• {lesson}</li>)}
