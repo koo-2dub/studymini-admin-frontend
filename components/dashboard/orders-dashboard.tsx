@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, Search, X } from "lucide-react";
+import { CreditCard, PlusCircle, Search, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ type OrderListFilters = {
   orderStatus: string;
   paymentStatus: string;
   shippingStatus: string;
+  orderSource: string;
   startDate: string;
   endDate: string;
 };
@@ -24,6 +25,7 @@ const emptyFilters: OrderListFilters = {
   orderStatus: "all",
   paymentStatus: "all",
   shippingStatus: "all",
+  orderSource: "all",
   startDate: "",
   endDate: "",
 };
@@ -34,10 +36,12 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
   const router = useRouter();
   const [filters, setFilters] = useState(emptyFilters);
   const [paymentLinkOpen, setPaymentLinkOpen] = useState(false);
+  const [manualOrderOpen, setManualOrderOpen] = useState(false);
 
   const orderStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.orderStatus))), [orders]);
   const paymentStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.paymentStatus))), [orders]);
   const shippingStatuses = useMemo(() => Array.from(new Set(orders.map((order) => order.shippingStatus))), [orders]);
+  const orderSources = useMemo(() => Array.from(new Set(orders.map((order) => order.orderSource))), [orders]);
 
   const filteredOrders = useMemo(() => {
     const normalizedQuery = filters.query.trim().toLowerCase();
@@ -49,10 +53,11 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
       const matchesOrderStatus = filters.orderStatus === "all" || order.orderStatus === filters.orderStatus;
       const matchesPaymentStatus = filters.paymentStatus === "all" || order.paymentStatus === filters.paymentStatus;
       const matchesShippingStatus = filters.shippingStatus === "all" || order.shippingStatus === filters.shippingStatus;
+      const matchesOrderSource = filters.orderSource === "all" || order.orderSource === filters.orderSource;
       const matchesStartDate = !filters.startDate || order.date >= filters.startDate;
       const matchesEndDate = !filters.endDate || order.date <= filters.endDate;
 
-      return matchesQuery && matchesOrderStatus && matchesPaymentStatus && matchesShippingStatus && matchesStartDate && matchesEndDate;
+      return matchesQuery && matchesOrderStatus && matchesPaymentStatus && matchesShippingStatus && matchesOrderSource && matchesStartDate && matchesEndDate;
     });
   }, [filters, orders]);
 
@@ -89,10 +94,13 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
             <CardTitle>주문 목록</CardTitle>
             <CardDescription>주문 행을 클릭하면 주문 상세 화면으로 이동합니다.</CardDescription>
           </div>
-          <Button type="button" onClick={() => setPaymentLinkOpen(true)}><CreditCard className="h-4 w-4" />결제 링크 생성</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={() => setManualOrderOpen(true)}><PlusCircle className="h-4 w-4" />주문 생성</Button>
+            <Button type="button" variant="outline" onClick={() => setPaymentLinkOpen(true)}><CreditCard className="h-4 w-4" />결제 링크 생성</Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <label className="space-y-2 text-sm font-semibold text-slate-700">
               <span>주문번호 / 주문자 / 상품명</span>
               <div className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-4 transition focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-100">
@@ -108,7 +116,8 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
             <FilterSelect label="주문상태" value={filters.orderStatus} onChange={(value) => updateFilter("orderStatus", value)} options={orderStatuses} />
             <FilterSelect label="결제상태" value={filters.paymentStatus} onChange={(value) => updateFilter("paymentStatus", value)} options={paymentStatuses} />
             <FilterSelect label="배송상태" value={filters.shippingStatus} onChange={(value) => updateFilter("shippingStatus", value)} options={shippingStatuses} />
-            <div className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2 xl:col-span-4">
+            <FilterSelect label="주문 출처" value={filters.orderSource} onChange={(value) => updateFilter("orderSource", value)} options={orderSources} />
+            <div className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2 xl:col-span-5">
               <span>주문일</span>
               <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
@@ -127,12 +136,13 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
           </div>
 
           <div className="overflow-x-auto rounded-3xl border border-slate-100">
-            <Table className="min-w-[1040px] [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
+            <Table className="min-w-[1160px] [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap">
               <TableHeader>
                 <TableRow>
                   <TableHead>주문번호</TableHead>
                   <TableHead>주문자</TableHead>
                   <TableHead>상품명</TableHead>
+                  <TableHead>주문 출처</TableHead>
                   <TableHead className="text-right">결제금액</TableHead>
                   <TableHead>주문일</TableHead>
                   <TableHead>주문상태</TableHead>
@@ -154,6 +164,7 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
                     <TableCell className="font-mono font-black text-indigo-700">{order.id}</TableCell>
                     <TableCell className="font-semibold text-slate-900">{order.member}</TableCell>
                     <TableCell className="font-semibold text-slate-700">{order.product}</TableCell>
+                    <TableCell><Badge variant={order.orderSource === "자사몰" ? "slate" : "success"}>{order.orderSource}</Badge></TableCell>
                     <TableCell className="text-right font-black text-slate-950">{formatCurrency(order.paymentAmount)}</TableCell>
                     <TableCell className="font-semibold text-slate-600">{order.date}</TableCell>
                     <TableCell><KoreanStatusBadge value={order.orderStatus} /></TableCell>
@@ -172,6 +183,7 @@ export function OrdersDashboard({ orders }: { orders: AdminOrder[] }) {
           )}
         </CardContent>
       </Card>
+      {manualOrderOpen ? <ManualOrderDialog onClose={() => setManualOrderOpen(false)} /> : null}
       {paymentLinkOpen ? <PaymentLinkDialog onClose={() => setPaymentLinkOpen(false)} /> : null}
     </div>
   );
@@ -297,6 +309,72 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+const manualOrderProducts = [
+  { id: "COURSE-BIZ-KO-12W", name: "비즈니스 회화 집중반", type: "코스", price: 215000 },
+  { id: "COURSE-EN-LISTENING-STARTER", name: "영어 리스닝 스타터", type: "코스", price: 99000 },
+  { id: "PACK-JP-POWER", name: "일본어 파워팩", type: "패키지", price: 500000 },
+  { id: "PACK-SPA-BASIC", name: "스페인어 베이직 패키지", type: "패키지", price: 149000 },
+];
+
+function ManualOrderDialog({ onClose }: { onClose: () => void }) {
+  const [source, setSource] = useState("이즈웰");
+  const [externalOrderNumber, setExternalOrderNumber] = useState("EZW-20260617-001");
+  const [email, setEmail] = useState("customer@example.com");
+  const [productQuery, setProductQuery] = useState("PACK");
+  const [selectedProductId, setSelectedProductId] = useState(manualOrderProducts[2].id);
+  const [paymentAmount, setPaymentAmount] = useState(manualOrderProducts[2].price);
+  const selectedProduct = manualOrderProducts.find((product) => product.id === selectedProductId);
+  const productResults = manualOrderProducts.filter((product) => [product.id, product.name, product.type].join(" ").toLowerCase().includes(productQuery.trim().toLowerCase())).slice(0, 5);
+
+  const selectProduct = (productId: string) => {
+    const product = manualOrderProducts.find((item) => item.id === productId);
+    if (!product) return;
+    setSelectedProductId(product.id);
+    setProductQuery(product.id);
+    setPaymentAmount(product.price);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-8 backdrop-blur-sm">
+      <Card className="w-full max-w-6xl border-white/80 bg-white shadow-2xl">
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>주문 생성</CardTitle>
+            <CardDescription>외부 복지몰/제휴몰에서 이미 결제 완료된 주문을 수동 등록하고 강의 이용 권한을 연결합니다.</CardDescription>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={onClose}><X className="h-4 w-4" />닫기</Button>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-5">
+            <FormSection title="주문 정보" description="외부 결제처에서 확인한 주문 식별 정보를 입력합니다.">
+              <TextField label="외부 주문번호" value={externalOrderNumber} onChange={setExternalOrderNumber} placeholder="EZW-20260617-001" />
+              <label className="space-y-2 text-sm font-semibold text-slate-700"><span>주문 출처</span><select className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none" value={source} onChange={(event) => setSource(event.target.value)}><option>이즈웰</option><option>수동 등록</option><option>기타</option></select></label>
+            </FormSection>
+            <FormSection title="주문자 정보" description="가입 전 유저도 생성/매칭할 수 있도록 계정 생성 정보를 입력합니다.">
+              <TextField label="닉네임" value="복지몰 고객" onChange={() => undefined} placeholder="닉네임" />
+              <TextField label="이메일 *" value={email} onChange={setEmail} placeholder="customer@example.com" />
+              <TextField label="임시 비밀번호" value="Studymini!2026" onChange={() => undefined} placeholder="임시 비밀번호" />
+              <TextField label="전화번호" value="010-0000-0000" onChange={() => undefined} placeholder="010-0000-0000" />
+            </FormSection>
+            <FormSection title="상품/강의 정보" description="코스 ID 또는 패키지 ID를 검색해 수강 권한을 연결합니다.">
+              <SearchField label="코스 ID / 패키지 ID 검색" value={productQuery} onChange={setProductQuery} placeholder="COURSE- 또는 PACK-" />
+              <div className="space-y-2 md:col-span-2">{productResults.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}><p className="font-mono text-sm font-black text-indigo-700">{product.id}</p><p className="mt-1 text-sm font-bold text-slate-900">{product.name}</p><p className="text-xs font-semibold text-slate-500">상품 유형: {product.type}</p></button>)}</div>
+              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="상품 유형" value={selectedProduct.type} /></> : null}
+            </FormSection>
+            <FormSection title="결제 정보" description="외부에서 이미 결제된 주문이므로 결제 링크는 발급하지 않습니다.">
+              <ReadOnlyField label="외부 결제 완료 여부" value="완료" />
+              <NumberField label="결제 금액" value={paymentAmount} onChange={setPaymentAmount} />
+              <TextField label="결제일" value="2026-06-17" onChange={() => undefined} placeholder="YYYY-MM-DD" />
+              <label className="space-y-2 text-sm font-semibold text-slate-700 md:col-span-2"><span>메모</span><textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none" defaultValue="이즈웰 복지몰 결제 확인 후 강의 지급" /></label>
+            </FormSection>
+          </div>
+          <aside className="space-y-4"><Card className="border-indigo-100 bg-indigo-50/70"><CardHeader><CardTitle className="text-base">생성 미리보기</CardTitle><CardDescription>외부 결제 완료 주문으로 등록됩니다.</CardDescription></CardHeader><CardContent className="space-y-3 text-sm"><PreviewRow label="주문 출처" value={source} /><PreviewRow label="외부 주문번호" value={externalOrderNumber} /><PreviewRow label="이메일" value={email || "필수 입력"} /><PreviewRow label="상품" value={selectedProduct?.name ?? "미선택"} /><PreviewRow label="결제금액" value={formatCurrency(paymentAmount)} /><Button type="button" className="w-full" disabled={!email || !selectedProduct}>주문 생성</Button></CardContent></Card></aside>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function KpiCard({ label, value, detail, tone = "indigo" }: { label: string; value: string; detail: string; tone?: "indigo" | "rose" }) {
   return (
     <Card>
@@ -306,6 +384,15 @@ function KpiCard({ label, value, detail, tone = "indigo" }: { label: string; val
         <p className="mt-2 text-xs font-bold text-slate-500">{detail}</p>
       </CardContent>
     </Card>
+  );
+}
+
+function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <label className="space-y-2 text-sm font-semibold text-slate-700">
+      <span>{label}</span>
+      <input className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm font-semibold outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+    </label>
   );
 }
 
@@ -381,7 +468,12 @@ function KoreanStatusBadge({ value }: { value: string }) {
         ? "warning"
         : "slate";
 
-  return <Badge variant={variant}>{value}</Badge>;
+  return <Badge variant={variant}>{simplifyStatus(value)}</Badge>;
+}
+
+function simplifyStatus(value: string) {
+  const labels: Record<string, string> = { 주문완료: "완료", 결제완료: "완료", 결제대기: "대기", 결제실패: "실패" };
+  return labels[value] ?? value;
 }
 
 function formatCurrency(value: number) {

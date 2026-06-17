@@ -51,6 +51,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
             rows={[
               ["주문번호", order.id],
               ["주문일", order.date],
+              ["주문 출처", order.orderSource],
+              ["외부 주문번호", order.externalOrderNumber ?? "-"],
               ["주문상태", order.orderStatus, "badge"],
               ["결제상태", order.paymentStatus, "badge"],
               ["배송상태", order.shippingStatus, "badge"],
@@ -89,6 +91,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
             description="결제 수단, 승인 정보와 환불 반영 금액입니다."
             rows={[
               ["결제수단", order.paymentMethod],
+              ["외부 결제 완료 여부", order.externalPaymentConfirmed ? "완료" : "-"],
               ["결제일", order.paidAt ?? "-"],
               ["PG사", order.pgProvider ?? "-"],
               ["결제 승인번호", order.paymentApprovalNumber ?? "-"],
@@ -145,6 +148,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ or
               <CardDescription>운영자가 확인해야 할 내부 메모입니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <InfoRow label="주문 출처" value={order.orderSource} />
+              <InfoRow label="외부 주문번호" value={order.externalOrderNumber ?? "-"} />
               {order.adminMemos.length > 0 ? order.adminMemos.map((memo) => (
                 <div key={memo.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                   <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-500"><span>{memo.author}</span><span>{memo.createdAt}</span></div>
@@ -227,6 +232,9 @@ function findOrder(orderId: string): AdminOrder | undefined {
     paymentMethod: "결제링크",
     sku: "BOOK-ADD-01",
     orderChannel: "관리자 생성",
+    orderSource: "수동 등록",
+    externalOrderNumber: "MANUAL-MOCK-001",
+    externalPaymentConfirmed: true,
     originalAmount: 35000,
     couponDiscountAmount: 3000,
     pointUsedAmount: 2000,
@@ -293,7 +301,12 @@ function KoreanStatusBadge({ value }: { value: string }) {
         ? "warning"
         : "slate";
 
-  return <Badge variant={variant}>{value}</Badge>;
+  return <Badge variant={variant}>{simplifyStatus(value)}</Badge>;
+}
+
+function simplifyStatus(value: string) {
+  const labels: Record<string, string> = { 주문완료: "완료", 결제완료: "완료", 결제대기: "대기", 결제실패: "실패" };
+  return labels[value] ?? value;
 }
 
 function formatCurrency(value: number) {
