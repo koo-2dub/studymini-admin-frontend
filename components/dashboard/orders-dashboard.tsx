@@ -310,10 +310,10 @@ function PaymentLinkDialog({ onClose }: { onClose: () => void }) {
 }
 
 const manualOrderProducts = [
-  { id: "COURSE-BIZ-KO-12W", sku: "BIZ-KO-12W", name: "비즈니스 회화 집중반", type: "코스", price: 215000, summary: "12주 비즈니스 한국어 회화 · 온라인 수업 24개", lessons: ["비즈니스 자기소개", "회의 표현", "이메일 표현", "프레젠테이션 말하기"] },
-  { id: "COURSE-EN-LISTENING-STARTER", sku: "EN-LISTENING-STARTER", name: "영어 리스닝 스타터", type: "코스", price: 99000, summary: "영어 듣기 입문 과정 · 핵심 레슨 18개", lessons: ["영어 리스닝 1단계", "영어 리스닝 2단계", "쉐도잉 트레이닝"] },
-  { id: "PACK-JP-POWER", sku: "JP-POWER-PACK", name: "일본어 파워팩", type: "패키지", price: 500000, summary: "일본어 기초 + 문법 + 네이티브 회화 패키지", lessons: ["일본어 1단계", "일본어 2단계", "일본어 3단계", "일본어 4단계"] },
-  { id: "PACK-SPA-BASIC", sku: "SPA-BASIC-08W", name: "스페인어 베이직 패키지", type: "패키지", price: 149000, summary: "스페인어 베이직 8주 과정 + 복습 자료", lessons: ["스페인어 1단계", "스페인어 2단계", "스페인어 회화 입문"] },
+  { id: "COURSE-BIZ-KO-12W", sku: "BIZ-KO-12W", name: "비즈니스 회화 집중반", type: "코스", productType: "디지털 상품", requiresShipping: false, price: 215000, summary: "12주 비즈니스 한국어 회화 · 온라인 수업 24개", lessons: ["비즈니스 자기소개", "회의 표현", "이메일 표현", "프레젠테이션 말하기"], permissions: ["비즈니스 회화 집중반", "비즈니스 자기소개", "회의 표현", "이메일 표현", "프레젠테이션 말하기"] },
+  { id: "COURSE-EN-LISTENING-STARTER", sku: "EN-LISTENING-STARTER", name: "영어 리스닝 스타터", type: "코스", productType: "디지털 상품", requiresShipping: false, price: 99000, summary: "영어 듣기 입문 과정 · 핵심 레슨 18개", lessons: ["영어 리스닝 1단계", "영어 리스닝 2단계", "쉐도잉 트레이닝"], permissions: ["영어 리스닝 스타터", "영어 리스닝 1단계", "영어 리스닝 2단계", "쉐도잉 트레이닝"] },
+  { id: "PACK-JP-POWER", sku: "JP-POWER-PACK", name: "일본어 파워팩", type: "패키지", productType: "디지털 + 페이퍼", requiresShipping: true, price: 500000, summary: "일본어 기초 + 문법 + 네이티브 회화 패키지", lessons: ["일본어 1단계", "일본어 2단계", "일본어 3단계", "일본어 4단계"], permissions: ["일본어 파워팩", "일본어 1단계", "일본어 2단계", "일본어 3단계", "일본어 4단계"] },
+  { id: "PACK-SPA-BASIC", sku: "SPA-BASIC-08W", name: "스페인어 베이직 패키지", type: "패키지", productType: "디지털 + 페이퍼", requiresShipping: true, price: 149000, summary: "스페인어 베이직 8주 과정 + 복습 자료", lessons: ["스페인어 1단계", "스페인어 2단계", "스페인어 회화 입문"], permissions: ["스페인어 베이직 패키지", "스페인어 1단계", "스페인어 2단계", "스페인어 회화 입문"] },
 ];
 
 function ManualOrderDialog({ onClose }: { onClose: () => void }) {
@@ -341,10 +341,12 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
   const selectedProduct = manualOrderProducts.find((product) => product.id === selectedProductId);
   const normalizedProductQuery = productQuery.trim().toLowerCase();
   const productResults = manualOrderProducts.filter((product) => !normalizedProductQuery || [product.id, product.sku, product.name, product.type].join(" ").toLowerCase().includes(normalizedProductQuery)).slice(0, 5);
-  const hasShippingInfo = [recipient, shippingPhone, shippingAddress, shippingDetailAddress, shippingPostalCode].some((value) => value.trim());
-  const userStatus = existingUser ? "기존 유저" : "신규 유저 생성 예정";
+  const requiresShipping = selectedProduct?.requiresShipping ?? false;
+  const hasShippingInfo = requiresShipping && [recipient, shippingPhone, shippingAddress, shippingDetailAddress, shippingPostalCode].some((value) => value.trim());
+  const userStatus = existingUser ? "🟢 기존 회원 발견" : "🟡 신규 회원 생성 예정";
   const previewName = existingUser?.name ?? name;
-  const userResultLabel = existingUser ? "기존 유저 매칭" : "신규 유저 생성";
+  const previewMemberId = existingUser?.id ?? "신규 회원 생성 후 발급";
+  const userResultLabel = existingUser ? "기존 회원 매칭" : "신규 회원 생성";
 
   const selectProduct = (productId: string) => {
     const product = manualOrderProducts.find((item) => item.id === productId);
@@ -371,7 +373,7 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 md:col-span-2">
                 {existingUser ? (
                   <div className="space-y-2 text-sm">
-                    <Badge variant="success">기존 유저 발견</Badge>
+                    <Badge variant="success">🟢 기존 회원 발견</Badge>
                     <PreviewRow label="User ID" value={existingUser.id} />
                     <PreviewRow label="이름" value={existingUser.name} />
                     <PreviewRow label="이메일" value={existingUser.email} />
@@ -380,12 +382,12 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <Badge variant="warning">신규 유저 생성 필요</Badge>
-                    <p className="text-sm font-semibold text-slate-600">저장 시 아래 정보로 유저가 자동 생성되고 선택 상품/강의가 지급됩니다.</p>
+                    <Badge variant="warning">🟡 신규 회원 생성 예정</Badge>
+                    <p className="text-sm font-semibold text-slate-600">신규 회원 생성 후 강의 지급까지 함께 처리됩니다.</p>
                     <div className="grid gap-4 md:grid-cols-2">
                       <TextField label="이름/닉네임" value={name} onChange={setName} placeholder="복지몰 고객" />
                       <TextField label="전화번호" value={phone} onChange={setPhone} placeholder="010-0000-0000" />
-                      <TextField label="임시 비밀번호" value={temporaryPassword} onChange={setTemporaryPassword} placeholder="임시 비밀번호" />
+                      <TextField label="임시 비밀번호 생성" value={temporaryPassword} onChange={setTemporaryPassword} placeholder="임시 비밀번호" />
                     </div>
                   </div>
                 )}
@@ -403,31 +405,32 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
 
             <FormSection title="3. 상품/강의 선택" description="코스 ID, 패키지 ID 또는 SKU로 검색해 지급할 상품/강의를 선택합니다.">
               <SearchField label="코스 ID / 패키지 ID / SKU 검색" value={productQuery} onChange={setProductQuery} placeholder="COURSE-, PACK-, SKU" />
-              <div className="space-y-2 md:col-span-2">{productResults.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}><p className="text-sm font-black text-slate-900">{product.name}</p><p className="mt-1 text-xs font-bold text-indigo-700">{product.type}</p><p className="mt-1 font-mono text-xs font-semibold text-slate-500">{product.sku} · {product.id}</p><p className="mt-2 text-xs font-semibold text-slate-600">{product.summary}</p></button>)}</div>
-              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="SKU" value={selectedProduct.sku} /><ReadOnlyField label="상품 유형" value={selectedProduct.type} /><ReadOnlyField label="포함 강의/수업 요약" value={selectedProduct.summary} /><GrantPreview product={selectedProduct} /></> : null}
+              <div className="space-y-2 md:col-span-2">{productResults.map((product) => <button key={product.id} type="button" onClick={() => selectProduct(product.id)} className={selectedProductId === product.id ? "w-full rounded-2xl border border-indigo-300 bg-indigo-50 p-4 text-left shadow-sm" : "w-full rounded-2xl border border-slate-100 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"}><p className="text-sm font-black text-slate-900">{product.name}</p><p className="mt-1 text-xs font-bold text-indigo-700">{product.productType}</p><p className="mt-1 font-mono text-xs font-semibold text-slate-500">{product.sku} · {product.id}</p><p className="mt-2 text-xs font-semibold text-slate-600">{product.summary}</p></button>)}</div>
+              {selectedProduct ? <><ReadOnlyField label="상품명" value={selectedProduct.name} /><ReadOnlyField label="상품 ID" value={selectedProduct.id} /><ReadOnlyField label="SKU" value={selectedProduct.sku} /><ReadOnlyField label="상품 유형" value={selectedProduct.productType} /><ReadOnlyField label="상품 구분" value={selectedProduct.type} /><ReadOnlyField label="포함 강의/수업 요약" value={selectedProduct.summary} /><GrantPreview product={selectedProduct} /></> : null}
             </FormSection>
 
-            <FormSection title="4. 배송 정보" description="외부몰 주문에 포함된 배송 정보를 주문 기록에 함께 저장합니다.">
+            {requiresShipping ? <FormSection title="4. 배송 정보" description="선택 상품이 페이퍼를 포함하므로 배송 정보를 주문 기록에 함께 저장합니다.">
               <TextField label="수령인" value={recipient} onChange={setRecipient} placeholder="수령인" />
               <TextField label="전화번호" value={shippingPhone} onChange={setShippingPhone} placeholder="010-0000-0000" />
               <TextField label="주소" value={shippingAddress} onChange={setShippingAddress} placeholder="기본 주소" />
               <TextField label="상세 주소" value={shippingDetailAddress} onChange={setShippingDetailAddress} placeholder="상세 주소" />
               <TextField label="우편번호" value={shippingPostalCode} onChange={setShippingPostalCode} placeholder="00000" />
               <label className="space-y-2 text-sm font-semibold text-slate-700"><span>배송 메모</span><textarea className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold outline-none" value={shippingMemo} onChange={(event) => setShippingMemo(event.target.value)} /></label>
-            </FormSection>
+            </FormSection> : null}
           </div>
           <aside className="space-y-4">
             <Card className="border-indigo-100 bg-indigo-50/70">
               <CardHeader><CardTitle className="text-base">생성 미리보기</CardTitle><CardDescription>저장 시 생성되는 결과를 확인합니다.</CardDescription></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="rounded-2xl bg-white/80 p-4"><Badge variant={existingUser ? "success" : "warning"}>{userStatus}</Badge><p className="mt-2 break-all font-black text-slate-900">{email || "이메일 필수"}</p></div>
+                <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">최종 생성 결과</p><div className="mt-3 space-y-2"><PreviewRow label="회원" value={previewMemberId} /><PreviewRow label="주문 출처" value={source} /><PreviewRow label="지급 상품" value={selectedProduct?.name ?? "미선택"} /><PreviewRow label="결제 금액" value={formatCurrency(paymentAmount)} /><PreviewRow label="배송 정보" value={requiresShipping ? "필요" : "불필요"} /><PreviewRow label="생성 유형" value={userResultLabel} /></div></div>
                 <PreviewRow label="이름" value={previewName || "-"} />
                 <PreviewRow label="주문 출처" value={source} />
                 <PreviewRow label="외부 주문번호" value={externalOrderNumber || "-"} />
                 <PreviewRow label="선택 상품/강의" value={selectedProduct?.name ?? "미선택"} />
                 <PreviewRow label="구매 금액" value={formatCurrency(paymentAmount)} />
-                <PreviewRow label="배송 정보 입력 여부" value={hasShippingInfo ? "입력됨" : "미입력"} />
-                <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">생성 결과</p><ul className="mt-2 space-y-2 text-sm font-black text-slate-900"><li>✓ {userResultLabel}</li><li>✓ {selectedProduct?.name ?? "상품/강의"} 지급</li><li>✓ 주문 기록 생성</li></ul><p className="mt-2 text-xs font-semibold text-slate-600">외부 주문번호, 주문 출처, 구매 금액, 배송 정보가 주문 기록에 저장됩니다.</p></div>
+                <PreviewRow label="배송 정보 입력 여부" value={requiresShipping ? (hasShippingInfo ? "입력됨" : "미입력") : "불필요"} />
+                <div className="rounded-2xl bg-white/80 p-4"><p className="text-xs font-bold text-slate-500">생성 결과</p><ul className="mt-2 space-y-2 text-sm font-black text-slate-900"><li>✓ {userResultLabel}</li>{selectedProduct?.permissions.map((permission) => <li key={permission}>✓ {permission} 지급</li>)}<li>✓ 주문 기록 생성</li></ul><p className="mt-2 text-xs font-semibold text-slate-600">외부 주문번호, 주문 출처, 구매 금액, 배송 정보가 주문 기록에 저장됩니다.</p></div>
                 <Button type="button" className="w-full" disabled={!email || !selectedProduct}>주문 생성</Button>
               </CardContent>
             </Card>
@@ -438,11 +441,16 @@ function ManualOrderDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function GrantPreview({ product }: { product: { name: string; type: string; lessons: string[] } }) {
+function GrantPreview({ product }: { product: { name: string; type: string; productType: string; lessons: string[]; permissions: string[] } }) {
   return (
     <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 md:col-span-2">
-      <p className="text-xs font-bold text-slate-500">{product.type === "패키지" ? "지급 예정 패키지" : "지급 예정 강의"}</p>
+      <p className="text-xs font-bold text-slate-500">지급 예정 권한</p>
+      <ul className="mt-2 space-y-2 text-sm font-black text-slate-900">
+        {product.permissions.map((permission) => <li key={permission}>✓ {permission}</li>)}
+      </ul>
+      <p className="mt-4 text-xs font-bold text-slate-500">{product.type === "패키지" ? "지급 예정 패키지" : "지급 예정 강의"}</p>
       <p className="mt-1 text-sm font-black text-slate-900">{product.name}</p>
+      <p className="mt-1 text-xs font-semibold text-indigo-700">상품 유형: {product.productType}</p>
       <p className="mt-3 text-xs font-bold text-slate-500">하위 포함 강의</p>
       <ul className="mt-2 grid gap-2 text-sm font-semibold text-slate-700 sm:grid-cols-2">
         {product.lessons.map((lesson) => <li key={lesson} className="rounded-xl bg-white/80 px-3 py-2">• {lesson}</li>)}
