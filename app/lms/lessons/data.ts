@@ -1,3 +1,5 @@
+import { blocks, getBlocksByIds } from "../blocks/data";
+
 export type LessonVisibility = "공개" | "비공개";
 
 export type LessonLinkedClass = {
@@ -17,9 +19,8 @@ export type Lesson = {
   course: string;
   /** 기존 코스/패키지 mock 집계 호환용 내부 연결값입니다. 레슨 생성/목록/상세 핵심 정보로는 노출하지 않습니다. */
   className: string;
-  videoUrl?: string;
-  audioUrl?: string;
-  quizUrl?: string;
+  /** 레슨은 등록된 블록을 순서대로 조합해서 구성합니다. */
+  blockIds: string[];
   updatedAt: string;
   /** 기존 수업/코스 화면 호환을 위한 내부 공개 상태입니다. 레슨 생성/목록 UI에서는 노출하지 않습니다. */
   visibility?: LessonVisibility;
@@ -35,9 +36,7 @@ export const lessons: Lesson[] = [
     description: "히라가나와 기본 인사를 익히는 입문 레슨입니다.",
     course: "베이직",
     className: "일본어 1단계",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    audioUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
-    quizUrl: "https://studymini.example.com/quizzes/LSN-JP-BSC-01-01",
+    blockIds: ["BLK-JP-BSC-01-VIDEO", "BLK-JP-BSC-01-AUDIO", "BLK-JP-BSC-01-QUIZ"],
     visibility: "공개",
     updatedAt: "2026-05-31",
     linkedClasses: [
@@ -57,9 +56,7 @@ export const lessons: Lesson[] = [
     description: "자기소개 표현을 듣고 말하는 연습 레슨입니다.",
     course: "베이직",
     className: "일본어 1단계",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    audioUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
-    quizUrl: "https://studymini.example.com/quizzes/LSN-JP-BSC-01-02",
+    blockIds: ["BLK-JP-BSC-01-VIDEO", "BLK-JP-BSC-01-AUDIO", "BLK-JP-BSC-02-QUIZ"],
     visibility: "공개",
     updatedAt: "2026-05-30",
     linkedClasses: [
@@ -79,8 +76,7 @@ export const lessons: Lesson[] = [
     description: "숫자와 시간 표현을 학습하는 레슨입니다. 퀴즈 링크는 아직 등록되지 않았습니다.",
     course: "베이직",
     className: "일본어 1단계",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    audioUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+    blockIds: ["BLK-JP-BSC-01-VIDEO", "BLK-JP-BSC-01-AUDIO"],
     visibility: "비공개",
     updatedAt: "2026-05-28",
     linkedClasses: [
@@ -100,8 +96,7 @@ export const lessons: Lesson[] = [
     description: "일본어 2단계에서 동사의 기본형과 활용을 확인하는 레슨입니다.",
     course: "베이직",
     className: "일본어 2단계",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    quizUrl: "https://studymini.example.com/quizzes/LSN-JP-BSC-02-01",
+    blockIds: ["BLK-JP-BSC-VERB-VIDEO", "BLK-JP-BSC-VERB-QUIZ"],
     visibility: "공개",
     updatedAt: "2026-05-27",
     linkedClasses: [
@@ -121,9 +116,7 @@ export const lessons: Lesson[] = [
     description: "영어 리스닝 학습법과 핵심 문장 쉐도잉을 안내하는 레슨입니다.",
     course: "리스닝 스타터",
     className: "영어 리스닝 1단계",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    audioUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
-    quizUrl: "https://studymini.example.com/quizzes/LSN-EN-LSN-01-01",
+    blockIds: ["BLK-EN-LSN-ORIENTATION-VIDEO", "BLK-EN-LSN-AIRPORT-AUDIO", "BLK-EN-LSN-AIRPORT-QUIZ"],
     visibility: "공개",
     updatedAt: "2026-05-25",
     linkedClasses: [
@@ -143,8 +136,7 @@ export const lessons: Lesson[] = [
     description: "공항 안내 방송과 탑승 안내 표현을 듣는 레슨입니다.",
     course: "리스닝 스타터",
     className: "영어 리스닝 1단계",
-    audioUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
-    quizUrl: "https://studymini.example.com/quizzes/LSN-EN-LSN-01-02",
+    blockIds: ["BLK-EN-LSN-AIRPORT-AUDIO", "BLK-EN-LSN-AIRPORT-QUIZ"],
     visibility: "비공개",
     updatedAt: "2026-05-22",
     linkedClasses: [
@@ -164,9 +156,7 @@ export const lessons: Lesson[] = [
     description: "스페인어 알파벳과 발음을 확인하는 첫 레슨입니다.",
     course: "베이직",
     className: "스페인어 1단계",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    audioUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
-    quizUrl: "https://studymini.example.com/quizzes/LSN-ES-BSC-01-01",
+    blockIds: ["BLK-ES-BSC-ALPHABET-VIDEO", "BLK-JP-BSC-01-AUDIO", "BLK-JP-BSC-01-QUIZ"],
     visibility: "공개",
     updatedAt: "2026-05-20",
     linkedClasses: [
@@ -186,7 +176,7 @@ export const lessons: Lesson[] = [
     description: "인사와 안부 묻기 표현을 학습하는 독립 레슨입니다. 아직 수업에 연결되지 않았습니다.",
     course: "",
     className: "",
-    videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    blockIds: ["BLK-ES-BSC-ALPHABET-VIDEO"],
     updatedAt: "2026-05-18",
     visibility: "공개",
     linkedClasses: [],
@@ -208,14 +198,30 @@ export function getLessonLinkedCourseCount(lesson: Lesson) {
   return new Set(getLessonLinkedClasses(lesson).map((linkedClass) => linkedClass.courseId)).size;
 }
 
+export function getLessonBlocks(lesson: Lesson) {
+  return getBlocksByIds(lesson.blockIds);
+}
+
+export function getLessonBlockCount(lesson: Lesson) {
+  return getLessonBlocks(lesson).length;
+}
+
+export function getBlockUsedLessonCount(blockId: string) {
+  return lessons.filter((lesson) => lesson.blockIds.includes(blockId)).length;
+}
+
 export function hasLessonVideo(lesson: Lesson) {
-  return Boolean(lesson.videoUrl?.trim());
+  return getLessonBlocks(lesson).some((block) => block.type === "영상");
 }
 
 export function hasLessonAudio(lesson: Lesson) {
-  return Boolean(lesson.audioUrl?.trim());
+  return getLessonBlocks(lesson).some((block) => block.type === "오디오");
 }
 
 export function hasLessonQuiz(lesson: Lesson) {
-  return Boolean(lesson.quizUrl?.trim());
+  return getLessonBlocks(lesson).some((block) => block.type === "퀴즈 링크");
+}
+
+export function getUnusedBlocks() {
+  return blocks.filter((block) => getBlockUsedLessonCount(block.id) === 0);
 }
