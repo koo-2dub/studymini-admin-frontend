@@ -384,6 +384,17 @@ export type AdminOrder = {
   paymentMethod: string;
   sku: string;
   orderChannel: string;
+  orderSource: "자사몰" | "결제 링크" | "이즈웰" | "수동 등록" | "기타";
+  externalOrderNumber?: string;
+  externalPaymentConfirmed?: boolean;
+  requestedAt?: string;
+  grantedProductName?: string;
+  grantedProductId?: string;
+  grantedProductType?: "코스" | "패키지";
+  grantedProductSummary?: string;
+  userProvisioningStatus?: "기존 유저 연결" | "신규 유저 생성";
+  shippingDetailAddress?: string;
+  shippingPostalCode?: string;
   originalAmount: number;
   couponDiscountAmount: number;
   pointUsedAmount: number;
@@ -427,6 +438,7 @@ export const orders: AdminOrder[] = [
     paymentMethod: "신용카드",
     sku: "BIZ-KO-12W",
     orderChannel: "웹 결제",
+    orderSource: "자사몰",
     originalAmount: 229000,
     couponDiscountAmount: 10000,
     pointUsedAmount: 7000,
@@ -474,6 +486,17 @@ export const orders: AdminOrder[] = [
     paymentMethod: "간편결제",
     sku: "BOOK-ADD-01",
     orderChannel: "관리자 생성",
+    orderSource: "이즈웰",
+    externalOrderNumber: "EZW-20260617-001",
+    externalPaymentConfirmed: true,
+    requestedAt: "2026-06-17",
+    grantedProductName: "교재 추가 배송",
+    grantedProductId: "BOOK-ADD-01",
+    grantedProductType: "코스",
+    grantedProductSummary: "교재 배송 주문 · 강의 지급 없음",
+    userProvisioningStatus: "기존 유저 연결",
+    shippingDetailAddress: "101동 1201호",
+    shippingPostalCode: "03901",
     originalAmount: 35000,
     couponDiscountAmount: 0,
     pointUsedAmount: 0,
@@ -518,6 +541,7 @@ export const orders: AdminOrder[] = [
     paymentMethod: "결제링크",
     sku: "SPA-BASIC-08W",
     orderChannel: "결제 링크",
+    orderSource: "결제 링크",
     originalAmount: 149000,
     couponDiscountAmount: 0,
     pointUsedAmount: 5000,
@@ -557,6 +581,7 @@ export const orders: AdminOrder[] = [
     paymentMethod: "신용카드",
     sku: "EN-LISTENING-STARTER",
     orderChannel: "모바일 웹",
+    orderSource: "자사몰",
     originalAmount: 109000,
     couponDiscountAmount: 10000,
     pointUsedAmount: 0,
@@ -602,6 +627,7 @@ export const orders: AdminOrder[] = [
     paymentMethod: "신용카드",
     sku: "COACH-1ON1-01",
     orderChannel: "웹 결제",
+    orderSource: "자사몰",
     originalAmount: 100000,
     couponDiscountAmount: 0,
     pointUsedAmount: 0,
