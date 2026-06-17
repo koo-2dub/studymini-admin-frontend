@@ -384,7 +384,7 @@ export type AdminOrder = {
   paymentMethod: string;
   sku: string;
   orderChannel: string;
-  orderSource: "자사몰" | "이즈웰" | "수동 등록" | "기타";
+  orderSource: "자사몰" | "결제 링크" | "이즈웰" | "수동 등록" | "기타";
   externalOrderNumber?: string;
   externalPaymentConfirmed?: boolean;
   requestedAt?: string;
@@ -541,7 +541,7 @@ export const orders: AdminOrder[] = [
     paymentMethod: "결제링크",
     sku: "SPA-BASIC-08W",
     orderChannel: "결제 링크",
-    orderSource: "자사몰",
+    orderSource: "결제 링크",
     originalAmount: 149000,
     couponDiscountAmount: 0,
     pointUsedAmount: 5000,

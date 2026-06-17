@@ -321,7 +321,7 @@ function KoreanStatusBadge({ value }: { value: string }) {
 }
 
 function simplifyStatus(value: string) {
-  const labels: Record<string, string> = { 주문완료: "완료", 결제완료: "완료", 결제대기: "대기", 결제실패: "실패" };
+  const labels: Record<string, string> = { 주문완료: "완료", 결제완료: "완료", 결제대기: "대기", 결제실패: "실패", 환불완료: "환불완료" };
   return labels[value] ?? value;
 }
 
